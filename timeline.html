@@ -585,7 +585,7 @@
   .err-modal .e-btn:hover{background:var(--accent-2)}
 
   /* ── Batch 4: Filter strip ── */
-  .filter-strip{height:38px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--bg-top);border-bottom:1px solid var(--border);position:relative;z-index:5;overflow:hidden;white-space:nowrap}
+  .filter-strip{min-height:38px;flex-shrink:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;padding:6px 12px;background:var(--bg-top);border-bottom:1px solid var(--border);position:relative;z-index:5}
   .filter-strip .fs-search{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;height:26px;padding:0 8px;min-width:160px;max-width:240px}
   .filter-strip .fs-search:focus-within{border-color:var(--accent-border)}
   .filter-strip .fs-search svg{width:11px;height:11px;color:var(--t4);flex-shrink:0}
@@ -2352,7 +2352,7 @@ function CalendarView({ tasks, expandedTasks, calendar, selected, selectedSet,
     const gridStart = new Date(cursor.y, cursor.m, 1 - offset);
     // End at week containing last day
     const lastDow = last.getDay();
-    const tailPad = (weekStart === 1 ? 7 : 6) - ((lastDow - weekStart + 7) % 7);
+    const tailPad = 6 - ((lastDow - weekStart + 7) % 7);
     const gridEnd = new Date(cursor.y, cursor.m, last.getDate() + tailPad);
     const days = [];
     let cur = new Date(gridStart);
