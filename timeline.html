@@ -740,9 +740,32 @@ function sampleWorkspace(){
   return { version: 1, projects: [p], activeProjectId: p.id };
 }
 
+const CURRENT_VERSION = 1;
+const MIGRATIONS = [
+  // { from: 1, to: 2, migrate(data){ ...; data.version = 2; return data; } },
+];
+
+function migrateWorkspace(data){
+  if (!data || typeof data !== 'object') throw new Error('Invalid workspace file');
+  let v = data.version || 1;
+  if (v > CURRENT_VERSION) {
+    throw new Error('This file was saved by a newer version of Timeline (v' + v + '). Please update the app to open it.');
+  }
+  let cur = data;
+  while (v < CURRENT_VERSION) {
+    const step = MIGRATIONS.find(m => m.from === v);
+    if (!step) throw new Error('No migration available from workspace version ' + v + ' to ' + CURRENT_VERSION);
+    cur = step.migrate(cur);
+    if ((cur.version || 0) <= v) throw new Error('Migration from v' + v + ' did not advance the version');
+    v = cur.version;
+  }
+  cur.version = CURRENT_VERSION;
+  return cur;
+}
+
 function serializeWorkspace(projects, activeProjectId){
   return JSON.stringify({
-    version: 1,
+    version: CURRENT_VERSION,
     activeProjectId,
     projects: projects.map(p => ({
       ...p,
@@ -752,10 +775,11 @@ function serializeWorkspace(projects, activeProjectId){
 }
 
 function parseWorkspace(json){
-  const data = JSON.parse(json);
-  if (!data || !Array.isArray(data.projects)) throw new Error('Invalid workspace file');
+  const raw = JSON.parse(json);
+  if (!raw || !Array.isArray(raw.projects)) throw new Error('Invalid workspace file');
+  const data = migrateWorkspace(raw);
   return {
-    version: data.version || 1,
+    version: data.version,
     activeProjectId: data.activeProjectId || null,
     projects: data.projects.map(p => ({
       id: p.id || genId('proj-'),
@@ -1051,6 +1075,7 @@ Object.assign(window,{
   cascadeAfterMove,computeFloat,detectConflicts,autoStagger,
   buildArrowPath,shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
+  CURRENT_VERSION, MIGRATIONS, migrateWorkspace,
 });
 </script>
 
@@ -1220,21 +1245,66 @@ function App(){
     document.documentElement.style.setProperty('--row-h', rowH+'px');
   },[dayW,rowH]);
 
-  // ── Mutation helpers ──
-  const updateTasks = useCallback((fn) => {
-    setProjects(ps => ps.map(p => p.id === activeProjectId ? {...p, tasks: fn(p.tasks)} : p));
+  // ── Undo / redo + mutation helpers ──
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const UNDO_CAP = 100;
+  const [undoTick, setUndoTick] = useState(0);
+
+  const commitMutation = useCallback((label, mutator) => {
+    setProjects(prev => {
+      const next = mutator(prev);
+      if (next === prev) return prev;
+      undoStackRef.current.push({label, projects: prev});
+      if (undoStackRef.current.length > UNDO_CAP) undoStackRef.current.shift();
+      redoStackRef.current = [];
+      return next;
+    });
     setDirty(true);
-  }, [activeProjectId]);
+    setUndoTick(t => t + 1);
+  }, []);
+
+  const undo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return;
+    const entry = undoStackRef.current.pop();
+    setProjects(cur => {
+      redoStackRef.current.push({label: entry.label, projects: cur});
+      if (redoStackRef.current.length > UNDO_CAP) redoStackRef.current.shift();
+      return entry.projects;
+    });
+    setDirty(true);
+    setUndoTick(t => t + 1);
+  }, []);
+
+  const redo = useCallback(() => {
+    if (redoStackRef.current.length === 0) return;
+    const entry = redoStackRef.current.pop();
+    setProjects(cur => {
+      undoStackRef.current.push({label: entry.label, projects: cur});
+      if (undoStackRef.current.length > UNDO_CAP) undoStackRef.current.shift();
+      return entry.projects;
+    });
+    setDirty(true);
+    setUndoTick(t => t + 1);
+  }, []);
+
+  const resetUndoHistory = useCallback(() => {
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setUndoTick(t => t + 1);
+  }, []);
+
+  const updateTasks = useCallback((fn) => {
+    commitMutation('edit tasks', ps => ps.map(p => p.id === activeProjectId ? {...p, tasks: fn(p.tasks)} : p));
+  }, [activeProjectId, commitMutation]);
 
   const updateActiveProject = useCallback((updates) => {
-    setProjects(ps => ps.map(p => p.id === activeProjectId ? {...p, ...updates} : p));
-    setDirty(true);
-  }, [activeProjectId]);
+    commitMutation('edit project', ps => ps.map(p => p.id === activeProjectId ? {...p, ...updates} : p));
+  }, [activeProjectId, commitMutation]);
 
   const updateProjectById = useCallback((id, updates) => {
-    setProjects(ps => ps.map(p => p.id === id ? {...p, ...updates} : p));
-    setDirty(true);
-  }, []);
+    commitMutation('edit project', ps => ps.map(p => p.id === id ? {...p, ...updates} : p));
+  }, [commitMutation]);
 
   // ── Workspace actions ──
   const openWorkspace = useCallback(async () => {
@@ -1257,10 +1327,12 @@ function App(){
       setCollapsed(new Set());
       setSelected(null);
       setSelectedSet(new Set());
+      resetUndoHistory();
+      try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
     } catch(e) {
       if (e?.name !== 'AbortError') console.error(e);
     }
-  }, [dirty, projects.length]);
+  }, [dirty, projects.length, resetUndoHistory]);
 
   const saveWorkspaceRef = useRef(null);
   const saveWorkspace = useCallback(async (forceAs = false) => {
@@ -1281,6 +1353,7 @@ function App(){
       await writable.write(serializeWorkspace(projects, activeProjectId));
       await writable.close();
       setDirty(false);
+      try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
     } catch(e) {
       console.error('Save failed', e);
       alert('Save failed: ' + (e?.message || e));
@@ -1292,14 +1365,13 @@ function App(){
     const name = nameArg ?? window.prompt('Project name:', 'New project');
     if (!name) return;
     const p = newProject(name);
-    setProjects(ps => [...ps, p]);
+    commitMutation('new project', ps => [...ps, p]);
     setActiveProjectId(p.id);
     setCollapsed(new Set());
     setSelected(null);
     setSelectedSet(new Set());
-    setDirty(true);
     setShowWelcome(false);
-  }, []);
+  }, [commitMutation]);
 
   const duplicateProject = useCallback((id) => {
     const p = projects.find(x => x.id === id);
@@ -1316,24 +1388,22 @@ function App(){
       deps: (t.deps || []).map(d => idMap.get(d) ?? d),
     }));
     const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks };
-    setProjects(ps => [...ps, np]);
+    commitMutation('duplicate project', ps => [...ps, np]);
     setActiveProjectId(np.id);
-    setDirty(true);
-  }, [projects]);
+  }, [projects, commitMutation]);
 
   const deleteProject = useCallback((id) => {
     const p = projects.find(x => x.id === id);
     if (!p) return;
-    if (!window.confirm(`Delete project "${p.name}" and all its tasks? This cannot be undone.`)) return;
-    setProjects(ps => {
+    if (!window.confirm(`Delete project "${p.name}" and all its tasks?`)) return;
+    let nextActive = activeProjectId;
+    commitMutation('delete project', ps => {
       const next = ps.filter(x => x.id !== id);
-      if (activeProjectId === id) {
-        setActiveProjectId(next[0]?.id ?? null);
-      }
+      if (activeProjectId === id) nextActive = next[0]?.id ?? null;
       return next;
     });
-    setDirty(true);
-  }, [projects, activeProjectId]);
+    if (nextActive !== activeProjectId) setActiveProjectId(nextActive);
+  }, [projects, activeProjectId, commitMutation]);
 
   const switchProject = useCallback((id) => {
     setActiveProjectId(id);
@@ -1353,7 +1423,82 @@ function App(){
     setCollapsed(new Set());
     setSelected(null);
     setSelectedSet(new Set());
+    resetUndoHistory();
+    try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
+  }, [resetUndoHistory]);
+
+  // ── Autosave / crash recovery ──
+  const AUTOSAVE_KEY = 'timeline-autosave-v1';
+  const [autosaveOffer, setAutosaveOffer] = useState(null);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(AUTOSAVE_KEY);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (!obj || !obj.payload) return;
+      setAutosaveOffer({ savedAt: obj.savedAt || Date.now(), fileName: obj.fileName || null, payload: obj.payload });
+    } catch(_){}
   }, []);
+
+  const restoreAutosave = useCallback(() => {
+    if (!autosaveOffer) return;
+    try {
+      const ws = parseWorkspace(autosaveOffer.payload);
+      hydratedRef.current = true;
+      setProjects(ws.projects);
+      const aid = ws.activeProjectId && ws.projects.find(p => p.id === ws.activeProjectId)
+        ? ws.activeProjectId
+        : (ws.projects[0]?.id ?? null);
+      setActiveProjectId(aid);
+      setFileHandle(null);
+      setShowWelcome(false);
+      setDirty(true);
+      setCollapsed(new Set());
+      setSelected(null);
+      setSelectedSet(new Set());
+      resetUndoHistory();
+      setAutosaveOffer(null);
+    } catch(e) {
+      alert('Could not restore autosave: ' + (e?.message || e));
+      try { localStorage.removeItem(AUTOSAVE_KEY); } catch(_){}
+      setAutosaveOffer(null);
+    }
+  }, [autosaveOffer, resetUndoHistory]);
+
+  const discardAutosave = useCallback(() => {
+    try { localStorage.removeItem(AUTOSAVE_KEY); } catch(_){}
+    setAutosaveOffer(null);
+  }, []);
+
+  useEffect(() => {
+    if (showWelcome) return;
+    if (!dirty) return;
+    if (!projects || projects.length === 0) return;
+    const tid = setTimeout(() => {
+      try {
+        const payload = serializeWorkspace(projects, activeProjectId);
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
+          savedAt: Date.now(),
+          fileName: fileHandle?.name || null,
+          payload,
+        }));
+      } catch(_){}
+    }, 500);
+    return () => clearTimeout(tid);
+  }, [projects, activeProjectId, showWelcome, fileHandle, dirty]);
+
+  const formatAgo = (ts) => {
+    const d = Math.max(0, Date.now() - ts);
+    const s = Math.floor(d/1000);
+    if (s < 60) return s + 's ago';
+    const m = Math.floor(s/60);
+    if (m < 60) return m + 'm ago';
+    const h = Math.floor(m/60);
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h/24) + 'd ago';
+  };
 
   // ── beforeunload warning ──
   useEffect(() => {
@@ -1364,12 +1509,26 @@ function App(){
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  // ── Global save shortcut (works even when input focused, before main key handler) ──
+  // ── Global save / undo / redo shortcuts (work even when input focused) ──
+  const undoRef = useRef(null); useEffect(()=>{ undoRef.current = undo; }, [undo]);
+  const redoRef = useRef(null); useEffect(()=>{ redoRef.current = redo; }, [redo]);
   useEffect(() => {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         saveWorkspaceRef.current?.(e.shiftKey);
+        return;
+      }
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        undoRef.current?.();
+        return;
+      }
+      if (mod && ((e.shiftKey && (e.key === 'z' || e.key === 'Z')) || (e.key === 'y' || e.key === 'Y'))) {
+        e.preventDefault();
+        redoRef.current?.();
+        return;
       }
     };
     window.addEventListener('keydown', onKey);
@@ -1537,14 +1696,21 @@ function App(){
     if(!row||row.isProject||row.isOwnerGroup) return;
     const dayIdx=Math.max(0,Math.min(axis.days.length-1,Math.floor(lx/dayW)));
     const startDay=axis.days[dayIdx];
+    let projForCreate = row.project || null;
+    if (projForCreate == null) {
+      for (let i = tasks.length - 1; i >= 0; i--) {
+        const tt = tasks[i];
+        if (tt.kind !== 'project' && tt.project) { projForCreate = tt.project; break; }
+      }
+    }
     e.preventDefault();
     setDrag({kind:'create',startClientX:e.clientX,startClientY:e.clientY,
       gridLeft:rect.left,gridScrollLeft:sl,
       rowIdx,startDay,endDay:startDay,
-      parentId:row.parent||null,project:row.project||'WORK',
+      parentId:row.parent||null,project:projForCreate,
       currentClientX:e.clientX,currentClientY:e.clientY});
     setSelected(null); setSelectedSet(new Set());
-  },[rows,axis.days,dayW,rowH]);
+  },[rows,axis.days,dayW,rowH,tasks]);
 
   // ── Main drag effect ──
   useEffect(()=>{
@@ -1773,11 +1939,23 @@ function App(){
       }
       if(/^[0-9]$/.test(e.key)&&!mod&&!t.milestone&&t.kind!=='project'){e.preventDefault();setDurationBuf(b=>(b+e.key).slice(0,3));return;}
       if((e.key==='Backspace'||e.key==='Delete')&&durationBuf){e.preventDefault();setDurationBuf(b=>b.slice(0,-1));return;}
-      if(e.key==='Delete'||e.key==='Backspace') updateTasks(ts=>ts.map(tt=>tt.id===selected?{...tt,deps:[]}:tt));
+      if(mod&&(e.key==='Delete'||e.key==='Backspace')){
+        e.preventDefault();
+        const ids = selectedSet.size>1 ? new Set(selectedSet) : new Set([selected]);
+        updateTasks(ts=>ts.map(tt=>ids.has(tt.id)?{...tt,deps:[]}:tt));
+        return;
+      }
+      if(e.key==='Delete'||e.key==='Backspace'){
+        e.preventDefault();
+        const ids = selectedSet.size>1 ? new Set(selectedSet) : new Set([selected]);
+        updateTasks(ts=>ts.filter(tt=>!ids.has(tt.id)).map(tt=>tt.deps?.some(d=>ids.has(d))?{...tt,deps:tt.deps.filter(d=>!ids.has(d))}:tt));
+        setSelected(null); setSelectedSet(new Set());
+        return;
+      }
     };
     window.addEventListener('keydown',onKey);
     return ()=>window.removeEventListener('keydown',onKey);
-  },[selected,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks]);
+  },[selected,selectedSet,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks]);
 
   // Click-away for ctx menus and file menu
   useEffect(()=>{
@@ -1801,6 +1979,18 @@ function App(){
             <div className="welcome-logo">TL</div>
             <div className="welcome-title">Timeline</div>
             <div className="welcome-subtitle">Plan projects on a timeline. Save them anywhere.</div>
+            {autosaveOffer && (
+              <div style={{margin:'0 0 16px',padding:'10px 12px',background:'var(--accent-dim)',border:'1px solid var(--accent-border)',borderRadius:3,fontSize:12,color:'var(--t1)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                <div style={{flex:'1 1 200px',minWidth:0}}>
+                  <div style={{fontWeight:600}}>Unsaved work found</div>
+                  <div style={{color:'var(--t3)',fontSize:11,marginTop:2}}>
+                    Last edit {formatAgo(autosaveOffer.savedAt)}{autosaveOffer.fileName?` · ${autosaveOffer.fileName}`:''}
+                  </div>
+                </div>
+                <button className="welcome-btn" style={{padding:'6px 12px',fontSize:11}} onClick={restoreAutosave}>Restore</button>
+                <button className="welcome-btn" style={{padding:'6px 12px',fontSize:11}} onClick={discardAutosave}>Discard</button>
+              </div>
+            )}
             <div className="welcome-actions">
               <button className="welcome-btn primary" onClick={()=>createNewProject()}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -1851,6 +2041,17 @@ function App(){
               </div>
               <div className="file-menu-item" onClick={()=>{saveWorkspace(true);setFileMenuOpen(false);}}>
                 Save as…<span className="kbd">Ctrl ⇧ S</span>
+              </div>
+              <div className="file-menu-sep"/>
+              <div className={`file-menu-item${undoStackRef.current.length===0?' disabled':''}`}
+                   style={undoStackRef.current.length===0?{opacity:.4,pointerEvents:'none'}:null}
+                   onClick={()=>{undo();setFileMenuOpen(false);}}>
+                Undo<span className="kbd">Ctrl Z</span>
+              </div>
+              <div className={`file-menu-item${redoStackRef.current.length===0?' disabled':''}`}
+                   style={redoStackRef.current.length===0?{opacity:.4,pointerEvents:'none'}:null}
+                   onClick={()=>{redo();setFileMenuOpen(false);}}>
+                Redo<span className="kbd">Ctrl ⇧ Z</span>
               </div>
               <div className="file-menu-sep"/>
               <div className="file-menu-item" onClick={()=>{setShowWelcome(true);setFileMenuOpen(false);}}>Home screen</div>
@@ -1916,7 +2117,18 @@ function App(){
                 onClick={()=>{
                   if(!activeProject) return;
                   const nid='task-'+Date.now().toString(36);
-                  const nt={id:nid,parent:null,project:'WORK',title:'New task',start:todayStr,end:addDays(todayStr,2),priority:'p3',progress:0,color:'#a5b4fc'};
+                  let proj = null;
+                  if (selected) {
+                    const st = tasks.find(t => t.id === selected);
+                    if (st && st.kind !== 'project' && st.project) proj = st.project;
+                  }
+                  if (proj == null) {
+                    for (let i = tasks.length - 1; i >= 0; i--) {
+                      const t = tasks[i];
+                      if (t.kind !== 'project' && t.project) { proj = t.project; break; }
+                    }
+                  }
+                  const nt={id:nid,parent:null,project:proj,title:'New task',start:todayStr,end:addDays(todayStr,2),priority:'p3',progress:0,color:'#a5b4fc'};
                   updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
                 }}>+ New task</button>
       </div>
