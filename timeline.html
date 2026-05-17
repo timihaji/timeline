@@ -481,6 +481,64 @@
   .empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t4);font-size:13px;gap:12px;pointer-events:none}
   .empty-state h3{font-size:14px;font-weight:600;color:var(--t2);letter-spacing:.02em}
 
+  /* Recurring task instance icon */
+  .recur-icon{position:absolute;top:1px;right:1px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.32);border-radius:50%;pointer-events:none;z-index:5;font-weight:700;line-height:1}
+  .bar.recur-instance{cursor:help}
+
+  /* Recurrence row in inspector */
+  .ins-recur-row{display:flex;align-items:center;gap:6px;font:10.5px var(--font);color:var(--t3);background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;padding:5px 8px;margin-top:4px}
+  .ins-recur-row .recur-label{color:var(--t1)}
+  .ins-recur-row .recur-edit{margin-left:auto;background:transparent;border:1px solid var(--border-s);color:var(--accent-2);font:10px var(--font);padding:1px 7px;border-radius:2px;cursor:pointer}
+  .ins-recur-row .recur-edit:hover{background:var(--accent-dim);border-color:var(--accent-border)}
+  .ins-recur-row .recur-clear{background:transparent;border:none;color:var(--p3);cursor:pointer;font:10px var(--font);padding:0 4px}
+  .ins-recur-row .recur-clear:hover{color:var(--p1)}
+
+  /* Recurrence editor popover */
+  .recur-popover{position:fixed;background:var(--surface);border:1px solid var(--accent-border);border-radius:3px;box-shadow:var(--shadow-lg);padding:10px;z-index:700;min-width:240px;font:11.5px var(--font);color:var(--t2)}
+  .recur-popover .rp-title{font:10px var(--mono);color:var(--t4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+  .recur-popover .rp-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .recur-popover .rp-row label{color:var(--t3);font-size:10.5px;min-width:64px}
+  .recur-popover .rp-row select,.recur-popover .rp-row input{flex:1;background:var(--surface-2);border:1px solid var(--border-s);color:var(--t1);font:11px var(--font);padding:3px 5px;border-radius:2px;outline:none}
+  .recur-popover .rp-acts{display:flex;gap:6px;margin-top:8px;justify-content:flex-end}
+  .recur-popover .rp-btn{font:11px var(--font);padding:4px 10px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface-2);color:var(--t1);cursor:pointer}
+  .recur-popover .rp-btn.primary{background:var(--accent);border-color:var(--accent-2);color:#021412;font-weight:600}
+  .recur-popover .rp-btn:hover{background:var(--surface-3)}
+  .recur-popover .rp-btn.primary:hover{background:var(--accent-2)}
+
+  /* Template modal */
+  .tmpl-overlay{position:fixed;inset:0;background:rgba(2,12,10,.65);z-index:1100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+  .tmpl-modal{background:var(--surface);border:1px solid var(--border-s);border-radius:6px;box-shadow:var(--shadow-lg);min-width:420px;max-width:540px;max-height:80vh;display:flex;flex-direction:column;font:12px var(--font);color:var(--t1)}
+  .tmpl-modal .tm-hdr{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+  .tmpl-modal .tm-hdr h3{font-size:14px;font-weight:600;color:var(--t1);flex:1}
+  .tmpl-modal .tm-close{background:transparent;border:none;color:var(--t3);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
+  .tmpl-modal .tm-close:hover{color:var(--t1)}
+  .tmpl-modal .tm-body{flex:1;overflow-y:auto;padding:14px 18px}
+  .tmpl-modal .tm-foot{padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .tmpl-modal .tm-btn{font:11.5px var(--font);padding:6px 14px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface-2);color:var(--t1);cursor:pointer}
+  .tmpl-modal .tm-btn.primary{background:var(--accent);border-color:var(--accent-2);color:#021412;font-weight:600}
+  .tmpl-modal .tm-btn:hover{background:var(--surface-3)}
+  .tmpl-modal .tm-btn.primary:hover{background:var(--accent-2)}
+  .tmpl-modal .tm-btn.danger{color:var(--p1);border-color:rgba(239,68,68,.3)}
+  .tmpl-modal .tm-btn.danger:hover{background:rgba(239,68,68,.1)}
+  .tmpl-list{display:flex;flex-direction:column;gap:6px}
+  .tmpl-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:3px;cursor:pointer}
+  .tmpl-item:hover{background:var(--surface-3);border-color:var(--accent-border)}
+  .tmpl-item.no-hover{cursor:default}
+  .tmpl-item.no-hover:hover{background:var(--surface-2);border-color:var(--border-s)}
+  .tmpl-item-info{flex:1;min-width:0}
+  .tmpl-item-name{font-size:12.5px;font-weight:600;color:var(--t1);margin-bottom:2px}
+  .tmpl-item-meta{font:10px var(--mono);color:var(--t4)}
+  .tmpl-empty{padding:32px 18px;text-align:center;color:var(--t4);font-size:12px;font-style:italic}
+  .tmpl-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+  .tmpl-field label{font:10px var(--mono);color:var(--t4);letter-spacing:.06em;text-transform:uppercase}
+  .tmpl-field input{background:var(--surface-2);border:1px solid var(--border-s);color:var(--t1);font:12px var(--font);padding:6px 8px;border-radius:2px;outline:none}
+  .tmpl-field input:focus{border-color:var(--accent-border)}
+
+  /* File menu submenu (Templates) */
+  .file-menu-item.has-sub{position:relative}
+  .file-menu-item.has-sub::after{content:'▸';margin-left:auto;font-size:10px;color:var(--t4)}
+  .file-menu-sub{position:absolute;top:-4px;left:100%;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;min-width:240px;font:11.5px var(--font);color:var(--t2)}
+
   /* Welcome / first launch overlay */
   .welcome-overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center,#0b201c 0%,#040c0a 80%);display:flex;align-items:center;justify-content:center;z-index:1000;font-family:var(--font)}
   .welcome-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:48px 64px;background:linear-gradient(180deg,rgba(20,40,36,.65),rgba(8,20,18,.85));border:1px solid var(--border-s);border-radius:8px;box-shadow:var(--shadow-lg);min-width:380px;backdrop-filter:blur(6px)}
@@ -1410,6 +1468,187 @@ function formatCost(n){
   return '$' + Math.round(n).toLocaleString();
 }
 
+// ── Date helpers for recurrence ──
+// Add n months to a ymd date. Preserves day-of-month where possible; if the
+// target month is shorter, snaps to the last day of that month (e.g. Jan 31 + 1mo = Feb 28).
+function addMonths(s, n){
+  const d = parseYmd(s);
+  const targetMonth = d.getMonth() + n;
+  const targetY = d.getFullYear() + Math.floor(targetMonth / 12);
+  const targetM = ((targetMonth % 12) + 12) % 12;
+  const dayOrig = d.getDate();
+  // Last day of target month
+  const lastDay = new Date(targetY, targetM + 1, 0).getDate();
+  const day = Math.min(dayOrig, lastDay);
+  const nd = new Date(targetY, targetM, day);
+  return ymd(nd);
+}
+
+// ── Recurring task expansion ──
+// For each task with task.recurrence != null, generate count-1 additional virtual
+// instances (recurrenceParent: sourceId, recurrence: null, derived id/title).
+// Virtual instances inherit all other fields; deps are stripped on instances so
+// the cascade/scheduler doesn't try to reshape them.
+function expandRecurring(tasks, calendar){
+  const out = [];
+  for (const t of tasks){
+    out.push(t);
+    const r = t.recurrence;
+    if (!r || !r.pattern || !r.count || r.count < 2) continue;
+    const interval = Math.max(1, r.interval || 1);
+    const count = Math.max(1, Math.floor(r.count));
+    for (let n = 1; n < count; n++){
+      let nStart, nEnd;
+      if (r.pattern === 'daily'){
+        nStart = addDays(t.start, n * interval);
+        nEnd   = addDays(t.end,   n * interval);
+      } else if (r.pattern === 'weekly'){
+        nStart = addDays(t.start, n * interval * 7);
+        nEnd   = addDays(t.end,   n * interval * 7);
+      } else if (r.pattern === 'monthly'){
+        nStart = addMonths(t.start, n * interval);
+        nEnd   = addMonths(t.end,   n * interval);
+      } else {
+        continue;
+      }
+      out.push({
+        ...t,
+        id: `${t.id}-occ-${n}`,
+        title: `${t.title} (${n+1}/${count})`,
+        start: nStart,
+        end: nEnd,
+        recurrenceParent: t.id,
+        recurrence: null,
+        baselineEnd: undefined,
+        deps: [],
+      });
+    }
+  }
+  return out;
+}
+
+// ── Project template helpers (localStorage-backed, cross-workspace) ──
+const TEMPLATES_KEY = 'timeline-templates-v1';
+
+function loadTemplates(){
+  try {
+    const raw = localStorage.getItem(TEMPLATES_KEY);
+    if (!raw) return [];
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.templates)) return [];
+    return obj.templates;
+  } catch(_){
+    return [];
+  }
+}
+
+function saveTemplates(arr){
+  try {
+    localStorage.setItem(TEMPLATES_KEY, JSON.stringify({ templates: arr }));
+    return true;
+  } catch(e){
+    return false;
+  }
+}
+
+// Sanitize a project record into a template. Strips volatile fields, replaces
+// IDs with stable index-based slugs (t1, t2, …) and re-anchors all task dates
+// so the earliest task starts on a fixed reference day (2000-01-01). On
+// instantiation the user picks a start date and we re-offset forward.
+const TEMPLATE_ANCHOR = '2000-01-01';
+
+function sanitizeForTemplate(project){
+  if (!project) return null;
+  const tasks = Array.isArray(project.tasks) ? project.tasks : [];
+  // Find earliest start
+  let earliest = null;
+  for (const t of tasks){
+    if (!t.start) continue;
+    if (earliest == null || t.start < earliest) earliest = t.start;
+  }
+  const anchor = earliest || TEMPLATE_ANCHOR;
+  const offset = diffDays(anchor, TEMPLATE_ANCHOR); // days to add
+  // Build id->slug map (project tasks get tN, projects pN)
+  const idMap = new Map();
+  let pCnt = 1, tCnt = 1;
+  for (const t of tasks){
+    if (t.kind === 'project') idMap.set(t.id, 'p' + (pCnt++));
+    else idMap.set(t.id, 't' + (tCnt++));
+  }
+  const slugTasks = tasks.map(t => {
+    const newId = idMap.get(t.id) || t.id;
+    const newParent = t.parent ? (idMap.get(t.parent) || null) : null;
+    const newDeps = (t.deps || []).map(d => {
+      const nd = normalizeDep(d);
+      if (!nd) return null;
+      const mapped = idMap.get(nd.id);
+      if (!mapped) return null; // skip dangling
+      return {...nd, id: mapped};
+    }).filter(Boolean);
+    // Re-anchor dates
+    const newStart = t.start ? addDays(t.start, offset) : t.start;
+    const newEnd   = t.end   ? addDays(t.end,   offset) : t.end;
+    const clean = {...t, id: newId, parent: newParent, deps: newDeps, start: newStart, end: newEnd};
+    // Strip volatile/derived fields
+    delete clean.baselineEnd;
+    return clean;
+  });
+  return {
+    name: project.name || 'Untitled',
+    color: project.color || '#7c3aed',
+    tasks: slugTasks,
+    owners: (project.owners || []).map(o => ({...o})),
+    calendar: project.calendar ? {
+      workingDays: [...(project.calendar.workingDays || DEFAULT_CALENDAR.workingDays)],
+      holidays: [...(project.calendar.holidays || [])],
+    } : {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]},
+    autoSchedule: project.autoSchedule || 'cascade',
+  };
+}
+
+// Instantiate: clone sanitized template, regenerate IDs, offset dates from
+// TEMPLATE_ANCHOR forward to user-picked startDate.
+function instantiateTemplate(template, name, startDate){
+  const src = template.project;
+  if (!src) return null;
+  const tasks = Array.isArray(src.tasks) ? src.tasks : [];
+  const offset = diffDays(TEMPLATE_ANCHOR, startDate);
+  // Build slug -> fresh id map
+  const idMap = new Map();
+  for (const t of tasks){
+    const prefix = t.kind === 'project' ? 'p' : 't';
+    idMap.set(t.id, prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+  }
+  const newTasks = tasks.map(t => {
+    const newId = idMap.get(t.id) || t.id;
+    const newParent = t.parent ? (idMap.get(t.parent) || null) : null;
+    const newDeps = (t.deps || []).map(d => {
+      const nd = normalizeDep(d);
+      if (!nd) return null;
+      const mapped = idMap.get(nd.id);
+      if (!mapped) return null;
+      return {...nd, id: mapped};
+    }).filter(Boolean);
+    const newStart = t.start ? addDays(t.start, offset) : t.start;
+    const newEnd   = t.end   ? addDays(t.end,   offset) : t.end;
+    return {...t, id: newId, parent: newParent, deps: newDeps, start: newStart, end: newEnd};
+  });
+  return {
+    id: genId('proj-'),
+    name: name || src.name || 'New project',
+    color: src.color || '#7c3aed',
+    created: todayStr,
+    baseline: null,
+    tasks: newTasks,
+    owners: (src.owners || []).map(o => ({...o})),
+    calendar: src.calendar ? {
+      workingDays: [...(src.calendar.workingDays || DEFAULT_CALENDAR.workingDays)],
+      holidays: [...(src.calendar.holidays || [])],
+    } : {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]},
+    autoSchedule: src.autoSchedule || 'cascade',
+  };
+}
+
 Object.assign(window,{
   DAY_MS,TODAY,todayStr,
   ymd,parseYmd,addDays,diffDays,fmtShort,isWeekend,
@@ -1423,6 +1662,8 @@ Object.assign(window,{
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
   CURRENT_VERSION, MIGRATIONS, migrateWorkspace,
   computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
+  addMonths, expandRecurring,
+  loadTemplates, saveTemplates, sanitizeForTemplate, instantiateTemplate,
 });
 </script>
 
@@ -1612,6 +1853,8 @@ const {
   buildArrowPath, shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
   computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
+  addMonths, expandRecurring,
+  loadTemplates, saveTemplates, sanitizeForTemplate, instantiateTemplate,
 } = window;
 
 const DEP_TYPES = ['FS','SS','FF','SF'];
@@ -1621,6 +1864,38 @@ const nextDepType = t => DEP_TYPES[(DEP_TYPES.indexOf(t||'FS') + 1) % DEP_TYPES.
 const COLOR_PRESETS = ['#a5b4fc','#7c3aed','#f472b6','#ef4444','#f59e0b','#fcd34d','#86efac','#14b8a6'];
 
 const FSA_AVAILABLE = typeof window.showOpenFilePicker === 'function';
+
+// Small modal: instantiate a template — collects name + start date.
+function TemplateInstantiateModal({ template, onCancel, onCreate }){
+  const [name, setName] = useState(template?.name || 'New project');
+  const [startDate, setStartDate] = useState(todayStr);
+  const canCreate = name.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(startDate);
+  return (
+    <div className="tmpl-overlay" onMouseDown={onCancel}>
+      <div className="tmpl-modal" onMouseDown={e=>e.stopPropagation()} style={{minWidth:380}}>
+        <div className="tm-hdr"><h3>Create from "{template?.name}"</h3><button className="tm-close" onClick={onCancel}>×</button></div>
+        <div className="tm-body">
+          <div className="tmpl-field">
+            <label>Project name</label>
+            <input autoFocus value={name} onChange={e=>setName(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter' && canCreate) onCreate(name.trim(), startDate); }}/>
+          </div>
+          <div className="tmpl-field">
+            <label>Start date</label>
+            <input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)}/>
+          </div>
+          <div style={{fontSize:11,color:'var(--t4)',marginTop:4}}>
+            {(template?.project?.tasks||[]).length} tasks · all dates offset from this start.
+          </div>
+        </div>
+        <div className="tm-foot">
+          <button className="tm-btn" onClick={onCancel}>Cancel</button>
+          <button className="tm-btn primary" disabled={!canCreate} onClick={()=>onCreate(name.trim(), startDate)}>Create project</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function App(){
   const tweakRes = window.useTweaks ? window.useTweaks(window.__TWEAK_DEFAULTS) : [window.__TWEAK_DEFAULTS,()=>{}];
@@ -1655,6 +1930,25 @@ function App(){
   const [bulkPicker,  setBulkPicker]  = useState(null);
   // Inspector disclosure state (per-task) — uses session-local Set
   const [insOpen,     setInsOpen]     = useState({notes:false, links:false, custom:false});
+
+  // ── Recurrence editor popover: {taskId, draft:{pattern,interval,count}}
+  const [recurEditor, setRecurEditor] = useState(null);
+  // ── Templates ──
+  const [templates,   setTemplates]   = useState(() => loadTemplates());
+  // ── Template modal: 'pick' | 'manage' | {kind:'instantiate', template} | null
+  const [tmplModal,   setTmplModal]   = useState(null);
+  // ── File menu Templates submenu
+  const [fileTmplSubOpen, setFileTmplSubOpen] = useState(false);
+
+  const refreshTemplates = useCallback(() => {
+    setTemplates(loadTemplates());
+  }, []);
+
+  // Persist templates to localStorage and re-sync state.
+  const persistTemplates = useCallback((arr) => {
+    saveTemplates(arr);
+    setTemplates(arr);
+  }, []);
 
   // ── Derived: active project ──
   const activeProject = useMemo(
@@ -1878,6 +2172,117 @@ function App(){
     try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
   }, [resetUndoHistory]);
 
+  // ── Templates ──
+  const saveActiveProjectAsTemplate = useCallback(() => {
+    if (!activeProject) { alert('Open or select a project first.'); return; }
+    const name = window.prompt('Template name:', activeProject.name || 'Template');
+    if (!name || !name.trim()) return;
+    const sanitized = sanitizeForTemplate(activeProject);
+    if (!sanitized) return;
+    const entry = {
+      id: 'tmpl-' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+      name: name.trim(),
+      savedAt: Date.now(),
+      project: sanitized,
+    };
+    const next = [...templates, entry];
+    persistTemplates(next);
+  }, [activeProject, templates, persistTemplates]);
+
+  const createProjectFromTemplate = useCallback((template, name, startDate) => {
+    const proj = instantiateTemplate(template, name, startDate);
+    if (!proj) return;
+    commitMutation('new project from template', ps => [...ps, proj]);
+    setActiveProjectId(proj.id);
+    setCollapsed(new Set());
+    setSelected(null);
+    setSelectedSet(new Set());
+    setShowWelcome(false);
+  }, [commitMutation]);
+
+  const deleteTemplate = useCallback((id) => {
+    const t = templates.find(x => x.id === id);
+    if (!t) return;
+    if (!window.confirm(`Delete template "${t.name}"?`)) return;
+    persistTemplates(templates.filter(x => x.id !== id));
+  }, [templates, persistTemplates]);
+
+  // ── Recurrence on a task ──
+  const setRecurrence = useCallback((taskId, recurrence) => {
+    updateTasks(ts => ts.map(t => {
+      if (t.id !== taskId) return t;
+      if (recurrence == null) {
+        const next = {...t};
+        delete next.recurrence;
+        return next;
+      }
+      return {...t, recurrence};
+    }));
+  }, [updateTasks]);
+
+  // ── Template modal renderer (shared between welcome + main app) ──
+  const renderTemplateModal = () => {
+    if (!tmplModal) return null;
+    const close = () => setTmplModal(null);
+    const fmtDate = (ts) => { try { return new Date(ts).toLocaleString(); } catch(_) { return ''; } };
+
+    if (tmplModal === 'pick') {
+      return (
+        <div className="tmpl-overlay" onMouseDown={close}>
+          <div className="tmpl-modal" onMouseDown={e=>e.stopPropagation()}>
+            <div className="tm-hdr"><h3>New project from template</h3><button className="tm-close" onClick={close}>×</button></div>
+            <div className="tm-body">
+              {templates.length === 0 && <div className="tmpl-empty">No saved templates yet.</div>}
+              <div className="tmpl-list">
+                {templates.map(t => (
+                  <div key={t.id} className="tmpl-item" onClick={()=>setTmplModal({kind:'instantiate', template:t})}>
+                    <div className="tmpl-item-info">
+                      <div className="tmpl-item-name">{t.name}</div>
+                      <div className="tmpl-item-meta">{(t.project?.tasks||[]).length} tasks · saved {fmtDate(t.savedAt)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="tm-foot"><button className="tm-btn" onClick={close}>Cancel</button></div>
+          </div>
+        </div>
+      );
+    }
+
+    if (tmplModal === 'manage') {
+      return (
+        <div className="tmpl-overlay" onMouseDown={close}>
+          <div className="tmpl-modal" onMouseDown={e=>e.stopPropagation()}>
+            <div className="tm-hdr"><h3>Manage templates</h3><button className="tm-close" onClick={close}>×</button></div>
+            <div className="tm-body">
+              {templates.length === 0 && <div className="tmpl-empty">No saved templates yet.</div>}
+              <div className="tmpl-list">
+                {templates.map(t => (
+                  <div key={t.id} className="tmpl-item no-hover">
+                    <div className="tmpl-item-info">
+                      <div className="tmpl-item-name">{t.name}</div>
+                      <div className="tmpl-item-meta">{(t.project?.tasks||[]).length} tasks · saved {fmtDate(t.savedAt)}</div>
+                    </div>
+                    <button className="tm-btn danger" onClick={()=>deleteTemplate(t.id)}>Delete</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="tm-foot"><button className="tm-btn" onClick={close}>Done</button></div>
+          </div>
+        </div>
+      );
+    }
+
+    if (tmplModal && tmplModal.kind === 'instantiate') {
+      return <TemplateInstantiateModal template={tmplModal.template}
+        onCancel={close}
+        onCreate={(name, startDate)=>{ createProjectFromTemplate(tmplModal.template, name, startDate); close(); }}/>;
+    }
+    return null;
+  };
+
   // ── Autosave / crash recovery ──
   const AUTOSAVE_KEY = 'timeline-autosave-v1';
   const [autosaveOffer, setAutosaveOffer] = useState(null);
@@ -2001,14 +2406,18 @@ function App(){
   const xForDay = useCallback(s=>diffDays(axis.start,s)*dayW,[axis.start,dayW]);
 
   // ── Derived analysis ──
-  const rows      = useMemo(()=>buildRows(tasks,collapsed,groupBy),[tasks,collapsed,groupBy]);
-  const critical  = useMemo(()=>computeCriticalPath(tasks,calendar),[tasks,calendar]);
-  const atRisk    = useMemo(()=>computeAtRisk(tasks),[tasks]);
-  const floatMap  = useMemo(()=>showFloat?computeFloat(tasks,calendar):new Map(),[tasks,showFloat,calendar]);
-  const conflicts = useMemo(()=>showConflicts?detectConflicts(tasks):new Set(),[tasks,showConflicts]);
-  const wbsMap    = useMemo(()=>computeWbsMap(tasks),[tasks]);
+  // Expand recurring tasks into virtual instances for rendering + analysis.
+  // Source task fields like deps stay on the source only; instances inherit deps:[]
+  // so the scheduler doesn't try to reshape them.
+  const expandedTasks = useMemo(()=>expandRecurring(tasks, calendar),[tasks, calendar]);
+  const rows      = useMemo(()=>buildRows(expandedTasks,collapsed,groupBy),[expandedTasks,collapsed,groupBy]);
+  const critical  = useMemo(()=>computeCriticalPath(expandedTasks,calendar),[expandedTasks,calendar]);
+  const atRisk    = useMemo(()=>computeAtRisk(expandedTasks),[expandedTasks]);
+  const floatMap  = useMemo(()=>showFloat?computeFloat(expandedTasks,calendar):new Map(),[expandedTasks,showFloat,calendar]);
+  const conflicts = useMemo(()=>showConflicts?detectConflicts(expandedTasks):new Set(),[expandedTasks,showConflicts]);
+  const wbsMap    = useMemo(()=>computeWbsMap(expandedTasks),[expandedTasks]);
   const owners    = activeProject?.owners ?? [];
-  const costRoll  = useMemo(()=>computeCostRollup(tasks, owners),[tasks, owners]);
+  const costRoll  = useMemo(()=>computeCostRollup(expandedTasks, owners),[expandedTasks, owners]);
 
   const hoverChain = useMemo(()=>{
     if(!hoveredBarId||focusChain) return null;
@@ -2084,6 +2493,8 @@ function App(){
   // ── Drag begin ──
   const beginBarDrag = useCallback((e,t,kind)=>{
     e.preventDefault(); e.stopPropagation();
+    // Recurring instances are not individually editable — ignore drag attempts.
+    if (t.recurrenceParent){ return; }
     const rect=gridScrollRef.current.getBoundingClientRect();
     const inGroup=selectedSet.has(t.id)&&selectedSet.size>1;
 
@@ -2114,6 +2525,7 @@ function App(){
 
   const beginDepDrag = useCallback((e,t)=>{
     e.preventDefault(); e.stopPropagation();
+    if (t.recurrenceParent){ return; }
     const rect=gridScrollRef.current.getBoundingClientRect();
     setDrag({id:t.id,kind:'dep',startClientX:e.clientX,startClientY:e.clientY,
       gridLeft:rect.left,gridTop:rect.top,
@@ -2123,6 +2535,7 @@ function App(){
 
   const beginProgDrag = useCallback((e,t)=>{
     e.preventDefault(); e.stopPropagation();
+    if (t.recurrenceParent){ return; }
     const rect=gridScrollRef.current.getBoundingClientRect();
     const barX=diffDays(axis.start,t.start)*dayW, barW=(diffDays(t.start,t.end)+1)*dayW-2;
     setDrag({id:t.id,kind:'prog',startClientX:e.clientX,startClientY:e.clientY,
@@ -2438,8 +2851,9 @@ function App(){
   useEffect(()=>{
     const onKey=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);return; }
+      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);setRecurEditor(null);setTmplModal(null);return; }
       if(!selected)return;
+      // If selected is a recurring instance (no source-task match), ignore keyboard ops.
       const t=tasks.find(x=>x.id===selected); if(!t)return;
       const mod=e.metaKey||e.ctrlKey;
       if(mod&&(e.key==='s'||e.key==='S')) return; // handled by global effect
@@ -2530,11 +2944,18 @@ function App(){
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
                 Open sample project
               </button>
+              {templates.length > 0 && (
+                <button className="welcome-btn" onClick={()=>setTmplModal('pick')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
+                  New from template…
+                </button>
+              )}
             </div>
             {!FSA_AVAILABLE && <div className="welcome-warn">Saving requires Chrome or Edge — your browser cannot persist files.</div>}
             <div className="welcome-hint">Local app. Your data stays on your machine.</div>
           </div>
         </div>
+        {renderTemplateModal()}
         <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
       </Fragment>
     );
@@ -2567,6 +2988,31 @@ function App(){
               </div>
               <div className="file-menu-item" onClick={()=>{saveWorkspace(true);setFileMenuOpen(false);}}>
                 Save as…<span className="kbd">Ctrl ⇧ S</span>
+              </div>
+              <div className="file-menu-sep"/>
+              <div className="file-menu-item has-sub"
+                onMouseEnter={()=>setFileTmplSubOpen(true)}
+                onMouseLeave={()=>setFileTmplSubOpen(false)}>
+                Templates
+                {fileTmplSubOpen && (
+                  <div className="file-menu-sub" onMouseDown={e=>e.stopPropagation()}>
+                    <div className={`file-menu-item${!activeProject?' disabled':''}`}
+                      style={!activeProject?{opacity:.4,pointerEvents:'none'}:null}
+                      onClick={()=>{saveActiveProjectAsTemplate();setFileMenuOpen(false);setFileTmplSubOpen(false);}}>
+                      Save active project as template…
+                    </div>
+                    <div className={`file-menu-item${templates.length===0?' disabled':''}`}
+                      style={templates.length===0?{opacity:.4,pointerEvents:'none'}:null}
+                      onClick={()=>{setTmplModal('pick');setFileMenuOpen(false);setFileTmplSubOpen(false);}}>
+                      New project from template…
+                    </div>
+                    <div className={`file-menu-item${templates.length===0?' disabled':''}`}
+                      style={templates.length===0?{opacity:.4,pointerEvents:'none'}:null}
+                      onClick={()=>{setTmplModal('manage');setFileMenuOpen(false);setFileTmplSubOpen(false);}}>
+                      Manage templates…
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="file-menu-sep"/>
               <div className={`file-menu-item${undoStackRef.current.length===0?' disabled':''}`}
@@ -2751,16 +3197,19 @@ function App(){
               }
               const sel=selected===r.id, isRen=renaming?.id===r.id;
               const wbsCode = wbsMap.get(r.id);
+              const isRecurInst = !!r.recurrenceParent;
               return (
                 <div className={`task-row is-child${r.done?' done':''}${sel?' selected':''}${hoverRow===r.id?' hover':''}`} key={r.id}
+                  style={isRecurInst?{opacity:.6}:null}
                   onMouseEnter={()=>setHoverRow(r.id)} onMouseLeave={()=>setHoverRow(null)}
-                  onClick={()=>setSelected(r.id)} onDoubleClick={()=>setRenaming({id:r.id,value:r.title})}
-                  onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
-                  <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
+                  onClick={()=>setSelected(r.id)}
+                  onDoubleClick={()=>{ if(isRecurInst) return; setRenaming({id:r.id,value:r.title}); }}
+                  onContextMenu={e=>{e.preventDefault();if(isRecurInst)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                  <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();if(isRecurInst)return;updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
                   {wbsCode && <span className="wbs" title={`WBS ${wbsCode}`}>{wbsCode}</span>}
                   {isRen
                     ?<input className="row-rename" autoFocus value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
-                    :<span className="ttl">{r.title}</span>
+                    :<span className="ttl">{isRecurInst && <span style={{color:'var(--accent-2)',marginRight:4}}>↻</span>}{r.title}</span>
                   }
                   <span className="pri" title={`Priority ${r.priority}`}>
                     {[3,6,9].slice(0,r.priority==='p1'?3:r.priority==='p2'?2:1).map((h,i)=>(
@@ -2981,22 +3430,25 @@ function App(){
                   }
 
                   const durLabel = formatDuration(start, end, calendar);
+                  const isRecurInstance = !!r.recurrenceParent;
+                  const isRecurSource = !!r.recurrence;
                   return (
                     <div key={r.id}
-                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}`}
+                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}${isRecurInstance?' recur-instance':''}`}
                       data-bar-id={r.id}
                       style={{left:x+'px',top:top+'px',width:w+'px',background:`linear-gradient(180deg,${bg},${shade(bg,-.18)})`,border:`1px solid ${shade(bg,-.35)}`,'--bar-c':bg,'--bar-c-d':shade(bg,-.35),'--bar-c-l':shade(bg,.32)}}
                       onPointerDown={e=>{if(isRenaming)return;beginBarDrag(e,r,'move');}}
                       onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
                       onClick={e=>{e.stopPropagation();setSelected(r.id);}}
-                      onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
-                      onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
-                      title={isRenaming?'':`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${durLabel}${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}`}>
+                      onDoubleClick={e=>{if(isRecurInstance)return;e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
+                      onContextMenu={e=>{e.preventDefault();if(isRecurInstance)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
+                      title={isRenaming?'':(isRecurInstance?`${r.title} · recurring instance — edit the source task to change`:`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${durLabel}${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}${isRecurSource?' · ↻ recurring source':''}`)}>
                       {liveProgress>0&&<div className="bar-prog" style={{width:(liveProgress*100)+'%',background:`${shade(bg,-.45)}66`}}/>}
-                      {!r.done&&liveProgress>0&&liveProgress<.99&&(
+                      {!r.done&&liveProgress>0&&liveProgress<.99&&!isRecurInstance&&(
                         <div className="bar-prog-handle" style={{left:`calc(${Math.max(6,Math.min(94,liveProgress*100))}% - 1px)`}}
                           onPointerDown={e=>{e.stopPropagation();beginProgDrag(e,r);}}/>
                       )}
+                      {(isRecurInstance||isRecurSource)&&<div className="recur-icon" title={isRecurInstance?'Recurring instance — edit the source':'Recurring source'}>↻</div>}
                       {isRenaming
                         ?<input className="bar-rename" value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
                             onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
@@ -3007,9 +3459,9 @@ function App(){
                       {health&&!isRenaming&&<div className={`health-pip ${health}`} title={`Health: ${health}`}/>}
                       {atRisk.has(r.id)&&!r.done&&<div className="bar-risk-edge"/>}
                       {isConflict&&showConflicts&&<div className="conflict-dot" title="Owner double-booked">!</div>}
-                      <div className="bar-handle l" onPointerDown={e=>beginBarDrag(e,r,'l')}/>
-                      <div className="bar-handle r" onPointerDown={e=>beginBarDrag(e,r,'r')}/>
-                      <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)} title="Drag to link →"/>
+                      {!isRecurInstance && <div className="bar-handle l" onPointerDown={e=>beginBarDrag(e,r,'l')}/>}
+                      {!isRecurInstance && <div className="bar-handle r" onPointerDown={e=>beginBarDrag(e,r,'r')}/>}
+                      {!isRecurInstance && <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)} title="Drag to link →"/>}
                     </div>
                   );
                 })}
@@ -3061,6 +3513,9 @@ function App(){
     {selected&&(()=>{
       const i=rows.findIndex(r=>r.id===selected); if(i<0)return null;
       const r=rows[i]; if(r.isProject||r.isOwnerGroup||renaming?.id===r.id)return null;
+      // Recurring instances are not directly editable — they redirect users
+      // to the source task. Suppress the inspector entirely on instances.
+      if (r.recurrenceParent) return null;
       // The row from `rows` may be a stale snapshot from buildRows. Pull the live task by id.
       const taskLive = tasks.find(t=>t.id===r.id) || r;
       const live=livePreview(r); const start=live?live.start:r.start, end=live?live.end:r.end;
@@ -3203,6 +3658,27 @@ function App(){
               )}
             </div>
 
+            {/* Recurrence */}
+            {!r.milestone && r.kind !== 'project' && (
+              <div className="ins-field">
+                <span className="ins-field-lbl">Recurrence</span>
+                <div className="ins-recur-row">
+                  {taskLive.recurrence ? (
+                    <>
+                      <span className="recur-label">↻ Every {taskLive.recurrence.interval||1} {taskLive.recurrence.pattern}{(taskLive.recurrence.interval||1)>1?'s':''} × {taskLive.recurrence.count}</span>
+                      <button className="recur-edit" onClick={()=>setRecurEditor({taskId:r.id,draft:{...taskLive.recurrence}})}>Edit…</button>
+                      <button className="recur-clear" title="Clear recurrence" onClick={()=>setRecurrence(r.id, null)}>×</button>
+                    </>
+                  ) : (
+                    <>
+                      <span>One-off task</span>
+                      <button className="recur-edit" onClick={()=>setRecurEditor({taskId:r.id,draft:{pattern:'weekly',interval:1,count:4}})}>Make recurring…</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Notes (disclosure) */}
             <div>
               <div className={`ins-disclose${insOpen.notes?' open':''}`} onClick={()=>setInsOpen(o=>({...o,notes:!o.notes}))}>
@@ -3315,6 +3791,12 @@ function App(){
           <div className="ctx-hdr">{t.title}</div><div className="ctx-sep"/>
           <div className="ctx-item" onClick={()=>{splitTask(t.id);setCtxMenu(null);}}>Split task</div>
           <div className="ctx-item" onClick={()=>{toggleMilestone(t.id);setCtxMenu(null);}}>{t.milestone?'Unset milestone':'→ Milestone'}</div>
+          {t.kind!=='project' && !t.recurrence && (
+            <div className="ctx-item" onClick={()=>{setRecurEditor({taskId:t.id,draft:{pattern:'weekly',interval:1,count:4}});setCtxMenu(null);}}>Make recurring…</div>
+          )}
+          {t.kind!=='project' && t.recurrence && (
+            <div className="ctx-item" onClick={()=>{setRecurEditor({taskId:t.id,draft:{...t.recurrence}});setCtxMenu(null);}}>Edit recurrence…<span className="kbd">↻</span></div>
+          )}
           <div className="ctx-item" onClick={()=>{const cur = depList(t)[0]?.lag || 0; const v=window.prompt('Lag days for ALL incoming deps (negative = lead):',String(cur));if(v!==null){const n=parseInt(v,10);if(!isNaN(n))setLagOnIncoming(t.id,n);}setCtxMenu(null);}}>Set lag (all incoming)…<span className="kbd">{(()=>{const l=depList(t)[0]?.lag||0; return l?`${l>0?'+':''}${l}d`:'0d';})()}</span></div>
           <div className="ctx-item" onClick={()=>{toggleBlocking(t.id);setCtxMenu(null);}}>{t.blocking?'Unmark blocking':'Mark blocking'}</div>
           <div className="ctx-sep"/>
@@ -3403,6 +3885,56 @@ function App(){
         <button className="clear" onClick={()=>setFocusChain(null)}>clear</button>
       </div>
     )}
+
+    {/* Recurrence editor popover */}
+    {recurEditor&&(()=>{
+      const t = tasks.find(x => x.id === recurEditor.taskId);
+      if (!t) { return null; }
+      const draft = recurEditor.draft;
+      const close = () => setRecurEditor(null);
+      const apply = () => {
+        const pattern = draft.pattern || 'weekly';
+        const interval = Math.max(1, parseInt(draft.interval, 10) || 1);
+        const count = Math.max(1, parseInt(draft.count, 10) || 1);
+        setRecurrence(t.id, { pattern, interval, count });
+        close();
+      };
+      const cx = Math.min(window.innerWidth/2 - 120, window.innerWidth - 280);
+      const cy = Math.min(window.innerHeight/2 - 100, window.innerHeight - 240);
+      return (
+        <div className="tmpl-overlay" onMouseDown={close}>
+          <div className="recur-popover" style={{position:'relative',left:0,top:0}} onMouseDown={e=>e.stopPropagation()}>
+            <div className="rp-title">{t.recurrence?'Edit recurrence':'Make recurring'} — "{t.title}"</div>
+            <div className="rp-row"><label>Pattern</label>
+              <select value={draft.pattern} onChange={e=>setRecurEditor({...recurEditor,draft:{...draft,pattern:e.target.value}})}>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div className="rp-row"><label>Every</label>
+              <input type="number" min="1" value={draft.interval}
+                onChange={e=>setRecurEditor({...recurEditor,draft:{...draft,interval:e.target.value}})}/>
+            </div>
+            <div className="rp-row"><label>Count</label>
+              <input type="number" min="1" value={draft.count}
+                onChange={e=>setRecurEditor({...recurEditor,draft:{...draft,count:e.target.value}})}/>
+            </div>
+            <div style={{fontSize:10,color:'var(--t4)',marginTop:4}}>
+              Generates {Math.max(0,(parseInt(draft.count,10)||1)-1)} additional instances after the source.
+            </div>
+            <div className="rp-acts">
+              {t.recurrence && <button className="rp-btn" onClick={()=>{ setRecurrence(t.id, null); close(); }}>Clear</button>}
+              <button className="rp-btn" onClick={close}>Cancel</button>
+              <button className="rp-btn primary" onClick={apply}>Save</button>
+            </div>
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* Template modal (also reachable from welcome screen) */}
+    {renderTemplateModal()}
 
     <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
     </Fragment>
