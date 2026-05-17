@@ -554,6 +554,36 @@
   .welcome-hint{font-size:11px;color:var(--t4);margin-top:18px;letter-spacing:.02em}
   .welcome-warn{font-size:11px;color:var(--p2);margin-top:10px;padding:6px 10px;border:1px solid rgba(245,158,11,.3);border-radius:3px;background:rgba(245,158,11,.06);text-align:center}
 
+  /* ── Batch 5: Help overlay (keyboard shortcuts) ── */
+  .help-overlay{position:fixed;inset:0;background:rgba(2,12,10,.65);z-index:1200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+  .help-modal{background:var(--surface);border:1px solid var(--border-s);border-radius:6px;box-shadow:var(--shadow-lg);width:560px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;font:12px var(--font);color:var(--t1)}
+  .help-modal .h-hdr{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+  .help-modal .h-hdr h3{font-size:14px;font-weight:600;color:var(--t1);flex:1}
+  .help-modal .h-close{background:transparent;border:none;color:var(--t3);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
+  .help-modal .h-close:hover{color:var(--t1)}
+  .help-modal .h-body{flex:1;overflow-y:auto;padding:6px 18px 14px}
+  .help-modal .h-grp{margin-top:14px}
+  .help-modal .h-grp-title{font:10px var(--mono);color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+  .help-modal .h-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:11.5px;color:var(--t2)}
+  .help-modal .h-row .h-keys{flex:0 0 170px;display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  .help-modal .h-row .h-desc{flex:1;color:var(--t2)}
+  .help-modal .h-row .kbd{font:10px var(--mono);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--surface-2);color:var(--t1)}
+  .help-modal .h-row .h-plus{color:var(--t4);font-size:10px}
+  .help-modal .h-foot{padding:10px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+  .help-modal .h-btn{font:11.5px var(--font);padding:6px 14px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface-2);color:var(--t1);cursor:pointer}
+  .help-modal .h-btn:hover{background:var(--surface-3)}
+
+  /* ── Batch 5: Load error modal ── */
+  .err-overlay{position:fixed;inset:0;background:rgba(2,12,10,.65);z-index:1300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+  .err-modal{background:var(--surface);border:1px solid var(--border-s);border-radius:6px;box-shadow:var(--shadow-lg);width:420px;max-width:92vw;font:12px var(--font);color:var(--t1)}
+  .err-modal .e-hdr{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+  .err-modal .e-icon{width:22px;height:22px;border-radius:50%;background:rgba(239,68,68,.15);color:var(--p1);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+  .err-modal .e-title{font-size:13px;font-weight:600;color:var(--t1)}
+  .err-modal .e-body{padding:14px 18px;font-size:12px;color:var(--t2);line-height:1.5}
+  .err-modal .e-foot{padding:10px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+  .err-modal .e-btn{font:11.5px var(--font);padding:6px 18px;border-radius:2px;border:1px solid var(--border-s);background:var(--accent);border-color:var(--accent-2);color:#021412;font-weight:600;cursor:pointer}
+  .err-modal .e-btn:hover{background:var(--accent-2)}
+
   /* ── Batch 4: Filter strip ── */
   .filter-strip{height:38px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--bg-top);border-bottom:1px solid var(--border);position:relative;z-index:5;overflow:hidden;white-space:nowrap}
   .filter-strip .fs-search{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;height:26px;padding:0 8px;min-width:160px;max-width:240px}
@@ -2563,6 +2593,85 @@ function TemplateInstantiateModal({ template, onCancel, onCreate }){
   );
 }
 
+// Batch 5: Keyboard shortcut help overlay. Categorised list of shortcuts.
+function HelpModal({ onClose, fsaAvailable }){
+  // Each row: keys (array of strings, '+' between them), description
+  const groups = [
+    { name: 'File', rows: [
+      { keys: [['Ctrl','S']], desc: fsaAvailable ? 'Save' : 'Download' },
+      { keys: [['Ctrl','Shift','S']], desc: 'Save as…', hide: !fsaAvailable },
+      { keys: [['Ctrl','Z']], desc: 'Undo' },
+      { keys: [['Ctrl','Shift','Z'], ['Ctrl','Y']], desc: 'Redo' },
+    ]},
+    { name: 'Editing', rows: [
+      { keys: [['F2'], ['Enter']], desc: 'Rename selected task' },
+      { keys: [['Delete'], ['Backspace']], desc: 'Delete task' },
+      { keys: [['Ctrl','Delete']], desc: 'Clear dependencies on selected' },
+      { keys: [['Ctrl','D']], desc: 'Duplicate task' },
+      { keys: [['Ctrl','E']], desc: 'Focus dependency chain' },
+      { keys: [['0-9']], desc: 'Type digits then Enter to set duration (days)' },
+      { keys: [['Shift','←'], ['Shift','→']], desc: 'Resize end by one day' },
+      { keys: [['←'], ['→']], desc: 'Move task by one day (start + end)' },
+    ]},
+    { name: 'Selection', rows: [
+      { keys: [['Shift','drag']], desc: 'Lasso select tasks' },
+      { keys: [['Shift','click']], desc: 'Toggle task in selection' },
+      { keys: [['Alt','drag']], desc: 'Duplicate as a successor (FS dep added)' },
+    ]},
+    { name: 'Navigation', rows: [
+      { keys: [['?']], desc: 'Show this help' },
+      { keys: [['Esc']], desc: 'Clear selection, menus, or close modal' },
+    ]},
+    { name: 'Views', rows: [
+      { keys: [['topbar']], desc: 'Switch between Gantt / List / Calendar views via the topbar' },
+    ]},
+  ];
+
+  const renderKeys = (combo) => {
+    // combo is an array like ['Ctrl','Shift','S']
+    const out = [];
+    combo.forEach((k, i) => {
+      if (i > 0) out.push(<span key={'p'+i} className="h-plus">+</span>);
+      out.push(<span key={'k'+i} className="kbd">{k}</span>);
+    });
+    return out;
+  };
+
+  return (
+    <div className="help-overlay" onMouseDown={onClose}>
+      <div className="help-modal" onMouseDown={e=>e.stopPropagation()}>
+        <div className="h-hdr">
+          <h3>Keyboard shortcuts</h3>
+          <button className="h-close" onClick={onClose} title="Close">×</button>
+        </div>
+        <div className="h-body">
+          {groups.map(g => (
+            <div key={g.name} className="h-grp">
+              <div className="h-grp-title">{g.name}</div>
+              {g.rows.filter(r => !r.hide).map((r, i) => (
+                <div key={i} className="h-row">
+                  <div className="h-keys">
+                    {r.keys.map((combo, j) => (
+                      <React.Fragment key={j}>
+                        {j > 0 && <span className="h-plus" style={{margin:'0 4px',color:'var(--t4)'}}>or</span>}
+                        {renderKeys(combo)}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="h-desc">{r.desc}</div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="h-foot">
+          <button className="h-btn" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App(){
   const tweakRes = window.useTweaks ? window.useTweaks(window.__TWEAK_DEFAULTS) : [window.__TWEAK_DEFAULTS,()=>{}];
   const tw = tweakRes[0], setTweak = tweakRes[1];
@@ -2613,6 +2722,8 @@ function App(){
 
   // ── Recurrence editor popover: {taskId, draft:{pattern,interval,count}}
   const [recurEditor, setRecurEditor] = useState(null);
+  // ── Batch 5: keyboard help overlay
+  const [helpOpen, setHelpOpen] = useState(false);
   // ── Templates ──
   const [templates,   setTemplates]   = useState(() => loadTemplates());
   // ── Template modal: 'pick' | 'manage' | {kind:'instantiate', template} | null
@@ -2728,37 +2839,119 @@ function App(){
   }, [commitMutation]);
 
   // ── Workspace actions ──
+  // Batch 5: load error modal — surfaces parse/migration errors to the user.
+  // Shape: {title, message} | null
+  const [loadError, setLoadError] = useState(null);
+  // Hidden file input for browsers without File System Access API (Firefox/Safari).
+  const fileInputRef = useRef(null);
+
+  // Classify an Error thrown by parseWorkspace / migrateWorkspace into a
+  // user-friendly title + message. Falls back to a generic invalid-shape note.
+  const classifyLoadError = useCallback((err) => {
+    const msg = String(err?.message || err || '');
+    if (err instanceof SyntaxError || /JSON/i.test(msg)) {
+      return { title: "Can't open this file",
+        message: "This file isn't valid JSON. It may be corrupted or wasn't saved by Timeline." };
+    }
+    if (/newer version of Timeline/i.test(msg)) {
+      return { title: 'File is too new', message: msg };
+    }
+    if (/Invalid workspace file|No migration available/i.test(msg)) {
+      return { title: "Can't open this file",
+        message: "This file doesn't look like a Timeline workspace. (Missing required fields.)" };
+    }
+    return { title: "Can't open this file",
+      message: "This file doesn't look like a Timeline workspace. (Missing required fields.)" };
+  }, []);
+
+  // Common hydration after a successful parseWorkspace — used by both the FSA
+  // path and the <input type=file> fallback.
+  const hydrateFromWorkspace = useCallback((ws, handle) => {
+    setFileHandle(handle || null);
+    setProjects(ws.projects);
+    const aid = ws.activeProjectId && ws.projects.find(p => p.id === ws.activeProjectId)
+      ? ws.activeProjectId
+      : (ws.projects[0]?.id ?? null);
+    setActiveProjectId(aid);
+    setShowWelcome(false);
+    setDirty(false);
+    setCollapsed(new Set());
+    setSelected(null);
+    setSelectedSet(new Set());
+    resetUndoHistory();
+    try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
+  }, [resetUndoHistory]);
+
   const openWorkspace = useCallback(async () => {
-    if (!FSA_AVAILABLE) { alert('File System Access API not available. Use Chrome or Edge.'); return; }
     if (dirty && projects.length > 0 && !window.confirm('Discard unsaved changes and open a different workspace?')) return;
+    // Non-FSA browsers: trigger hidden <input type=file>. The change handler
+    // will read the file and call hydrateFromWorkspace / setLoadError.
+    if (!FSA_AVAILABLE) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+        fileInputRef.current.click();
+      }
+      return;
+    }
     try {
       const [handle] = await window.showOpenFilePicker({
         types: [{ description: 'Timeline Workspace', accept: { 'application/json': ['.json'] } }]
       });
       const file = await handle.getFile();
-      const ws = parseWorkspace(await file.text());
-      setFileHandle(handle);
-      setProjects(ws.projects);
-      const aid = ws.activeProjectId && ws.projects.find(p => p.id === ws.activeProjectId)
-        ? ws.activeProjectId
-        : (ws.projects[0]?.id ?? null);
-      setActiveProjectId(aid);
-      setShowWelcome(false);
-      setDirty(false);
-      setCollapsed(new Set());
-      setSelected(null);
-      setSelectedSet(new Set());
-      resetUndoHistory();
-      try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
+      let ws;
+      try { ws = parseWorkspace(await file.text()); }
+      catch(parseErr) { setLoadError(classifyLoadError(parseErr)); return; }
+      hydrateFromWorkspace(ws, handle);
     } catch(e) {
-      if (e?.name !== 'AbortError') console.error(e);
+      if (e?.name !== 'AbortError') {
+        setLoadError(classifyLoadError(e));
+      }
     }
-  }, [dirty, projects.length, resetUndoHistory]);
+  }, [dirty, projects.length, classifyLoadError, hydrateFromWorkspace]);
+
+  // Handler wired to <input type=file>. Reads via FileReader so it works
+  // in every modern browser (Firefox/Safari/Chrome).
+  const onFileInputChange = useCallback((e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onerror = () => setLoadError({ title: "Can't open this file",
+      message: "The browser couldn't read this file. Try again or pick a different file." });
+    reader.onload = () => {
+      try {
+        const ws = parseWorkspace(String(reader.result || ''));
+        hydrateFromWorkspace(ws, null);
+      } catch(err) {
+        setLoadError(classifyLoadError(err));
+      }
+    };
+    reader.readAsText(file);
+  }, [classifyLoadError, hydrateFromWorkspace]);
 
   const saveWorkspaceRef = useRef(null);
   const saveWorkspace = useCallback(async (forceAs = false) => {
-    if (!FSA_AVAILABLE) { alert('File System Access API not available. Use Chrome or Edge.'); return; }
     if (projects.length === 0) { alert('Nothing to save — create a project first.'); return; }
+    // Non-FSA browsers: trigger a download via Blob + <a download>. There is no
+    // in-place handle in this mode, so every save downloads a fresh copy.
+    if (!FSA_AVAILABLE) {
+      try {
+        const payload = serializeWorkspace(projects, activeProjectId);
+        const blob = new Blob([payload], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (activeProject?.name ? (activeProject.name + '.json') : 'workspace.json');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+        setDirty(false);
+        try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
+      } catch(e) {
+        alert('Download failed: ' + (e?.message || e));
+      }
+      return;
+    }
     let handle = fileHandle;
     if (!handle || forceAs) {
       try {
@@ -2776,10 +2969,9 @@ function App(){
       setDirty(false);
       try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
     } catch(e) {
-      console.error('Save failed', e);
       alert('Save failed: ' + (e?.message || e));
     }
-  }, [fileHandle, projects, activeProjectId]);
+  }, [fileHandle, projects, activeProjectId, activeProject]);
   saveWorkspaceRef.current = saveWorkspace;
 
   const createNewProject = useCallback((nameArg) => {
@@ -2968,13 +3160,27 @@ function App(){
   const AUTOSAVE_KEY = 'timeline-autosave-v1';
   const [autosaveOffer, setAutosaveOffer] = useState(null);
   const hydratedRef = useRef(false);
+  // Batch 5: track last successful autosave timestamp so we can use a variable
+  // debounce: 500ms for the first write after a dirty-flip / idle stretch,
+  // 1500ms for sustained editing (avoids hammering localStorage on every keystroke).
+  const lastAutosaveRef = useRef(0);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(AUTOSAVE_KEY);
       if (!raw) return;
-      const obj = JSON.parse(raw);
-      if (!obj || !obj.payload) return;
+      let obj;
+      try { obj = JSON.parse(raw); }
+      catch(_){
+        // Corrupt autosave payload — silently drop it and move on.
+        console.warn('Discarding corrupt autosave payload');
+        try { localStorage.removeItem(AUTOSAVE_KEY); } catch(__){}
+        return;
+      }
+      if (!obj || !obj.payload || typeof obj.payload !== 'string') {
+        try { localStorage.removeItem(AUTOSAVE_KEY); } catch(__){}
+        return;
+      }
       setAutosaveOffer({ savedAt: obj.savedAt || Date.now(), fileName: obj.fileName || null, payload: obj.payload });
     } catch(_){}
   }, []);
@@ -2998,7 +3204,8 @@ function App(){
       resetUndoHistory();
       setAutosaveOffer(null);
     } catch(e) {
-      alert('Could not restore autosave: ' + (e?.message || e));
+      // Corrupt or unmigratable autosave — silently drop it (don't bother user).
+      console.warn('Discarding unrestoreable autosave payload', e?.message || e);
       try { localStorage.removeItem(AUTOSAVE_KEY); } catch(_){}
       setAutosaveOffer(null);
     }
@@ -3013,6 +3220,11 @@ function App(){
     if (showWelcome) return;
     if (!dirty) return;
     if (!projects || projects.length === 0) return;
+    // Variable debounce: 500ms when we're starting fresh (last write >5s ago),
+    // 1500ms during sustained editing to reduce serialization cost.
+    const now = Date.now();
+    const idle = now - (lastAutosaveRef.current || 0) > 5000;
+    const delay = idle ? 500 : 1500;
     const tid = setTimeout(() => {
       try {
         const payload = serializeWorkspace(projects, activeProjectId);
@@ -3021,8 +3233,9 @@ function App(){
           fileName: fileHandle?.name || null,
           payload,
         }));
+        lastAutosaveRef.current = Date.now();
       } catch(_){}
-    }, 500);
+    }, delay);
     return () => clearTimeout(tid);
   }, [projects, activeProjectId, showWelcome, fileHandle, dirty]);
 
@@ -3065,6 +3278,14 @@ function App(){
       if (mod && ((e.shiftKey && (e.key === 'z' || e.key === 'Z')) || (e.key === 'y' || e.key === 'Y'))) {
         e.preventDefault();
         redoRef.current?.();
+        return;
+      }
+      // Batch 5: ? (Shift+/) toggles help overlay — but not when typing in inputs.
+      if (e.key === '?' && !mod) {
+        const tag = e.target?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return;
+        e.preventDefault();
+        setHelpOpen(o => !o);
         return;
       }
     };
@@ -3601,7 +3822,7 @@ function App(){
   useEffect(()=>{
     const onKey=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);setRecurEditor(null);setTmplModal(null);return; }
+      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);setRecurEditor(null);setTmplModal(null);setHelpOpen(false);setLoadError(null);return; }
       if(!selected)return;
       // If selected is a recurring instance (no source-task match), ignore keyboard ops.
       const t=tasks.find(x=>x.id===selected); if(!t)return;
@@ -3686,7 +3907,7 @@ function App(){
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 New project
               </button>
-              <button className="welcome-btn" onClick={openWorkspace} disabled={!FSA_AVAILABLE}>
+              <button className="welcome-btn" onClick={openWorkspace}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                 Open workspace…
               </button>
@@ -3701,11 +3922,35 @@ function App(){
                 </button>
               )}
             </div>
-            {!FSA_AVAILABLE && <div className="welcome-warn">Saving requires Chrome or Edge — your browser cannot persist files.</div>}
+            {!FSA_AVAILABLE && <div className="welcome-warn">Saving works via downloads in this browser. For best experience use Chrome or Edge (in-place save).</div>}
             <div className="welcome-hint">Local app. Your data stays on your machine.</div>
           </div>
         </div>
         {renderTemplateModal()}
+        {/* Batch 5: Hidden file input + load error modal also available on welcome screen */}
+        {!FSA_AVAILABLE && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            style={{display:'none'}}
+            onChange={onFileInputChange}
+          />
+        )}
+        {loadError && (
+          <div className="err-overlay" onMouseDown={()=>setLoadError(null)}>
+            <div className="err-modal" onMouseDown={e=>e.stopPropagation()}>
+              <div className="e-hdr">
+                <div className="e-icon">!</div>
+                <div className="e-title">{loadError.title}</div>
+              </div>
+              <div className="e-body">{loadError.message}</div>
+              <div className="e-foot">
+                <button className="e-btn" autoFocus onClick={()=>setLoadError(null)}>OK</button>
+              </div>
+            </div>
+          </div>
+        )}
         <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
       </Fragment>
     );
@@ -3734,11 +3979,13 @@ function App(){
               <div className="file-menu-item" onClick={()=>{openWorkspace();setFileMenuOpen(false);}}>Open workspace…</div>
               <div className="file-menu-sep"/>
               <div className="file-menu-item" onClick={()=>{saveWorkspace(false);setFileMenuOpen(false);}}>
-                Save<span className="kbd">Ctrl S</span>
+                {FSA_AVAILABLE ? 'Save' : 'Download'}<span className="kbd">Ctrl S</span>
               </div>
-              <div className="file-menu-item" onClick={()=>{saveWorkspace(true);setFileMenuOpen(false);}}>
-                Save as…<span className="kbd">Ctrl ⇧ S</span>
-              </div>
+              {FSA_AVAILABLE && (
+                <div className="file-menu-item" onClick={()=>{saveWorkspace(true);setFileMenuOpen(false);}}>
+                  Save as…<span className="kbd">Ctrl ⇧ S</span>
+                </div>
+              )}
               <div className="file-menu-sep"/>
               <div className="file-menu-item has-sub"
                 onMouseEnter={()=>setFileTmplSubOpen(true)}
@@ -3844,6 +4091,11 @@ function App(){
             ⚡ Stagger
           </button>
         )}
+
+        {/* Keyboard help (Batch 5) */}
+        <button className="tb-icon-btn" title="Keyboard shortcuts (?)" onClick={()=>setHelpOpen(true)}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
 
         {/* Settings */}
         <button className="tb-icon-btn" title="Settings" onClick={()=>window.postMessage({type:'__activate_edit_mode'},'*')}>
@@ -4739,6 +4991,36 @@ function App(){
 
     {/* Template modal (also reachable from welcome screen) */}
     {renderTemplateModal()}
+
+    {/* Batch 5: Hidden file input for browsers without File System Access API. */}
+    {!FSA_AVAILABLE && (
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json,application/json"
+        style={{display:'none'}}
+        onChange={onFileInputChange}
+      />
+    )}
+
+    {/* Batch 5: Keyboard help overlay */}
+    {helpOpen && <HelpModal onClose={()=>setHelpOpen(false)} fsaAvailable={FSA_AVAILABLE}/>}
+
+    {/* Batch 5: Load error modal */}
+    {loadError && (
+      <div className="err-overlay" onMouseDown={()=>setLoadError(null)}>
+        <div className="err-modal" onMouseDown={e=>e.stopPropagation()}>
+          <div className="e-hdr">
+            <div className="e-icon">!</div>
+            <div className="e-title">{loadError.title}</div>
+          </div>
+          <div className="e-body">{loadError.message}</div>
+          <div className="e-foot">
+            <button className="e-btn" autoFocus onClick={()=>setLoadError(null)}>OK</button>
+          </div>
+        </div>
+      </div>
+    )}
 
     <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
     </Fragment>
