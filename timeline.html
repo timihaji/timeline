@@ -4189,7 +4189,9 @@ function App(){
             {rows.map((r)=>{
               if(r.isProject){
                 const open=!collapsed.has(r.id);
-                const cnt=tasks.filter(t=>t.parent===r.id).length;
+                const cnt = r.id==='__loose'
+                  ? tasks.filter(t=>!t.parent && t.kind!=='project').length
+                  : tasks.filter(t=>t.parent===r.id).length;
                 const projCost = costRoll.perTask.get(r.id) || 0;
                 return (
                   <div className="group-row" data-pid={r.project} key={r.id}
@@ -4213,14 +4215,31 @@ function App(){
                   </div>
                 );
               }
-              const sel=selected===r.id, isRen=renaming?.id===r.id;
+              const sel=selected===r.id||selectedSet.has(r.id), isRen=renaming?.id===r.id;
               const wbsCode = wbsMap.get(r.id);
               const isRecurInst = !!r.recurrenceParent;
               return (
-                <div className={`task-row is-child${r.done?' done':''}${sel?' selected':''}${hoverRow===r.id?' hover':''}`} key={r.id}
+                <div className={`task-row is-child${r.done?' done':''}${sel?' selected':''}${selectedSet.has(r.id)&&selectedSet.size>1?' multi-sel':''}${hoverRow===r.id?' hover':''}`} key={r.id}
                   style={isRecurInst?{opacity:.6}:null}
                   onMouseEnter={()=>setHoverRow(r.id)} onMouseLeave={()=>setHoverRow(null)}
-                  onClick={()=>setSelected(r.id)}
+                  onClick={(e)=>{
+                    if(e.shiftKey){
+                      setSelectedSet(prev=>{
+                        const n=new Set(prev);
+                        if(n.has(r.id)){
+                          n.delete(r.id);
+                          if(selected===r.id){ const next=n.values().next().value; setSelected(next||null); }
+                        } else {
+                          n.add(r.id);
+                          setSelected(r.id);
+                        }
+                        return n;
+                      });
+                    } else {
+                      setSelected(r.id);
+                      setSelectedSet(new Set([r.id]));
+                    }
+                  }}
                   onDoubleClick={()=>{ if(isRecurInst) return; setRenaming({id:r.id,value:r.title}); }}
                   onContextMenu={e=>{e.preventDefault();if(isRecurInst)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
                   <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();if(isRecurInst)return;updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
