@@ -1,0 +1,2400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --font:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+    --bg:#071512; --bg-side:#06110f; --bg-top:#06110f; --bg-grid:#08191590;
+    --surface:#10201d; --surface-2:#1d342f; --surface-3:#26433d;
+    --border:#1d342f; --border-s:#22403a;
+    --t1:#e6fffb; --t2:#c3ddd7; --t3:#8eada6; --t4:#66837c;
+    --accent:#0f766e; --accent-2:#14b8a6; --accent-dim:rgba(15,118,110,.18); --accent-border:rgba(20,184,166,.35);
+    --p1:#ef4444; --p2:#f59e0b; --p3:#71717a;
+    --proj-LIFE:#86efac; --proj-HOME:#fcd34d; --proj-WORK:#a5b4fc; --proj-ADMIN:#94a3b8;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+    --shadow-lg:0 10px 40px rgba(0,0,0,.6);
+    --rk:2px;
+    --row-h:34px;
+    --col-w:36px;
+  }
+  html,body,#root{height:100%}
+  body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidden;-webkit-font-smoothing:antialiased}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#1d342f;border:2px solid var(--bg);border-radius:99px}
+  ::-webkit-scrollbar-thumb:hover{background:#26433d}
+  ::-webkit-scrollbar-corner{background:transparent}
+
+  /* Topbar */
+  .topbar{height:44px;display:flex;align-items:center;gap:6px;padding:0 14px;background:var(--bg-top);border-bottom:1px solid var(--border);flex-shrink:0;z-index:30;position:relative}
+  .tb-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--t1);letter-spacing:-.2px}
+  .tb-icon{width:22px;height:22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#02100d;letter-spacing:.04em}
+  .tb-sep{width:1px;height:18px;background:var(--border-s);margin:0 4px}
+  .tb-crumb{font-size:12px;color:var(--t3);display:flex;align-items:center;gap:6px}
+  .tb-crumb-active{color:var(--t1);font-weight:500}
+  .tb-spacer{flex:1}
+  .tb-btn-group{display:flex;align-items:center;padding:2px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:3px}
+  .tb-btn-group .tb-btn{height:24px;padding:0 10px;border:none;background:transparent;color:var(--t3);font:11px var(--font);cursor:pointer;border-radius:2px;display:flex;align-items:center;gap:5px}
+  .tb-btn-group .tb-btn:hover{color:var(--t1)}
+  .tb-btn-group .tb-btn.active{background:var(--surface);color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,.3)}
+  .tb-btn{height:28px;padding:0 11px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface);color:var(--t2);font:11px var(--font);cursor:pointer;display:flex;align-items:center;gap:6px}
+  .tb-btn:hover{background:var(--surface-2);color:var(--t1)}
+  .tb-btn.active{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
+  .tb-btn.primary{background:var(--accent);border-color:var(--accent-2);color:#021412}
+  .tb-btn.primary:hover{background:var(--accent-2)}
+  .tb-btn:disabled{opacity:.4;cursor:not-allowed}
+  .zoom-pill{display:flex;align-items:center;gap:0;background:var(--surface);border:1px solid var(--border-s);border-radius:2px;height:28px;overflow:hidden}
+  .zoom-pill button{height:100%;width:28px;background:transparent;border:none;color:var(--t3);font-size:13px;cursor:pointer}
+  .zoom-pill button:hover{background:var(--surface-2);color:var(--t1)}
+  .zoom-pill .label{font:10px var(--mono);color:var(--t3);padding:0 8px;border-left:1px solid var(--border-s);border-right:1px solid var(--border-s);height:100%;display:flex;align-items:center;min-width:48px;justify-content:center}
+
+  /* Dirty indicator */
+  .dirty-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--p2);box-shadow:0 0 6px var(--p2);margin-left:4px;vertical-align:middle}
+
+  /* File menu */
+  .file-menu-wrap{position:relative}
+  .file-menu-drop{position:absolute;top:34px;left:0;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;z-index:500;min-width:220px;font:11.5px var(--font);color:var(--t2)}
+  .file-menu-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap}
+  .file-menu-item:hover{background:var(--surface-2);color:var(--t1)}
+  .file-menu-item .kbd{margin-left:auto;font:9.5px var(--mono);color:var(--t4);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--bg)}
+  .file-menu-sep{height:1px;background:var(--border);margin:4px 2px}
+
+  /* Layout */
+  .app{display:flex;flex-direction:column;height:100%}
+  .body{flex:1;display:flex;min-height:0;background:var(--bg)}
+
+  /* Project panel */
+  .proj-panel{width:200px;flex-shrink:0;background:var(--bg-side);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .15s ease}
+  .proj-panel.collapsed{width:32px}
+  .proj-panel-hdr{height:54px;display:flex;align-items:center;padding:0 8px 0 14px;border-bottom:1px solid var(--border);gap:10px;flex-shrink:0}
+  .proj-panel-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4);flex:1}
+  .proj-panel-toggle{width:20px;height:20px;border:1px solid var(--border-s);background:var(--surface);color:var(--t3);font-size:11px;border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+  .proj-panel-toggle:hover{background:var(--surface-2);color:var(--t1)}
+  .proj-panel-body{flex:1;overflow-y:auto;padding:6px 0}
+  .proj-item{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;cursor:pointer;color:var(--t2);font-size:12px;border-left:2px solid transparent;position:relative}
+  .proj-item:hover{background:var(--surface)}
+  .proj-item.active{background:var(--accent-dim);color:var(--t1);border-left-color:var(--accent-2)}
+  .proj-item-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .proj-item-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .proj-item-cnt{font:10px var(--mono);color:var(--t4);flex-shrink:0}
+  .proj-item.active .proj-item-cnt{color:var(--accent-2)}
+  .proj-rename-input{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--accent-border);color:var(--t1);font:inherit;padding:2px 5px;border-radius:2px;outline:none}
+  .proj-add-btn{display:flex;align-items:center;gap:6px;height:30px;width:calc(100% - 16px);margin:8px 8px 0;padding:0 10px;border:1px dashed var(--border-s);background:transparent;color:var(--t3);font:11px var(--font);cursor:pointer;border-radius:2px}
+  .proj-add-btn:hover{border-color:var(--accent-border);color:var(--accent-2);background:var(--accent-dim)}
+  .proj-empty{padding:20px 14px;text-align:center;color:var(--t4);font-size:11px;font-style:italic}
+
+  /* Left task panel */
+  .lpane{width:320px;flex-shrink:0;background:var(--bg-side);border-right:1px solid var(--border);display:flex;flex-direction:column}
+  .lpane-hdr{height:54px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);gap:10px;flex-shrink:0}
+  .lpane-hdr h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4)}
+  .lpane-hdr .pill{margin-left:auto;font:10px var(--mono);padding:2px 6px;border-radius:2px;background:var(--surface);color:var(--t3);border:1px solid var(--border-s)}
+  .lpane-body{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:120px}
+
+  .group-row{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 10px;cursor:pointer;border-bottom:1px solid var(--border);background:var(--bg-side);position:sticky;z-index:1}
+  .group-row:hover{background:var(--surface)}
+  .group-chv{width:10px;height:10px;color:var(--t3);transition:transform .15s}
+  .group-chv.open{transform:rotate(90deg)}
+  .group-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;background:var(--accent-2)}
+  .group-name{font-size:11.5px;font-weight:600;color:var(--t1);letter-spacing:.01em;flex:1}
+  .group-cnt{font:10px var(--mono);color:var(--t4)}
+
+  .task-row{display:flex;align-items:center;gap:8px;height:var(--row-h);padding:0 12px 0 26px;border-bottom:1px solid #0c1c19;cursor:default;position:relative;color:var(--t2);font-size:12.5px}
+  .task-row:hover,.task-row.hover{background:#0c1c19}
+  .task-row.selected{background:linear-gradient(90deg,var(--accent-dim),transparent);box-shadow:inset 2px 0 0 var(--accent-2)}
+  .task-row .chk{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border-s);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .task-row .chk.done{background:var(--accent-2);border-color:var(--accent-2)}
+  .task-row .chk.done::after{content:'';width:4px;height:2px;border-left:1.5px solid #021;border-bottom:1.5px solid #021;transform:rotate(-45deg) translateY(-.5px)}
+  .task-row .ttl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .task-row.done .ttl{color:var(--t4);text-decoration:line-through}
+  .task-row .pri{display:flex;align-items:flex-end;gap:1.5px;height:9px}
+  .task-row .pri-bar{width:2px;border-radius:1px;background:var(--t4)}
+  .task-row .est{font:10px var(--mono);color:var(--t4)}
+  .task-row.is-project{font-weight:600;color:var(--t1);padding-left:14px}
+  .task-row.is-child{padding-left:38px}
+  .task-row.is-child::before{content:'';position:absolute;left:18px;top:0;bottom:0;width:1px;background:var(--border)}
+  .task-row.is-child::after{content:'';position:absolute;left:18px;top:50%;width:10px;height:1px;background:var(--border)}
+
+  /* Right timeline */
+  .rpane{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;background:var(--bg)}
+  .timeline-hdr{height:54px;flex-shrink:0;border-bottom:1px solid var(--border);position:relative;overflow:hidden;background:var(--bg-top)}
+  .hdr-scroll{height:100%;overflow:hidden;position:relative}
+  .hdr-track{height:100%;position:relative}
+  .hdr-month{position:absolute;top:0;left:0;height:24px;display:flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--t2);padding:0 10px;border-right:1px solid var(--border);text-transform:uppercase;background:var(--bg-top)}
+  .hdr-month .yr{margin-left:6px;font:10px var(--mono);color:var(--t4)}
+  .hdr-day{position:absolute;top:24px;height:30px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid #0c1c19;color:var(--t3);gap:1px}
+  .hdr-day .dow{font:9.5px var(--mono);color:var(--t4);letter-spacing:.05em;text-transform:uppercase}
+  .hdr-day .dom{font-size:12px;font-weight:500;color:var(--t2);letter-spacing:-.2px}
+  .hdr-day.weekend{background:#05100e}
+  .hdr-day.weekend .dom{color:var(--t4)}
+  .hdr-day.today{background:linear-gradient(180deg,var(--accent-dim),transparent)}
+  .hdr-day.today .dow{color:var(--accent-2);font-weight:700}
+  .hdr-day.today .dom{color:#fff;font-weight:700}
+  .hdr-day.month-start{border-left:1px solid var(--border-s)}
+
+  .grid-scroll{flex:1;overflow:auto;position:relative;cursor:default}
+  .grid-scroll.panning{cursor:grabbing}
+  .grid-track{position:relative;min-height:100%}
+
+  .grid-bg{position:absolute;inset:0;pointer-events:none}
+  .grid-col{position:absolute;top:0;bottom:0;border-right:1px solid #0c1c19}
+  .grid-col.weekend{background:#05100e88}
+  .grid-col.month-start{border-left:1px solid var(--border-s)}
+  .today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--accent-2);box-shadow:0 0 12px var(--accent-2);z-index:1;pointer-events:none}
+  .today-line::after{content:'TODAY';position:absolute;top:6px;left:6px;font:9px var(--mono);background:var(--accent-2);color:#021412;padding:1px 5px;border-radius:2px;letter-spacing:.08em;font-weight:700;white-space:nowrap}
+
+  .row-line{position:absolute;left:0;right:0;height:var(--row-h);border-bottom:1px solid #0c1c19;pointer-events:none}
+  .row-line.group{background:#08191550;border-bottom-color:var(--border)}
+  .row-line.hover{background:#0c1c19a0}
+
+  /* Bars */
+  .bar-layer{position:absolute;inset:0}
+  .bar{position:absolute;height:22px;border-radius:3px;display:flex;align-items:center;padding:0 8px 0 10px;font-size:11.5px;font-weight:500;color:#021412;cursor:grab;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);transition:box-shadow .12s,transform .12s,filter .12s;white-space:nowrap;overflow:hidden;will-change:transform}
+  .bar:hover{box-shadow:0 2px 4px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.35);filter:brightness(1.06);z-index:5}
+  .bar.dragging{cursor:grabbing;box-shadow:0 4px 8px rgba(0,0,0,.55),0 18px 40px rgba(0,0,0,.55);transform:translateY(-1px) scale(1.01);filter:brightness(1.1);z-index:50}
+  .bar.selected{outline:2px solid var(--accent-2);outline-offset:1px;z-index:6}
+  .bar.done{filter:saturate(.4) brightness(.85)}
+  .bar.done .bar-ttl{text-decoration:line-through;opacity:.7}
+  .bar-ttl{flex:1;text-overflow:ellipsis;overflow:hidden;text-shadow:0 1px 0 rgba(255,255,255,.12)}
+  .bar-prog{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.22);border-radius:3px 0 0 3px;pointer-events:none}
+  .bar-meta{font:10px var(--mono);color:rgba(0,0,0,.55);margin-left:6px;flex-shrink:0}
+  .bar.compact{padding:0 4px}
+  .bar.compact .bar-ttl{font-size:10.5px}
+  .bar-handle{position:absolute;top:0;bottom:0;width:6px;cursor:ew-resize;background:transparent}
+  .bar-handle::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:2px;height:10px;background:rgba(0,0,0,.35);border-radius:1px}
+  .bar-handle.l{left:0}
+  .bar-handle.l::after{left:2px}
+  .bar-handle.r{right:0}
+  .bar-handle.r::after{right:2px}
+  .bar:hover .bar-handle::after{background:rgba(0,0,0,.55)}
+  .bar.dragging-edge{cursor:ew-resize}
+
+  /* Dep handle */
+  .dep-knob{position:absolute;right:-7px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid #021412;opacity:0;transition:opacity .12s,transform .12s;cursor:crosshair;z-index:7;box-shadow:0 0 0 0 var(--accent-2)}
+  .bar:hover .dep-knob,.bar.selected .dep-knob{opacity:1}
+  .dep-knob:hover{transform:translateY(-50%) scale(1.25);box-shadow:0 0 0 6px rgba(20,184,166,.18)}
+
+  /* Project (parent) bar */
+  .bar.project{background:transparent !important;color:var(--t1);border:none;box-shadow:none;cursor:default;padding:0}
+  .bar.project::before{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:6px;background:linear-gradient(90deg,#1d342f,#26433d);border:1px solid var(--border-s);border-radius:1px}
+  .bar.project::after{content:'';position:absolute;left:0;top:50%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--accent-2);transform:translate(-2px,3px)}
+  .bar.project .proj-cap{position:absolute;right:0;top:50%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--accent-2);transform:translate(2px,3px)}
+  .bar.project .bar-ttl{position:absolute;left:0;top:-15px;color:var(--t2);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-shadow:none}
+
+  /* Milestone diamond */
+  .bar.milestone{background:transparent !important;box-shadow:none;padding:0;justify-content:center}
+  .bar.milestone .diamond{width:18px;height:18px;background:var(--accent-2);transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.5),0 0 0 2px #021412}
+  .bar.milestone .bar-ttl{position:absolute;left:24px;color:var(--t1);text-shadow:none;font-weight:600}
+
+  /* Dependencies SVG */
+  .dep-svg{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:4}
+  .dep-path{fill:none;stroke:var(--t4);stroke-width:1.5;opacity:.8;transition:stroke .12s,opacity .12s;marker-end:url(#dep-arrow)}
+  .dep-path.preview{stroke:var(--accent-2);stroke-width:2;stroke-dasharray:4 3;opacity:1;marker-end:url(#dep-arrow-preview)}
+  .dep-path:hover{stroke:var(--accent-2);opacity:1}
+  .dep-svg .row-divider{stroke:#0c1c19}
+
+  /* Drop ghost / live label */
+  .drag-tooltip{position:fixed;pointer-events:none;background:var(--surface-2);border:1px solid var(--accent-border);border-radius:3px;padding:5px 9px;font:11px var(--font);color:var(--t1);box-shadow:var(--shadow-lg);z-index:300;white-space:nowrap;display:flex;flex-direction:column;gap:2px}
+  .drag-tooltip .dt-dates{font:10px var(--mono);color:var(--accent-2);letter-spacing:.04em}
+  .drag-tooltip .dt-meta{font:9.5px var(--mono);color:var(--t3)}
+
+  /* Status footer */
+  .sbar{height:26px;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--bg-top);border-top:1px solid var(--border);flex-shrink:0;font-size:11px;color:var(--t3)}
+  .sbar kbd{font:10px var(--mono);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--surface-2);color:var(--t2)}
+  .sbar .right{margin-left:auto;display:flex;gap:14px;align-items:center}
+  .sbar .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 8px var(--accent-2)}
+
+  /* Section colors for rows */
+  .group-row[data-pid="WORK"] .group-dot{background:var(--proj-WORK)}
+  .group-row[data-pid="LIFE"] .group-dot{background:var(--proj-LIFE)}
+  .group-row[data-pid="HOME"] .group-dot{background:var(--proj-HOME)}
+  .group-row[data-pid="ADMIN"] .group-dot{background:var(--proj-ADMIN)}
+
+  /* Loading state */
+  .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t4);font-size:13px}
+
+  /* Selection ring on row */
+  .row-line.selected-row{background:linear-gradient(90deg,var(--accent-dim),transparent 60%)}
+
+  /* Snap guide */
+  .snap-guide{position:absolute;top:0;bottom:0;width:1px;background:var(--accent-2);box-shadow:0 0 8px var(--accent-2);pointer-events:none;z-index:9;opacity:.7}
+
+  /* Critical path */
+  .bar.critical{box-shadow:0 0 0 1.5px rgba(251,191,36,.85),0 0 16px rgba(251,191,36,.45),0 1px 2px rgba(0,0,0,.4)}
+  .bar.milestone.critical .diamond{box-shadow:0 0 0 2px #fbbf24,0 0 14px rgba(251,191,36,.5),0 1px 2px rgba(0,0,0,.5)}
+  .dep-path.critical{stroke:#fbbf24;opacity:.95;stroke-width:2}
+
+  /* Selection inspector */
+  .inspector{position:absolute;background:var(--surface);border:1px solid var(--accent-border);border-radius:4px;box-shadow:var(--shadow-lg);padding:10px 12px;z-index:100;min-width:240px;animation:su .12s ease}
+  @keyframes su{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .inspector::before{content:'';position:absolute;left:14px;bottom:-6px;width:10px;height:10px;background:var(--surface);border-right:1px solid var(--accent-border);border-bottom:1px solid var(--accent-border);transform:rotate(45deg)}
+  .ins-title{font-size:12.5px;font-weight:600;color:var(--t1);margin-bottom:6px;letter-spacing:-.1px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ins-row{display:flex;align-items:center;gap:8px;font:11px var(--mono);color:var(--t3);margin-bottom:3px}
+  .ins-row .lbl{color:var(--t4);min-width:42px;text-transform:uppercase;letter-spacing:.06em;font-size:9.5px}
+  .ins-row .val{color:var(--t1)}
+  .ins-row .dur-pill{background:var(--accent-dim);color:var(--accent-2);padding:1px 6px;border-radius:2px;font-size:10px;border:1px solid var(--accent-border)}
+  .ins-acts{display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);flex-wrap:wrap}
+  .ins-btn{height:24px;padding:0 9px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface-2);color:var(--t2);font:10.5px var(--font);cursor:pointer;display:flex;align-items:center;gap:4px}
+  .ins-btn:hover{background:var(--surface-3);color:var(--t1);border-color:var(--accent-border)}
+  .ins-btn.danger:hover{color:var(--p1);border-color:rgba(239,68,68,.4)}
+  .ins-crit{display:inline-flex;align-items:center;gap:4px;font:9.5px var(--mono);color:#fbbf24;padding:1px 5px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:2px;margin-left:auto}
+  .ins-btn.link-btn{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border);cursor:crosshair;font-weight:600}
+  .ins-btn.link-btn:hover{background:rgba(20,184,166,.22);color:#5eead4}
+  .ins-deps-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .ins-dep-chip{font:10px var(--mono);color:var(--accent-2);background:var(--accent-dim);border:1px solid var(--accent-border);padding:1px 5px;border-radius:2px;cursor:pointer}
+  .ins-dep-chip:hover{background:rgba(20,184,166,.25)}
+  .ins-dep-empty{font:10px var(--mono);color:var(--t4)}
+
+  /* Right-click context menu */
+  .ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;z-index:500;min-width:220px;font:11.5px var(--font);color:var(--t2);user-select:none}
+  .ctx-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:2px;cursor:pointer}
+  .ctx-item:hover{background:var(--surface-2);color:var(--t1)}
+  .ctx-item.danger:hover{color:var(--p1)}
+  .ctx-item .kbd{margin-left:auto;font:9.5px var(--mono);color:var(--t4);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--bg)}
+  .ctx-item:hover .kbd{color:var(--t3)}
+  .ctx-item .ico{width:12px;height:12px;color:var(--t4);flex-shrink:0}
+  .ctx-item:hover .ico{color:var(--accent-2)}
+  .ctx-sep{height:1px;background:var(--border);margin:4px 2px}
+  .ctx-hdr{padding:6px 10px 4px;font:9.5px var(--mono);letter-spacing:.08em;color:var(--t4);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+
+  /* Inline rename */
+  .bar-rename{flex:1;min-width:0;width:100%;background:rgba(0,0,0,.32);border:1px solid rgba(0,0,0,.55);color:#021412;font:inherit;font-weight:500;padding:1px 4px;border-radius:2px;outline:none;text-shadow:none}
+  .bar-rename::selection{background:rgba(255,255,255,.3)}
+  .row-rename{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--accent-border);color:var(--t1);font:inherit;padding:1px 5px;border-radius:2px;outline:none}
+
+  /* Duration buffer toast */
+  .dur-toast{position:absolute;font:11px var(--mono);font-weight:700;background:var(--accent-2);color:#021412;padding:4px 9px;border-radius:2px;letter-spacing:.04em;box-shadow:var(--shadow);z-index:60;pointer-events:none;white-space:nowrap}
+  .dur-toast::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-right:5px solid var(--accent-2)}
+  .dur-toast .hint{color:rgba(2,20,18,.65);font-weight:500;margin-left:6px}
+
+  /* Focus chain */
+  .bar.dimmed{opacity:.16;filter:saturate(.3)}
+  .dep-path.dimmed{opacity:.1}
+  .focus-banner{position:fixed;top:54px;left:50%;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--accent-border);border-radius:3px;padding:6px 12px;font:11px var(--font);color:var(--t1);box-shadow:var(--shadow);z-index:200;display:flex;align-items:center;gap:10px}
+  .focus-banner kbd{font:10px var(--mono);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--bg);color:var(--t2)}
+  .focus-banner .clear{background:transparent;border:none;color:var(--accent-2);cursor:pointer;font:11px var(--font);padding:0}
+  .focus-banner .clear:hover{color:#5eead4}
+
+  /* Blocking flag */
+  .bar.blocking{box-shadow:0 0 0 1.5px rgba(239,68,68,.85),0 0 14px rgba(239,68,68,.3),0 1px 2px rgba(0,0,0,.4)}
+  .bar.blocking::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--p1);border-radius:3px 0 0 3px}
+
+  /* Lag pill in dep arrow */
+  .dep-lag-label{font:9px var(--mono);fill:var(--t4)}
+
+  /* Phantom (drag-to-create) */
+  .phantom-bar{position:absolute;height:22px;border-radius:3px;background:linear-gradient(180deg,var(--accent-2),#0d8678);border:1.5px dashed #042a26;opacity:.85;z-index:8;display:flex;align-items:center;padding:0 8px;color:#021412;font:11px var(--font);font-weight:600;pointer-events:none;box-shadow:0 0 0 4px rgba(20,184,166,.18)}
+
+  /* Tweaks panel overrides for dark teal */
+  .tweaks-panel{background:var(--surface) !important;border-color:var(--border-s) !important;color:var(--t1) !important}
+
+  /* ═══════════════ BAR STYLE: CAPSULE (only one shipped in 1.0) ═══════════════ */
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone){
+    background: linear-gradient(180deg, var(--bar-c-l) 0%, var(--bar-c) 45%, var(--bar-c-d) 100%) !important;
+    border: 1px solid rgba(0,0,0,.25) !important;
+    border-radius: 99px !important;
+    padding: 0 12px 0 14px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(0,0,0,.25), 0 2px 6px rgba(0,0,0,.3) !important;
+  }
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone)::before{
+    content:''; position:absolute; left:8px; right:8px; top:2px; height:35%;
+    background: linear-gradient(180deg, rgba(255,255,255,.45), transparent);
+    border-radius: 99px; pointer-events:none;
+  }
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone) .bar-prog{
+    background: rgba(0,0,0,.25) !important;
+    border-radius: 99px 0 0 99px !important;
+  }
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone) .bar-handle.l{ left:2px }
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone) .bar-handle.r{ right:2px }
+
+  /* Sprint bands */
+  :root{
+    --sprint-even-bg: rgba(255,255,255,.018);
+    --sprint-bound: rgba(255,255,255,.07);
+    --sprint-release: rgba(255,255,255,.18);
+    --sprint-label: rgba(255,255,255,.16);
+  }
+  .sprint-band{position:absolute;top:0;bottom:0;pointer-events:none;z-index:0}
+  .sprint-band.even{background:var(--sprint-even-bg)}
+  .sprint-bound{position:absolute;top:0;bottom:0;width:1px;pointer-events:none;z-index:1;background:var(--sprint-bound)}
+  .sprint-bound.release{background:var(--sprint-release)}
+  .sprint-bound.release::after{content:attr(data-label);position:absolute;top:5px;left:5px;font:8px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--sprint-label);white-space:nowrap;pointer-events:none}
+
+  /* Hover guide band */
+  .hover-guide-band{position:absolute;top:0;bottom:0;background:var(--accent-dim);border-left:1px solid var(--accent-border);border-right:1px solid var(--accent-border);pointer-events:none;z-index:2;animation:guide-in .08s ease}
+  @keyframes guide-in{from{opacity:0}to{opacity:1}}
+
+  /* Hover dep-chain dim/highlight */
+  .bar.hover-dim{opacity:.1;filter:saturate(.15);transition:opacity .1s,filter .1s}
+  .dep-path.hover-dim{opacity:.06;transition:opacity .1s}
+  .dep-path.hover-lit{stroke:var(--accent-2) !important;opacity:1 !important;stroke-width:2 !important;transition:stroke .08s,opacity .08s}
+
+  /* Progress drag handle */
+  .bar-prog-handle{position:absolute;top:2px;bottom:2px;width:7px;border-radius:3px;background:rgba(255,255,255,.9);border:1.5px solid rgba(0,0,0,.22);cursor:ew-resize;opacity:0;transition:opacity .12s;z-index:6;box-shadow:0 1px 4px rgba(0,0,0,.38);pointer-events:auto;transform:translateX(-50%)}
+  .bar:hover .bar-prog-handle,.bar.selected .bar-prog-handle{opacity:1}
+  .bar.prog-dragging .bar-prog-handle{opacity:1;background:#fff}
+
+  /* Health pips */
+  .health-pip{width:6px;height:6px;border-radius:50%;flex-shrink:0;align-self:center;margin-left:3px}
+  .health-pip.green{background:#22c55e;box-shadow:0 0 4px rgba(34,197,94,.75)}
+  .health-pip.amber{background:#f59e0b;box-shadow:0 0 4px rgba(245,158,11,.75)}
+  .health-pip.red{background:#ef4444;box-shadow:0 0 5px rgba(239,68,68,.9);animation:pip-pulse 1.2s ease infinite}
+  @keyframes pip-pulse{0%,100%{box-shadow:0 0 5px rgba(239,68,68,.8)}50%{box-shadow:0 0 10px rgba(239,68,68,.55),0 0 16px rgba(239,68,68,.3)}}
+
+  /* Milestone ribbons */
+  .milestone-ribbon{position:absolute;top:0;bottom:0;width:2px;pointer-events:none;z-index:3;background:var(--ribbon-c, var(--accent-2));opacity:.55;box-shadow:0 0 10px var(--ribbon-c, var(--accent-2))}
+  .milestone-ribbon::before{content:'';position:absolute;top:0;left:-5px;width:12px;height:12px;background:var(--ribbon-c, var(--accent-2));opacity:.9;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)}
+  .milestone-ribbon[data-label]::after{content:attr(data-label);position:absolute;top:16px;left:6px;font:8px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--ribbon-c, var(--accent-2));white-space:nowrap;opacity:.9}
+  .milestone-ribbon.done-ribbon{opacity:.18;box-shadow:none}
+
+  /* At-risk edge flash */
+  .bar-risk-edge{position:absolute;right:0;top:0;bottom:0;width:3px;border-radius:0 3px 3px 0;background:var(--p1);z-index:4;pointer-events:none;animation:risk-pulse 1.8s ease infinite}
+  @keyframes risk-pulse{0%,100%{opacity:.9}50%{opacity:.28}}
+
+  /* Multi-select */
+  .bar.multi-sel{outline:2px solid var(--accent-2);outline-offset:2px;z-index:7}
+
+  /* Lasso marquee */
+  .lasso-rect{position:absolute;pointer-events:none;z-index:20;border:1.5px dashed var(--accent-2);background:var(--accent-dim);border-radius:2px}
+
+  /* Float / slack ghost */
+  .float-ghost{position:absolute;height:22px;border-radius:0 4px 4px 0;pointer-events:none;z-index:1}
+
+  /* Baseline plan shadow */
+  .baseline-bar{position:absolute;height:3px;border-radius:1px;pointer-events:none;z-index:2}
+
+  /* PERT probability tail */
+  .prob-tail{position:absolute;height:22px;border-radius:0 4px 4px 0;pointer-events:none;z-index:1;opacity:.35}
+
+  /* Now curtain */
+  .now-curtain{position:absolute;top:0;bottom:0;left:0;pointer-events:none;z-index:3;background:linear-gradient(to right,rgba(2,10,8,.52) 0%,rgba(2,10,8,.18) 78%,transparent 100%)}
+
+  /* Past bar */
+  .bar.past:not(.dragging){filter:saturate(.22) brightness(.65)}
+
+  /* Alt-drag ghost */
+  .alt-ghost{position:absolute;height:22px;border-radius:3px;pointer-events:none;z-index:8;opacity:.5;border:2px dashed rgba(255,255,255,.5)}
+
+  /* Magnetic snap badge */
+  .snap-badge{position:absolute;pointer-events:none;z-index:15;background:var(--accent-2);color:#021412;font:9px var(--mono);font-weight:700;padding:2px 7px;border-radius:2px;letter-spacing:.06em;box-shadow:0 0 8px var(--accent-2);white-space:nowrap;animation:snap-pop .12s ease}
+  @keyframes snap-pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  .snap-guide-mag{position:absolute;top:0;bottom:0;width:2px;background:var(--accent-2);box-shadow:0 0 10px var(--accent-2);z-index:9;pointer-events:none;background:linear-gradient(180deg,transparent,var(--accent-2) 10%,var(--accent-2) 90%,transparent)}
+
+  /* Owner label on bar */
+  .bar-owner{font:8.5px var(--mono);opacity:.75;background:rgba(0,0,0,.22);border-radius:2px;padding:0 3px;margin-left:3px;flex-shrink:0;letter-spacing:.02em}
+
+  /* Resource conflict */
+  .bar.conflict-bar{box-shadow:0 0 0 1.5px rgba(245,158,11,.85),0 0 14px rgba(245,158,11,.22),0 1px 2px rgba(0,0,0,.4) !important}
+  .conflict-dot{position:absolute;top:-5px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--p2);border:1.5px solid var(--bg);z-index:8;display:flex;align-items:center;justify-content:center;font:6px var(--mono);font-weight:900;color:#021412;pointer-events:none}
+
+  /* Minimap */
+  .minimap-strip{height:52px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg-top);position:relative;overflow:hidden;cursor:crosshair;user-select:none}
+  .minimap-strip::before{content:'OVERVIEW';position:absolute;top:4px;left:8px;font:7.5px var(--mono);letter-spacing:.1em;color:var(--t4);z-index:3;pointer-events:none}
+  .minimap-track{position:absolute;top:16px;bottom:4px;left:0;right:0}
+  .minimap-bar{position:absolute;border-radius:1px}
+  .minimap-today{position:absolute;top:0;bottom:0;width:1px;background:var(--accent-2);opacity:.8;z-index:2;pointer-events:none}
+  .minimap-viewport{position:absolute;top:0;bottom:0;background:rgba(20,184,166,.1);border-left:1.5px solid var(--accent-2);border-right:1.5px solid var(--accent-2);pointer-events:none;z-index:3}
+
+  /* Zoom preset buttons */
+  .zoom-presets{display:flex;align-items:center;gap:1px;background:var(--surface);border:1px solid var(--border-s);border-radius:2px;height:28px;padding:2px}
+  .zp-btn{height:100%;padding:0 9px;border:none;background:transparent;color:var(--t3);font:10px var(--mono);cursor:pointer;border-radius:2px;letter-spacing:.05em;text-transform:uppercase}
+  .zp-btn:hover{background:var(--surface-2);color:var(--t1)}
+  .zp-btn.active{background:var(--accent-dim);color:var(--accent-2);border:1px solid var(--accent-border)}
+
+  /* Topbar icon buttons */
+  .tb-icon-btn{height:28px;width:28px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .tb-icon-btn:hover{background:var(--surface-2);color:var(--t1)}
+  .tb-icon-btn.active{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
+
+  /* Owner swimlane */
+  .owner-group-row{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;background:var(--bg-side);border-bottom:1px solid var(--border);cursor:pointer;position:sticky;z-index:1}
+  .owner-group-row:hover{background:var(--surface)}
+  .owner-avatar{width:20px;height:20px;border-radius:50%;background:var(--surface-3);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font:8px var(--font);font-weight:700;color:var(--accent-2);flex-shrink:0}
+
+  /* Tiny header columns */
+  .hdr-day.tiny .dow,.hdr-day.tiny .dom{display:none}
+
+  /* Drag-create phantom */
+  .drag-create-hint{position:absolute;height:22px;border-radius:3px;background:var(--accent-dim);border:1.5px dashed var(--accent-2);pointer-events:none;z-index:8;display:flex;align-items:center;justify-content:center;color:var(--accent-2);font:10px var(--mono);font-weight:700;box-shadow:0 0 0 4px rgba(20,184,166,.1)}
+
+  /* Empty Gantt state (no projects) */
+  .empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t4);font-size:13px;gap:12px;pointer-events:none}
+  .empty-state h3{font-size:14px;font-weight:600;color:var(--t2);letter-spacing:.02em}
+
+  /* Welcome / first launch overlay */
+  .welcome-overlay{position:fixed;inset:0;background:radial-gradient(ellipse at center,#0b201c 0%,#040c0a 80%);display:flex;align-items:center;justify-content:center;z-index:1000;font-family:var(--font)}
+  .welcome-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:48px 64px;background:linear-gradient(180deg,rgba(20,40,36,.65),rgba(8,20,18,.85));border:1px solid var(--border-s);border-radius:8px;box-shadow:var(--shadow-lg);min-width:380px;backdrop-filter:blur(6px)}
+  .welcome-logo{width:54px;height:54px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#02100d;letter-spacing:.02em;box-shadow:0 8px 24px rgba(20,184,166,.35),inset 0 1px 0 rgba(255,255,255,.18);margin-bottom:14px}
+  .welcome-title{font-size:28px;font-weight:700;color:var(--t1);letter-spacing:-.5px}
+  .welcome-subtitle{font-size:13px;color:var(--t3);margin-bottom:24px}
+  .welcome-actions{display:flex;flex-direction:column;gap:10px;width:100%}
+  .welcome-btn{height:42px;padding:0 18px;border-radius:4px;border:1px solid var(--border-s);background:var(--surface);color:var(--t1);font:13px var(--font);font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .12s,border-color .12s}
+  .welcome-btn:hover{background:var(--surface-2);border-color:var(--accent-border)}
+  .welcome-btn.primary{background:var(--accent);border-color:var(--accent-2);color:#021412;font-weight:600}
+  .welcome-btn.primary:hover{background:var(--accent-2)}
+  .welcome-btn svg{width:14px;height:14px;opacity:.7}
+  .welcome-hint{font-size:11px;color:var(--t4);margin-top:18px;letter-spacing:.02em}
+  .welcome-warn{font-size:11px;color:var(--p2);margin-top:10px;padding:6px 10px;border:1px solid rgba(245,158,11,.3);border-radius:3px;background:rgba(245,158,11,.06);text-align:center}
+</style>
+</head>
+<body data-bar-style="capsule" data-screen-label="Timeline">
+<div id="root"><div class="loading">Loading Timeline…</div></div>
+
+<script>
+  // Tweak defaults
+  const TWEAK_DEFAULTS = {
+    "dayWidth": 36,
+    "rowHeight": 34,
+    "showWeekends": true,
+    "showDeps": true,
+    "compactBars": false,
+    "snapToDay": true,
+    "groupBy": "project",
+    "showFloat": false,
+    "showProbBars": true,
+    "showNowCurtain": false,
+    "showOwners": true,
+    "showConflicts": true,
+    "showMinimap": true
+  };
+  window.__TWEAK_DEFAULTS = TWEAK_DEFAULTS;
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- ════════════════ TWEAKS PANEL (generic framework) ════════════════ -->
+<script type="text/babel">
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(20,32,29,.92);color:#e6fffb;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid rgba(34,64,58,.8);border-radius:8px;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+    font:11.5px/1.4 'Geist',ui-sans-serif,system-ui,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none;border-bottom:1px solid rgba(34,64,58,.6)}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(230,255,251,.55);
+    width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(255,255,255,.06);color:#e6fffb}
+  .twk-body{padding:8px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0}
+  .twk-body::-webkit-scrollbar{width:6px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(230,255,251,.78)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(230,255,251,.55);font-variant-numeric:tabular-nums}
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(230,255,251,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:1px solid rgba(34,64,58,.8);border-radius:4px;
+    background:rgba(8,20,18,.7);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(20,184,166,.6)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(230,255,251,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(255,255,255,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#14b8a6;
+    border:1px solid rgba(0,0,0,.4);box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(255,255,255,.15);transition:background .15s;cursor:pointer;padding:0}
+  .twk-toggle[data-on="1"]{background:#14b8a6}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.4);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:1px solid rgba(34,64,58,.8);border-radius:4px;
+    background:rgba(8,20,18,.7);color:#e6fffb;font:inherit;font-weight:500;cursor:pointer}
+  .twk-btn:hover{background:rgba(20,184,166,.18);border-color:rgba(20,184,166,.5)}
+`;
+
+const TIMELINE_TWK_KEY = 'timeline-tweaks-v1';
+
+function useTweaks(defaults) {
+  const stored = (() => {
+    try { return JSON.parse(localStorage.getItem(TIMELINE_TWK_KEY)) || {}; }
+    catch(e) { return {}; }
+  })();
+  const [values, setValues] = React.useState({...defaults, ...stored});
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => {
+      const next = { ...prev, ...edits };
+      try { localStorage.setItem(TIMELINE_TWK_KEY, JSON.stringify(next)); } catch(e) {}
+      return next;
+    });
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ title = 'Settings', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 36 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    window.addEventListener('resize', clampToViewport);
+    return () => window.removeEventListener('resize', clampToViewport);
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => setOpen(false);
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel"
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close" onMouseDown={(e) => e.stopPropagation()} onClick={dismiss}>×</button>
+        </div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakSection({ title, label, children }) {
+  return (<><div className="twk-sect">{title ?? label}</div>{children}</>);
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl"><span>{label}</span>{value != null && <span className="twk-val">{value}</span>}</div>
+      {children}
+    </div>
+  );
+}
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value} onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (<button type="button" className="twk-btn" onClick={onClick}>{label}</button>);
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakSelect, TweakButton,
+});
+</script>
+
+<!-- ════════════════ UTILS + DEMO DATA + WORKSPACE HELPERS ════════════════ -->
+<script type="text/babel">
+const DAY_MS = 86400000;
+const _today = new Date(); _today.setHours(0,0,0,0);
+const TODAY = _today;
+
+function ymd(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dd}`; }
+function parseYmd(s){ return new Date(s+'T00:00:00'); }
+function addDays(s,n){ const d=parseYmd(s); d.setDate(d.getDate()+n); return ymd(d); }
+function diffDays(a,b){ return Math.round((parseYmd(b)-parseYmd(a))/DAY_MS); }
+function fmtShort(s){ return parseYmd(s).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+function isWeekend(s){ const d=parseYmd(s).getDay(); return d===0||d===6; }
+const todayStr = ymd(TODAY);
+const DOW    = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── Demo data — relative to today so the sample always looks alive ──
+function buildDemoTasks(){
+  const d = (n) => addDays(todayStr, n);
+  return [
+    // Acme launch
+    {id:'p1',   parent:null, project:'WORK',  kind:'project', title:'Acme — Q2 launch', start:d(-19),end:d(9), priority:'p1',progress:.55},
+    {id:'p1s1', parent:'p1', project:'WORK',  title:'Brief copywriter',                start:d(-19),end:d(-17),priority:'p2',progress:1, done:true, color:'#7c3aed',owner:'Sam'},
+    {id:'p1s2', parent:'p1', project:'WORK',  title:'Approve hero image',              start:d(-14),end:d(-11),priority:'p2',progress:.7, color:'#7c3aed',deps:['p1s1'],owner:'Jordan',pessimistic:3},
+    {id:'p1s3', parent:'p1', project:'WORK',  title:'Draft launch blog post',          start:d(-14),end:d(-10),priority:'p1',progress:.85,color:'#a5b4fc',deps:['p1s1'],owner:'Sam',  pessimistic:4},
+    {id:'p1s4', parent:'p1', project:'WORK',  title:'Schedule social posts',           start:d(-7), end:d(-4), priority:'p3',progress:.1, color:'#a5b4fc',deps:['p1s3'],baselineEnd:d(-6),owner:'Jordan'},
+    {id:'p1s5', parent:'p1', project:'WORK',  title:'QA landing page on staging',      start:d(-5), end:d(1),  priority:'p2',progress:0,  color:'#fcd34d',deps:['p1s2'],baselineEnd:d(-3),owner:'Chris',pessimistic:5},
+    {id:'p1s6', parent:'p1', project:'WORK',  title:'Flip DNS to live',                start:d(3),  end:d(3),  priority:'p1',progress:0,  color:'#ef4444',deps:['p1s5'],milestone:true,owner:'Alex'},
+    {id:'p1s7', parent:'p1', project:'WORK',  title:'Launch day',                      start:d(4),  end:d(4),  priority:'p1',progress:0,  color:'#14b8a6',deps:['p1s6','p1s4'],milestone:true,owner:'Alex'},
+    // Hyperion
+    {id:'h1',   parent:null, project:'WORK',  kind:'project', title:'Hyperion — proposal', start:d(-12),end:d(-3),priority:'p1',progress:.2},
+    {id:'h1a',  parent:'h1', project:'WORK',  title:'Discovery call',                  start:d(-12),end:d(-12),priority:'p1',progress:0,  color:'#a855f7',milestone:true,owner:'Alex'},
+    {id:'h1b',  parent:'h1', project:'WORK',  title:'Pricing slide (Sam)',             start:d(-11),end:d(-7), priority:'p1',progress:.4, color:'#f472b6',deps:['h1a'],baselineEnd:d(-9),owner:'Sam',pessimistic:2},
+    {id:'h1c',  parent:'h1', project:'WORK',  title:'Draft proposal narrative',        start:d(-10),end:d(-5), priority:'p1',progress:0,  color:'#a5b4fc',deps:['h1a'],baselineEnd:d(-7),owner:'Jordan'},
+    {id:'h1d',  parent:'h1', project:'WORK',  title:'Submit proposal',                 start:d(-3), end:d(-3), priority:'p1',progress:0,  color:'#14b8a6',deps:['h1b','h1c'],milestone:true,owner:'Alex'},
+    // Admin
+    {id:'a1',   parent:null, project:'ADMIN', kind:'project', title:'Q1 close + tax filing', start:d(-19),end:d(-7),priority:'p1',progress:.45},
+    {id:'a1a',  parent:'a1', project:'ADMIN', title:'Send Northwind invoice',          start:d(-19),end:d(-19),priority:'p2',progress:1, done:true,color:'#94a3b8',owner:'Alex'},
+    {id:'a1b',  parent:'a1', project:'ADMIN', title:'Q1 books closed',                 start:d(-19),end:d(-11),priority:'p1',progress:.6, color:'#fcd34d',baselineEnd:d(-14),owner:'Alex',pessimistic:3},
+    {id:'a1c',  parent:'a1', project:'ADMIN', title:'Gather receipts',                 start:d(-14),end:d(-11),priority:'p2',progress:.35,color:'#94a3b8',owner:'Sam'},
+    {id:'a1d',  parent:'a1', project:'ADMIN', title:'Submit quarterly filing',         start:d(-10),end:d(-7),priority:'p1',progress:0,  color:'#fcd34d',deps:['a1b','a1c'],owner:'Alex'},
+    // Life
+    {id:'l1',   parent:null, project:'LIFE',  kind:'project', title:'Personal — month', start:d(-19),end:d(9),priority:'p3',progress:.3},
+    {id:'l1a',  parent:'l1', project:'LIFE',  title:'Strength training',               start:d(-19),end:d(4), priority:'p3',progress:.45,color:'#86efac',owner:'Jordan'},
+    {id:'l1b',  parent:'l1', project:'LIFE',  title:'Coffee with mentor',              start:d(-17),end:d(-17),priority:'p2',progress:1, done:true, color:'#5eead4',milestone:true,owner:'Jordan'},
+    {id:'l1c',  parent:'l1', project:'LIFE',  title:'Dentist checkup',                 start:d(-11),end:d(-11),priority:'p2',progress:0, color:'#5eead4',milestone:true,owner:'Jordan'},
+    {id:'l1d',  parent:'l1', project:'LIFE',  title:'Read a book',                     start:d(-9), end:d(1),  priority:'p3',progress:0, color:'#86efac',owner:'Chris'},
+  ];
+}
+const DEMO_TASKS = buildDemoTasks();
+
+// ── Workspace helpers ──
+function genId(prefix){ return (prefix||'p') + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+
+function newProject(name){
+  const palette = ['#7c3aed','#14b8a6','#f472b6','#a5b4fc','#fcd34d','#86efac','#f59e0b','#5eead4'];
+  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [] };
+}
+
+function sampleWorkspace(){
+  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: DEMO_TASKS };
+  return { version: 1, projects: [p], activeProjectId: p.id };
+}
+
+function serializeWorkspace(projects, activeProjectId){
+  return JSON.stringify({
+    version: 1,
+    activeProjectId,
+    projects: projects.map(p => ({
+      ...p,
+      baseline: (p.baseline instanceof Map) ? Object.fromEntries(p.baseline) : (p.baseline || null)
+    }))
+  }, null, 2);
+}
+
+function parseWorkspace(json){
+  const data = JSON.parse(json);
+  if (!data || !Array.isArray(data.projects)) throw new Error('Invalid workspace file');
+  return {
+    version: data.version || 1,
+    activeProjectId: data.activeProjectId || null,
+    projects: data.projects.map(p => ({
+      id: p.id || genId('proj-'),
+      name: p.name || 'Untitled',
+      color: p.color || '#7c3aed',
+      created: p.created || todayStr,
+      tasks: Array.isArray(p.tasks) ? p.tasks : [],
+      baseline: p.baseline ? new Map(Object.entries(p.baseline)) : null,
+    }))
+  };
+}
+
+// ── Row building ──
+function buildRows(tasks, collapsed, groupBy){
+  return groupBy === 'owner'
+    ? buildRowsByOwner(tasks, collapsed)
+    : buildRowsByProject(tasks, collapsed);
+}
+
+function buildRowsByProject(tasks, collapsed){
+  const out = [];
+  const byParent = new Map();
+  for (const t of tasks){
+    const k = t.parent || '__root';
+    if (!byParent.has(k)) byParent.set(k,[]);
+    byParent.get(k).push(t);
+  }
+  const projects = (byParent.get('__root')||[]).filter(t=>t.kind==='project');
+  for (const p of projects){
+    out.push({...p, depth:0, isProject:true});
+    if (!collapsed.has(p.id)){
+      for (const k of (byParent.get(p.id)||[])) out.push({...k, depth:1});
+    }
+  }
+  // Orphans (tasks without a project parent) — show under "Loose tasks"
+  const orphans = (byParent.get('__root')||[]).filter(t=>t.kind!=='project');
+  if (orphans.length){
+    const lid = '__loose';
+    const ls = orphans.reduce((m,t)=>t.start<m?t.start:m, orphans[0].start);
+    const le = orphans.reduce((m,t)=>t.end>m?t.end:m,   orphans[0].end);
+    out.push({id:lid, title:'Loose tasks', isProject:true, depth:0, kind:'project', start:ls, end:le, project:'WORK'});
+    if (!collapsed.has(lid)){
+      for (const t of orphans) out.push({...t, depth:1});
+    }
+  }
+  return out;
+}
+
+function buildRowsByOwner(tasks, collapsed){
+  const out = [];
+  const map = new Map();
+  for (const t of tasks){
+    if (t.kind==='project') continue;
+    const k = t.owner || '—';
+    if (!map.has(k)) map.set(k,[]);
+    map.get(k).push(t);
+  }
+  const OWNER_COLORS = {Alex:'#a5b4fc',Sam:'#fcd34d',Jordan:'#86efac',Chris:'#f472b6','—':'#94a3b8'};
+  for (const owner of [...map.keys()].sort()){
+    const ots = map.get(owner).sort((a,b)=>a.start.localeCompare(b.start));
+    const rs  = ots.reduce((mn,t)=>t.start<mn?t.start:mn, ots[0].start);
+    const re  = ots.reduce((mx,t)=>t.end>mx?t.end:mx,   ots[0].end);
+    const gid = 'owner-'+owner;
+    out.push({id:gid, title:owner, isOwnerGroup:true, owner,
+      start:rs, end:re, color:OWNER_COLORS[owner]||'#94a3b8', kind:'owner-group'});
+    if (!collapsed.has(gid)){
+      for (const t of ots) out.push({...t, depth:1});
+    }
+  }
+  return out;
+}
+
+// ── Critical path ──
+function computeCriticalPath(tasks){
+  const byId  = new Map(tasks.map(t=>[t.id,t]));
+  const memo  = new Map();
+  const visit = id=>{
+    if (memo.has(id)) return memo.get(id);
+    const t=byId.get(id); if(!t) return {finish:0,prev:null};
+    const dur=diffDays(t.start,t.end)+1;
+    let best={finish:dur,prev:null};
+    for (const d of (t.deps||[])){
+      const r=visit(d); const f=r.finish+dur;
+      if(f>best.finish) best={finish:f,prev:d};
+    }
+    memo.set(id,best); return best;
+  };
+  const deps=new Set(); for(const t of tasks) for(const d of (t.deps||[])) deps.add(d);
+  let leaf=null,max=-1;
+  for(const t of tasks){
+    if(t.kind==='project') continue;
+    const r=visit(t.id); const isLeaf=!deps.has(t.id);
+    if(isLeaf&&r.finish>max){max=r.finish;leaf=t.id;}
+  }
+  const path=new Set(); const edges=new Set();
+  let cur=leaf;
+  while(cur){ path.add(cur); const prev=memo.get(cur)?.prev; if(prev) edges.add(prev+'→'+cur); cur=prev; }
+  return {nodes:path,edges};
+}
+
+// ── At-risk tasks ──
+function computeAtRisk(tasks){
+  const byId=new Map(tasks.map(t=>[t.id,t]));
+  const atRisk=new Set();
+  for(const ms of tasks.filter(t=>t.milestone&&!t.done)){
+    const stack=[...(ms.deps||[])]; const seen=new Set();
+    while(stack.length){
+      const id=stack.pop(); if(seen.has(id)) continue; seen.add(id);
+      const t=byId.get(id); if(!t) continue;
+      if(t.end>=ms.start) atRisk.add(id);
+      for(const d of (t.deps||[])) stack.push(d);
+    }
+  }
+  return atRisk;
+}
+
+// ── Health pip ──
+function getHealth(t, isAtRisk){
+  if(t.done||t.kind==='project'||t.milestone) return null;
+  if(t.blocking) return 'red';
+  const todayD=parseYmd(todayStr), endD=parseYmd(t.end);
+  if(endD<todayD&&(t.progress||0)<1) return 'red';
+  if(t.baselineEnd){ const slip=diffDays(t.baselineEnd,t.end); if(slip>=4) return 'red'; if(slip>=2) return 'amber'; }
+  const startD=parseYmd(t.start), dur=Math.max(1,diffDays(t.start,t.end)+1);
+  const elapsed=Math.max(0,(todayD-startD)/DAY_MS);
+  const expected=Math.min(1,elapsed/dur), actual=t.progress||0;
+  if(expected-actual>0.4) return 'red';
+  if(expected-actual>0.2) return 'amber';
+  if(isAtRisk) return 'amber';
+  return 'green';
+}
+
+// ── Dep chain ──
+function getDepChain(tasks, id){
+  const byId=new Map(tasks.map(t=>[t.id,t]));
+  const dependents=new Map();
+  for(const t of tasks) for(const d of (t.deps||[])){
+    if(!dependents.has(d)) dependents.set(d,[]);
+    dependents.get(d).push(t.id);
+  }
+  const result=new Set([id]);
+  const up=[id];
+  while(up.length){ const cur=up.pop(); for(const d of (byId.get(cur)?.deps||[])) if(!result.has(d)){result.add(d);up.push(d);} }
+  const down=[id];
+  while(down.length){ const cur=down.pop(); for(const c of (dependents.get(cur)||[])) if(!result.has(c)){result.add(c);down.push(c);} }
+  return result;
+}
+
+// ── Cascade shift dependents ──
+function cascadeAfterMove(tasks, movedId){
+  const byId=new Map(tasks.map(t=>[t.id,{...t}]));
+  const deps=new Map();
+  for(const t of tasks) for(const d of (t.deps||[])){
+    if(!deps.has(d)) deps.set(d,[]);
+    deps.get(d).push(t.id);
+  }
+  const stack=[movedId]; const seen=new Set();
+  while(stack.length){
+    const id=stack.pop(); if(seen.has(id)) continue; seen.add(id);
+    const t=byId.get(id); if(!t) continue;
+    const minStart=addDays(t.end,1);
+    for(const nid of (deps.get(id)||[])){
+      const child=byId.get(nid); if(!child) continue;
+      if(child.start<minStart){
+        const dur=diffDays(child.start,child.end);
+        child.start=minStart; child.end=addDays(minStart,dur); stack.push(nid);
+      }
+    }
+  }
+  return Array.from(byId.values());
+}
+
+// ── Slack / float ──
+function computeFloat(tasks){
+  const byId=new Map(tasks.map(t=>[t.id,t]));
+  const deps=new Map();
+  for(const t of tasks) for(const d of (t.deps||[])){
+    if(!deps.has(d)) deps.set(d,[]);
+    deps.get(d).push(t.id);
+  }
+  const projEnd=tasks.reduce((mx,t)=>t.end>mx?t.end:mx,'2020-01-01');
+  const out=new Map();
+  for(const t of tasks){
+    if(t.kind==='project'||t.milestone){out.set(t.id,0);continue;}
+    const succs=deps.get(t.id)||[];
+    if(!succs.length){out.set(t.id,Math.max(0,diffDays(t.end,projEnd)));continue;}
+    let minF=Infinity;
+    for(const sid of succs){ const s=byId.get(sid); if(s) minF=Math.min(minF,diffDays(t.end,s.start)-1); }
+    out.set(t.id,Math.max(0,minF===Infinity?0:minF));
+  }
+  return out;
+}
+
+// ── Resource conflict detection ──
+function detectConflicts(tasks){
+  const byOwner=new Map();
+  for(const t of tasks){
+    if(!t.owner||t.kind==='project'||t.milestone||t.done) continue;
+    if(!byOwner.has(t.owner)) byOwner.set(t.owner,[]);
+    byOwner.get(t.owner).push(t);
+  }
+  const conflicts=new Set();
+  for(const [,ots] of byOwner){
+    for(let i=0;i<ots.length;i++) for(let j=i+1;j<ots.length;j++){
+      const a=ots[i],b=ots[j];
+      if(a.start<=b.end&&b.start<=a.end){conflicts.add(a.id);conflicts.add(b.id);}
+    }
+  }
+  return conflicts;
+}
+
+// ── Auto-stagger ──
+function autoStagger(tasks){
+  const byOwner=new Map();
+  for(const t of tasks){
+    if(!t.owner||t.kind==='project'||t.milestone||t.done) continue;
+    if(!byOwner.has(t.owner)) byOwner.set(t.owner,[]);
+    byOwner.get(t.owner).push(t);
+  }
+  const updates=new Map();
+  for(const [,ots] of byOwner){
+    const sorted=[...ots].sort((a,b)=>a.start.localeCompare(b.start));
+    let prevEnd=null;
+    for(const t of sorted){
+      if(prevEnd&&t.start<=prevEnd){
+        const ns=addDays(prevEnd,1), dur=diffDays(t.start,t.end);
+        updates.set(t.id,{start:ns,end:addDays(ns,dur)});
+        prevEnd=addDays(ns,dur);
+      } else { prevEnd=t.end; }
+    }
+  }
+  if(!updates.size) return tasks;
+  return tasks.map(t=>updates.has(t.id)?{...t,...updates.get(t.id)}:t);
+}
+
+// ── Orthogonal dep-arrow routing ──
+function buildArrowPath(fromRowIdx, toRowIdx, parentX, childX, rows, axisStart, dayW, rowH){
+  const fromY=fromRowIdx*rowH+rowH/2, toY=toRowIdx*rowH+rowH/2, CR=4;
+  if(fromRowIdx===toRowIdx){
+    const m=(parentX+childX)/2;
+    return `M ${parentX} ${fromY} C ${m} ${fromY} ${m} ${toY} ${childX} ${toY}`;
+  }
+  const minR=Math.min(fromRowIdx,toRowIdx), maxR=Math.max(fromRowIdx,toRowIdx);
+  const traversed=rows.slice(minR+1,maxR);
+  const hitsBar=tx=>{
+    for(const row of traversed){
+      if(row.isProject||row.isOwnerGroup||row.milestone) continue;
+      const bx=diffDays(axisStart,row.start)*dayW;
+      const bw=(diffDays(row.start,row.end)+1)*dayW-2;
+      if(tx>=bx-4&&tx<=bx+bw+4) return true;
+    }
+    return false;
+  };
+  let viaX=null;
+  for(let off=8;off<=320;off+=6){ if(!hitsBar(parentX+off)){viaX=parentX+off;break;} }
+  if(viaX===null) for(let off=8;off<=200;off+=6){ if(!hitsBar(childX-off)){viaX=childX-off;break;} }
+  if(viaX===null) viaX=parentX+10;
+  const goingDown=toY>fromY;
+  const cr=Math.min(CR,Math.abs(viaX-parentX)/2,Math.abs(childX-viaX)/2,Math.abs(toY-fromY)/2);
+  const c1x=parentX<viaX?viaX-cr:viaX+cr, c1y=goingDown?fromY+cr:fromY-cr;
+  const c2y=goingDown?toY-cr:toY+cr, c2x=viaX<childX?viaX+cr:viaX-cr;
+  let p=`M ${parentX} ${fromY}`;
+  if(cr>=1){
+    p+=` L ${c1x} ${fromY} Q ${viaX} ${fromY} ${viaX} ${c1y}`;
+    p+=` L ${viaX} ${c2y} Q ${viaX} ${toY} ${c2x} ${toY}`;
+  } else { p+=` L ${viaX} ${fromY} L ${viaX} ${toY}`; }
+  return p+` L ${childX} ${toY}`;
+}
+
+// ── Color shade helper ──
+function shade(c,pct){
+  if(!c) return '#000';
+  let hex=c;
+  if(hex.startsWith('var(')){
+    const name=hex.match(/--[\w-]+/)?.[0];
+    hex=name?getComputedStyle(document.documentElement).getPropertyValue(name).trim():'#14b8a6';
+  }
+  if(!hex.startsWith('#')) return c;
+  if(hex.length===4) hex='#'+hex.slice(1).split('').map(x=>x+x).join('');
+  const n=parseInt(hex.slice(1),16);
+  let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  if(pct<0){ r=Math.round(r*(1+pct));g=Math.round(g*(1+pct));b=Math.round(b*(1+pct)); }
+  else { r=Math.round(r+(255-r)*pct);g=Math.round(g+(255-g)*pct);b=Math.round(b+(255-b)*pct); }
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+Object.assign(window,{
+  DAY_MS,TODAY,todayStr,
+  ymd,parseYmd,addDays,diffDays,fmtShort,isWeekend,
+  DOW,MONTHS,DEMO_TASKS,
+  buildRows,buildRowsByProject,buildRowsByOwner,
+  computeCriticalPath,computeAtRisk,getHealth,getDepChain,
+  cascadeAfterMove,computeFloat,detectConflicts,autoStagger,
+  buildArrowPath,shade,
+  genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
+});
+</script>
+
+<!-- ════════════════ COMPONENTS: Minimap, GanttTweaks ════════════════ -->
+<script type="text/babel">
+const { useState: _useState2, useEffect: _useEffect2, useRef: _useRef2, useCallback: _useCallback2 } = React;
+
+function Minimap({ rows, axis, dayW, totalW, gridScrollRef }){
+  const ref = _useRef2(null);
+  const [vp, setVp] = _useState2({l:0,w:100});
+
+  _useEffect2(()=>{
+    const update = ()=>{
+      const grid=gridScrollRef.current, cont=ref.current;
+      if(!grid||!cont) return;
+      const ratio=cont.clientWidth/totalW;
+      setVp({l:grid.scrollLeft*ratio, w:Math.max(16,grid.clientWidth*ratio)});
+    };
+    const grid=gridScrollRef.current; if(!grid) return;
+    grid.addEventListener('scroll',update,{passive:true});
+    const ro=new ResizeObserver(update);
+    if(ref.current) ro.observe(ref.current);
+    update();
+    return ()=>{ grid.removeEventListener('scroll',update); ro.disconnect(); };
+  },[totalW,gridScrollRef]);
+
+  const jump = _useCallback2((e)=>{
+    const rect=ref.current?.getBoundingClientRect(), grid=gridScrollRef.current;
+    if(!rect||!grid) return;
+    const pct=(e.clientX-rect.left)/rect.width;
+    grid.scrollTo({left:Math.max(0,pct*totalW-grid.clientWidth/2),behavior:'smooth'});
+  },[totalW,gridScrollRef]);
+
+  const nDays=axis.days.length;
+  const toLeft = d=>`${window.diffDays(axis.start,d)/nDays*100}%`;
+  const toPct  = (s,e)=>`${(window.diffDays(s,e)+1)/nDays*100}%`;
+  const todayL = `${window.diffDays(axis.start,window.todayStr)/nDays*100}%`;
+
+  const taskRows=rows.filter(r=>!r.isProject&&!r.isOwnerGroup);
+  const barH=Math.min(4,Math.max(1.5, 32/Math.max(1,taskRows.length)));
+  let y=0;
+  const barItems=taskRows.map(r=>{ const my=y; y+=barH+0.5; return {r,my}; });
+
+  return (
+    <div className="minimap-strip" ref={ref} onClick={jump} title="Click to navigate">
+      <div className="minimap-track">
+        {barItems.map(({r,my})=>(
+          <div key={r.id} className="minimap-bar" style={{
+            left:toLeft(r.start),
+            width:r.milestone?'3px':toPct(r.start,r.end),
+            top:my+'px', height:barH+'px',
+            background:r.done?'var(--t4)':(r.color||'var(--accent-2)'),
+            opacity:r.done?.35:.85,
+            borderRadius:r.milestone?'50%':'1px',
+          }}/>
+        ))}
+        <div className="minimap-today" style={{left:todayL}}/>
+        <div className="minimap-viewport" style={{left:vp.l+'px',width:vp.w+'px'}}/>
+      </div>
+    </div>
+  );
+}
+
+function GanttTweaks({ tw, setTweak }){
+  if(!window.TweaksPanel) return null;
+  const { TweaksPanel, TweakSection, TweakSlider, TweakToggle, TweakSelect } = window;
+
+  return (
+    <TweaksPanel title="Settings">
+      <TweakSection title="Timeline">
+        <TweakSlider label="Day width" value={tw.dayWidth} min={4} max={80} step={2}
+          onChange={v=>setTweak('dayWidth',v)} unit="px"/>
+        <TweakSlider label="Row height" value={tw.rowHeight} min={26} max={60} step={2}
+          onChange={v=>setTweak('rowHeight',v)} unit="px"/>
+      </TweakSection>
+      <TweakSection title="Grouping">
+        <TweakSelect label="Group by" value={tw.groupBy||'project'}
+          options={[{value:'project',label:'Project'},{value:'owner',label:'Owner / swimlane'}]}
+          onChange={v=>setTweak('groupBy',v)}/>
+      </TweakSection>
+      <TweakSection title="Overlays">
+        <TweakToggle label="Float / slack ghosts"   value={!!tw.showFloat}      onChange={v=>setTweak('showFloat',v)}/>
+        <TweakToggle label="PERT probability tails" value={!!tw.showProbBars}   onChange={v=>setTweak('showProbBars',v)}/>
+        <TweakToggle label="Now curtain"            value={tw.showNowCurtain!==false} onChange={v=>setTweak('showNowCurtain',v)}/>
+        <TweakToggle label="Minimap strip"          value={tw.showMinimap!==false}    onChange={v=>setTweak('showMinimap',v)}/>
+        <TweakToggle label="Owner badges"           value={tw.showOwners!==false}     onChange={v=>setTweak('showOwners',v)}/>
+        <TweakToggle label="Conflict highlights"    value={tw.showConflicts!==false}  onChange={v=>setTweak('showConflicts',v)}/>
+      </TweakSection>
+      <TweakSection title="Grid">
+        <TweakToggle label="Weekend shading"   value={tw.showWeekends!==false}  onChange={v=>setTweak('showWeekends',v)}/>
+        <TweakToggle label="Show dependencies" value={tw.showDeps!==false}      onChange={v=>setTweak('showDeps',v)}/>
+        <TweakToggle label="Compact bars"      value={!!tw.compactBars}         onChange={v=>setTweak('compactBars',v)}/>
+        <TweakToggle label="Snap to day"       value={tw.snapToDay!==false}     onChange={v=>setTweak('snapToDay',v)}/>
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+Object.assign(window,{ Minimap, GanttTweaks });
+</script>
+
+<!-- ════════════════ MAIN APP ════════════════ -->
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, Fragment } = React;
+const {
+  DAY_MS, todayStr, parseYmd, addDays, diffDays, fmtShort, isWeekend, ymd,
+  DOW, MONTHS,
+  buildRows, computeCriticalPath, computeAtRisk, getHealth, getDepChain,
+  cascadeAfterMove, computeFloat, detectConflicts, autoStagger,
+  buildArrowPath, shade,
+  genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
+} = window;
+
+const FSA_AVAILABLE = typeof window.showOpenFilePicker === 'function';
+
+function App(){
+  const tweakRes = window.useTweaks ? window.useTweaks(window.__TWEAK_DEFAULTS) : [window.__TWEAK_DEFAULTS,()=>{}];
+  const tw = tweakRes[0], setTweak = tweakRes[1];
+
+  // ── Workspace state ──
+  const [projects,        setProjects]        = useState([]);
+  const [activeProjectId, setActiveProjectId] = useState(null);
+  const [fileHandle,      setFileHandle]      = useState(null);
+  const [dirty,           setDirty]           = useState(false);
+  const [showWelcome,     setShowWelcome]     = useState(true);
+  const [projectPanelOpen,setProjectPanelOpen]= useState(true);
+  const [fileMenuOpen,    setFileMenuOpen]    = useState(false);
+  const [projCtxMenu,     setProjCtxMenu]     = useState(null);  // {x,y,projectId}
+  const [projRenaming,    setProjRenaming]    = useState(null);  // {id,value}
+
+  // ── Core editing state ──
+  const [collapsed,   setCollapsed]   = useState(new Set());
+  const [selected,    setSelected]    = useState(null);
+  const [selectedSet, setSelectedSet] = useState(new Set());
+  const [hoverRow,    setHoverRow]    = useState(null);
+  const [hoveredBarId,setHoveredBarId]= useState(null);
+  const [drag,        setDrag]        = useState(null);
+  const [lasso,       setLasso]       = useState(null);
+  const [snapInfo,    setSnapInfo]    = useState(null);
+  const [renaming,    setRenaming]    = useState(null);
+  const [durationBuf, setDurationBuf] = useState('');
+  const [ctxMenu,     setCtxMenu]     = useState(null);
+  const [focusChain,  setFocusChain]  = useState(null);
+
+  // ── Derived: active project ──
+  const activeProject = useMemo(
+    () => projects.find(p => p.id === activeProjectId) ?? null,
+    [projects, activeProjectId]
+  );
+  const tasks    = activeProject?.tasks ?? [];
+  const baseline = activeProject?.baseline ?? null;
+
+  // ── Tweak aliases ──
+  const dayW           = tw.dayWidth  || 36;
+  const rowH           = tw.rowHeight || 34;
+  const groupBy        = tw.groupBy   || 'project';
+  const showFloat      = !!tw.showFloat;
+  const showProbBars   = !!tw.showProbBars;
+  const showNowCurtain = !!tw.showNowCurtain;
+  const showOwners     = tw.showOwners     !== false;
+  const showConflicts  = tw.showConflicts  !== false;
+  const showMinimap    = tw.showMinimap    !== false;
+
+  // ── CSS vars ──
+  useLayoutEffect(()=>{
+    document.documentElement.style.setProperty('--col-w', dayW+'px');
+    document.documentElement.style.setProperty('--row-h', rowH+'px');
+  },[dayW,rowH]);
+
+  // ── Mutation helpers ──
+  const updateTasks = useCallback((fn) => {
+    setProjects(ps => ps.map(p => p.id === activeProjectId ? {...p, tasks: fn(p.tasks)} : p));
+    setDirty(true);
+  }, [activeProjectId]);
+
+  const updateActiveProject = useCallback((updates) => {
+    setProjects(ps => ps.map(p => p.id === activeProjectId ? {...p, ...updates} : p));
+    setDirty(true);
+  }, [activeProjectId]);
+
+  const updateProjectById = useCallback((id, updates) => {
+    setProjects(ps => ps.map(p => p.id === id ? {...p, ...updates} : p));
+    setDirty(true);
+  }, []);
+
+  // ── Workspace actions ──
+  const openWorkspace = useCallback(async () => {
+    if (!FSA_AVAILABLE) { alert('File System Access API not available. Use Chrome or Edge.'); return; }
+    if (dirty && projects.length > 0 && !window.confirm('Discard unsaved changes and open a different workspace?')) return;
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'Timeline Workspace', accept: { 'application/json': ['.json'] } }]
+      });
+      const file = await handle.getFile();
+      const ws = parseWorkspace(await file.text());
+      setFileHandle(handle);
+      setProjects(ws.projects);
+      const aid = ws.activeProjectId && ws.projects.find(p => p.id === ws.activeProjectId)
+        ? ws.activeProjectId
+        : (ws.projects[0]?.id ?? null);
+      setActiveProjectId(aid);
+      setShowWelcome(false);
+      setDirty(false);
+      setCollapsed(new Set());
+      setSelected(null);
+      setSelectedSet(new Set());
+    } catch(e) {
+      if (e?.name !== 'AbortError') console.error(e);
+    }
+  }, [dirty, projects.length]);
+
+  const saveWorkspaceRef = useRef(null);
+  const saveWorkspace = useCallback(async (forceAs = false) => {
+    if (!FSA_AVAILABLE) { alert('File System Access API not available. Use Chrome or Edge.'); return; }
+    if (projects.length === 0) { alert('Nothing to save — create a project first.'); return; }
+    let handle = fileHandle;
+    if (!handle || forceAs) {
+      try {
+        handle = await window.showSaveFilePicker({
+          suggestedName: 'workspace.json',
+          types: [{ description: 'Timeline Workspace', accept: { 'application/json': ['.json'] } }]
+        });
+        setFileHandle(handle);
+      } catch(e) { return; }
+    }
+    try {
+      const writable = await handle.createWritable();
+      await writable.write(serializeWorkspace(projects, activeProjectId));
+      await writable.close();
+      setDirty(false);
+    } catch(e) {
+      console.error('Save failed', e);
+      alert('Save failed: ' + (e?.message || e));
+    }
+  }, [fileHandle, projects, activeProjectId]);
+  saveWorkspaceRef.current = saveWorkspace;
+
+  const createNewProject = useCallback((nameArg) => {
+    const name = nameArg ?? window.prompt('Project name:', 'New project');
+    if (!name) return;
+    const p = newProject(name);
+    setProjects(ps => [...ps, p]);
+    setActiveProjectId(p.id);
+    setCollapsed(new Set());
+    setSelected(null);
+    setSelectedSet(new Set());
+    setDirty(true);
+    setShowWelcome(false);
+  }, []);
+
+  const duplicateProject = useCallback((id) => {
+    const p = projects.find(x => x.id === id);
+    if (!p) return;
+    const idMap = new Map();
+    const renamed = p.tasks.map(t => {
+      const nid = t.id + '-' + Math.random().toString(36).slice(2,5);
+      idMap.set(t.id, nid);
+      return { ...t, id: nid };
+    });
+    const finalTasks = renamed.map(t => ({
+      ...t,
+      parent: t.parent ? (idMap.get(t.parent) ?? t.parent) : null,
+      deps: (t.deps || []).map(d => idMap.get(d) ?? d),
+    }));
+    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks };
+    setProjects(ps => [...ps, np]);
+    setActiveProjectId(np.id);
+    setDirty(true);
+  }, [projects]);
+
+  const deleteProject = useCallback((id) => {
+    const p = projects.find(x => x.id === id);
+    if (!p) return;
+    if (!window.confirm(`Delete project "${p.name}" and all its tasks? This cannot be undone.`)) return;
+    setProjects(ps => {
+      const next = ps.filter(x => x.id !== id);
+      if (activeProjectId === id) {
+        setActiveProjectId(next[0]?.id ?? null);
+      }
+      return next;
+    });
+    setDirty(true);
+  }, [projects, activeProjectId]);
+
+  const switchProject = useCallback((id) => {
+    setActiveProjectId(id);
+    setCollapsed(new Set());
+    setSelected(null);
+    setSelectedSet(new Set());
+    setFocusChain(null);
+  }, []);
+
+  const loadSample = useCallback(() => {
+    const ws = sampleWorkspace();
+    setProjects(ws.projects);
+    setActiveProjectId(ws.activeProjectId);
+    setFileHandle(null);
+    setShowWelcome(false);
+    setDirty(false);
+    setCollapsed(new Set());
+    setSelected(null);
+    setSelectedSet(new Set());
+  }, []);
+
+  // ── beforeunload warning ──
+  useEffect(() => {
+    const fn = (e) => {
+      if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    };
+    window.addEventListener('beforeunload', fn);
+    return () => window.removeEventListener('beforeunload', fn);
+  }, [dirty]);
+
+  // ── Global save shortcut (works even when input focused, before main key handler) ──
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        saveWorkspaceRef.current?.(e.shiftKey);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // ── Dynamic axis (relative to today) ──
+  const axis = useMemo(()=>{
+    const t0d = parseYmd(todayStr).getTime();
+    const [bk, fw] = dayW>=20 ? [30,75] : dayW>=8 ? [90,180] : [180,365];
+    const start = ymd(new Date(t0d - bk*DAY_MS));
+    const end   = ymd(new Date(t0d + fw*DAY_MS));
+    const days=[]; let cur=start;
+    while(cur<=end){ days.push(cur); cur=addDays(cur,1); }
+    return {start,end,days};
+  },[dayW]);
+
+  const totalW = axis.days.length * dayW;
+  const xForDay = useCallback(s=>diffDays(axis.start,s)*dayW,[axis.start,dayW]);
+
+  // ── Derived analysis ──
+  const rows      = useMemo(()=>buildRows(tasks,collapsed,groupBy),[tasks,collapsed,groupBy]);
+  const critical  = useMemo(()=>computeCriticalPath(tasks),[tasks]);
+  const atRisk    = useMemo(()=>computeAtRisk(tasks),[tasks]);
+  const floatMap  = useMemo(()=>showFloat?computeFloat(tasks):new Map(),[tasks,showFloat]);
+  const conflicts = useMemo(()=>showConflicts?detectConflicts(tasks):new Set(),[tasks,showConflicts]);
+
+  const hoverChain = useMemo(()=>{
+    if(!hoveredBarId||focusChain) return null;
+    const c=getDepChain(tasks,hoveredBarId);
+    return c.size>1?c:null;
+  },[hoveredBarId,focusChain,tasks]);
+
+  const sprintBands = useMemo(()=>{
+    const b=[]; let n=0;
+    axis.days.forEach((d,i)=>{
+      if(parseYmd(d).getDay()!==1) return;
+      b.push({dayIdx:i,n,isEven:n%2===0,label:`S${n+1}`}); n++;
+    });
+    return b;
+  },[axis.days]);
+
+  const monthSpans = useMemo(()=>{
+    const out=[]; let i=0;
+    while(i<axis.days.length){
+      const start=axis.days[i], m=parseYmd(start).getMonth(); let j=i+1;
+      while(j<axis.days.length&&parseYmd(axis.days[j]).getMonth()===m) j++;
+      out.push({idx:i,len:j-i,label:MONTHS[m],year:parseYmd(start).getFullYear()}); i=j;
+    }
+    return out;
+  },[axis.days]);
+
+  // ── Refs + scroll sync ──
+  const hdrScrollRef   = useRef(null);
+  const gridScrollRef  = useRef(null);
+  const lpaneBodyRef   = useRef(null);
+  const syncingRef     = useRef(false);
+
+  const onGridScroll = e=>{
+    if(hdrScrollRef.current) hdrScrollRef.current.scrollLeft=e.target.scrollLeft;
+    if(!syncingRef.current&&lpaneBodyRef.current){
+      syncingRef.current=true;
+      lpaneBodyRef.current.scrollTop=e.target.scrollTop;
+      syncingRef.current=false;
+    }
+  };
+  const onLpaneScroll = e=>{
+    if(!syncingRef.current&&gridScrollRef.current){
+      syncingRef.current=true;
+      gridScrollRef.current.scrollTop=e.target.scrollTop;
+      syncingRef.current=false;
+    }
+  };
+
+  // Center on today whenever axis or active project changes
+  useEffect(()=>{
+    const el=gridScrollRef.current; if(!el) return;
+    const idx=diffDays(axis.start,todayStr);
+    el.scrollLeft=Math.max(0,idx*dayW-el.clientWidth/3);
+    if(hdrScrollRef.current) hdrScrollRef.current.scrollLeft=el.scrollLeft;
+  },[axis.start, activeProjectId]); // eslint-disable-line
+
+  // ── Live preview (drag visuals) ──
+  const livePreview = t=>{
+    if(!drag) return null;
+    if(drag.kind==='group-move'&&selectedSet.has(t.id)){
+      const orig=drag.groupOffsets?.[t.id]; if(!orig) return null;
+      const d=drag.deltaDays;
+      return {start:addDays(orig.start,d),end:addDays(orig.end,d)};
+    }
+    if(drag.id!==t.id||drag.kind==='alt-move') return null;
+    const d=drag.deltaDays;
+    if(drag.kind==='move') return {start:addDays(t.start,d),end:addDays(t.end,d)};
+    if(drag.kind==='l'){let ns=addDays(t.start,d);if(ns>t.end)ns=t.end;return{start:ns,end:t.end};}
+    if(drag.kind==='r'){let ne=addDays(t.end,d);if(ne<t.start)ne=t.start;return{start:t.start,end:ne};}
+    return null;
+  };
+
+  // ── Drag begin ──
+  const beginBarDrag = useCallback((e,t,kind)=>{
+    e.preventDefault(); e.stopPropagation();
+    const rect=gridScrollRef.current.getBoundingClientRect();
+    const inGroup=selectedSet.has(t.id)&&selectedSet.size>1;
+
+    if(e.altKey&&kind==='move'){
+      setDrag({id:t.id,kind:'alt-move',startClientX:e.clientX,startClientY:e.clientY,
+        origStart:t.start,origEnd:t.end,gridLeft:rect.left,gridScrollLeft:gridScrollRef.current.scrollLeft,
+        dx:0,deltaDays:0,currentClientX:e.clientX,currentClientY:e.clientY});
+      if(!e.shiftKey){setSelected(t.id);setSelectedSet(new Set([t.id]));}
+      return;
+    }
+    if(inGroup&&kind==='move'){
+      const offsets={};
+      for(const id of selectedSet){const tt=tasks.find(x=>x.id===id);if(tt)offsets[id]={start:tt.start,end:tt.end};}
+      setDrag({id:t.id,kind:'group-move',startClientX:e.clientX,startClientY:e.clientY,
+        groupOffsets:offsets,gridLeft:rect.left,gridScrollLeft:gridScrollRef.current.scrollLeft,
+        dx:0,deltaDays:0,snapped:false,currentClientX:e.clientX,currentClientY:e.clientY});
+      return;
+    }
+    setDrag({id:t.id,kind,startClientX:e.clientX,startClientY:e.clientY,
+      origStart:t.start,origEnd:t.end,gridLeft:rect.left,gridScrollLeft:gridScrollRef.current.scrollLeft,
+      dx:0,deltaDays:0,snapped:false,hoverDay:t.start,currentClientX:e.clientX,currentClientY:e.clientY});
+    if(e.shiftKey){
+      setSelectedSet(p=>{const n=new Set(p);n.has(t.id)?n.delete(t.id):n.add(t.id);return n;});
+    } else {
+      setSelected(t.id); setSelectedSet(new Set([t.id]));
+    }
+  },[selectedSet,tasks]);
+
+  const beginDepDrag = useCallback((e,t)=>{
+    e.preventDefault(); e.stopPropagation();
+    const rect=gridScrollRef.current.getBoundingClientRect();
+    setDrag({id:t.id,kind:'dep',startClientX:e.clientX,startClientY:e.clientY,
+      gridLeft:rect.left,gridTop:rect.top,
+      gridScrollLeft:gridScrollRef.current.scrollLeft,gridScrollTop:gridScrollRef.current.scrollTop,
+      currentClientX:e.clientX,currentClientY:e.clientY});
+  },[]);
+
+  const beginProgDrag = useCallback((e,t)=>{
+    e.preventDefault(); e.stopPropagation();
+    const rect=gridScrollRef.current.getBoundingClientRect();
+    const barX=diffDays(axis.start,t.start)*dayW, barW=(diffDays(t.start,t.end)+1)*dayW-2;
+    setDrag({id:t.id,kind:'prog',startClientX:e.clientX,startClientY:e.clientY,
+      gridLeft:rect.left,gridScrollLeft:gridScrollRef.current.scrollLeft,
+      barX,barW,liveProgress:t.progress||0,currentClientX:e.clientX,currentClientY:e.clientY});
+  },[axis.start,dayW]);
+
+  const onGridPointerDown = useCallback(e=>{
+    if(e.target.closest('[data-bar-id]')||e.target.closest('.bar-handle')||e.target.closest('.dep-knob')) return;
+    const grid=gridScrollRef.current; if(!grid) return;
+    const rect=grid.getBoundingClientRect();
+    const sl=grid.scrollLeft, st=grid.scrollTop;
+    const lx=e.clientX-rect.left+sl, ly=e.clientY-rect.top+st;
+
+    if(e.shiftKey){
+      e.preventDefault();
+      setLasso({x1:lx,y1:ly,x2:lx,y2:ly});
+      setDrag({kind:'lasso',startClientX:e.clientX,startClientY:e.clientY,
+        gridLeft:rect.left,gridTop:rect.top,gridScrollLeft:sl,gridScrollTop:st,
+        currentClientX:e.clientX,currentClientY:e.clientY});
+      return;
+    }
+    const rowIdx=Math.floor(ly/rowH);
+    const row=rows[rowIdx];
+    if(!row||row.isProject||row.isOwnerGroup) return;
+    const dayIdx=Math.max(0,Math.min(axis.days.length-1,Math.floor(lx/dayW)));
+    const startDay=axis.days[dayIdx];
+    e.preventDefault();
+    setDrag({kind:'create',startClientX:e.clientX,startClientY:e.clientY,
+      gridLeft:rect.left,gridScrollLeft:sl,
+      rowIdx,startDay,endDay:startDay,
+      parentId:row.parent||null,project:row.project||'WORK',
+      currentClientX:e.clientX,currentClientY:e.clientY});
+    setSelected(null); setSelectedSet(new Set());
+  },[rows,axis.days,dayW,rowH]);
+
+  // ── Main drag effect ──
+  useEffect(()=>{
+    if(!drag) return;
+    const onMove=e=>{
+      const grid=gridScrollRef.current; if(!grid) return;
+      const rect=grid.getBoundingClientRect();
+      const lx=e.clientX-rect.left+grid.scrollLeft, ly=e.clientY-rect.top+grid.scrollTop;
+
+      if(drag.kind==='prog'){
+        const p=Math.max(0,Math.min(1,(lx-drag.barX)/drag.barW));
+        setDrag(d=>d&&({...d,liveProgress:p,currentClientX:e.clientX,currentClientY:e.clientY})); return;
+      }
+      if(drag.kind==='lasso'){
+        setLasso(l=>l&&({...l,x2:lx,y2:ly}));
+        setDrag(d=>d&&({...d,currentClientX:e.clientX,currentClientY:e.clientY})); return;
+      }
+      if(drag.kind==='create'){
+        const di=Math.max(0,Math.min(axis.days.length-1,Math.floor(lx/dayW)));
+        setDrag(d=>d&&({...d,endDay:axis.days[di],currentClientX:e.clientX,currentClientY:e.clientY})); return;
+      }
+      if(drag.kind==='dep'){
+        setDrag(d=>d&&({...d,currentClientX:e.clientX,currentClientY:e.clientY})); return;
+      }
+      const dx=e.clientX-drag.startClientX;
+      const snap=tw.snapToDay!==false;
+      let days=snap?Math.round(dx/dayW):dx/dayW, snapped=false;
+
+      if(drag.kind==='move'||drag.kind==='group-move'){
+        const t=tasks.find(x=>x.id===drag.id);
+        if(t?.deps?.length){
+          const origStart=drag.origStart||(drag.groupOffsets?.[drag.id]?.start);
+          if(origStart){
+            const byId=new Map(tasks.map(x=>[x.id,x]));
+            const newStart=addDays(origStart,days);
+            for(const depId of t.deps){
+              const dep=byId.get(depId); if(!dep) continue;
+              const ideal=addDays(dep.end,1);
+              if(Math.abs(diffDays(newStart,ideal))<=1){
+                days=diffDays(origStart,ideal); snapped=true;
+                const ri=rows.findIndex(r=>r.id===drag.id);
+                setSnapInfo({x:xForDay(ideal),y:ri*rowH,label:'0d lag'});
+                break;
+              }
+            }
+          }
+        }
+        if(!snapped) setSnapInfo(null);
+      }
+      const ri=Math.floor(ly/rowH);
+      const di=Math.max(0,Math.min(axis.days.length-1,Math.floor(lx/dayW)));
+      setDrag(d=>d&&({...d,dx,deltaDays:days,snapped,currentClientX:e.clientX,currentClientY:e.clientY,hoverRowIdx:ri,hoverDay:axis.days[di]}));
+    };
+
+    const onUp=e=>{
+      setSnapInfo(null);
+      const dx=e.clientX-drag.startClientX;
+      const days=Math.round(dx/dayW);
+
+      if(drag.kind==='prog'){
+        const grid=gridScrollRef.current; if(!grid){setDrag(null);return;}
+        const lx=e.clientX-grid.getBoundingClientRect().left+grid.scrollLeft;
+        const p=Math.max(0,Math.min(1,(lx-drag.barX)/drag.barW));
+        updateTasks(ts=>ts.map(t=>t.id===drag.id?{...t,progress:p>=.98?1:p,done:p>=.98}:t));
+        setDrag(null); return;
+      }
+
+      if(drag.kind==='lasso'){
+        if(lasso){
+          const x1=Math.min(lasso.x1,lasso.x2),x2=Math.max(lasso.x1,lasso.x2);
+          const y1=Math.min(lasso.y1,lasso.y2),y2=Math.max(lasso.y1,lasso.y2);
+          const sel=new Set();
+          rows.forEach((r,i)=>{
+            if(r.isProject||r.isOwnerGroup) return;
+            const bx=diffDays(axis.start,r.start)*dayW;
+            const bw=r.milestone?dayW:(diffDays(r.start,r.end)+1)*dayW;
+            if(bx<x2&&bx+bw>x1&&i*rowH<y2&&(i+1)*rowH>y1) sel.add(r.id);
+          });
+          setSelectedSet(sel); if(sel.size===1) setSelected([...sel][0]);
+        }
+        setLasso(null); setDrag(null); return;
+      }
+
+      if(drag.kind==='create'){
+        let s=drag.startDay,en=drag.endDay;
+        if(s>en){const tmp=s;s=en;en=tmp;}
+        if(diffDays(s,en)>=0){
+          const nid='task-'+Date.now().toString(36);
+          const nt={id:nid,parent:drag.parentId,project:drag.project,title:'New task',
+            start:s,end:en,priority:'p3',progress:0,color:'#a5b4fc'};
+          updateTasks(ts=>[...ts,nt]);
+          setSelected(nid); setRenaming({id:nid,value:nt.title});
+        }
+        setDrag(null); return;
+      }
+
+      if(drag.kind==='dep'){
+        const target=document.elementFromPoint(e.clientX,e.clientY);
+        const barEl=target?.closest?.('[data-bar-id]');
+        const tid=barEl?.getAttribute('data-bar-id');
+        if(tid&&tid!==drag.id){
+          updateTasks(ts=>ts.map(t=>{ if(t.id!==tid)return t; const d=new Set(t.deps||[]); d.add(drag.id); return{...t,deps:[...d]}; }));
+        } else if(!tid){
+          const src=tasks.find(t=>t.id===drag.id);
+          if(src){
+            const nid='task-'+Date.now().toString(36);
+            const ns=addDays(src.end,1);
+            const nt={id:nid,parent:src.parent,project:src.project,title:'New successor',
+              start:ns,end:addDays(ns,3),priority:'p3',progress:0,color:src.color||'#a5b4fc',deps:[drag.id]};
+            updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
+          }
+        }
+        setDrag(null); return;
+      }
+
+      const applyMove=ts=>{
+        if(drag.kind==='move'&&days!==0){
+          const next=ts.map(t=>t.id!==drag.id?t:{...t,start:addDays(drag.origStart,days),end:addDays(drag.origEnd,days)});
+          return cascadeAfterMove(next,drag.id);
+        }
+        if(drag.kind==='alt-move'){
+          if(!days)return ts;
+          const t=ts.find(x=>x.id===drag.id); if(!t)return ts;
+          const nid=t.id+'-c'+Math.random().toString(36).slice(2,5);
+          const copy={...t,id:nid,title:t.title+' (copy)',start:addDays(drag.origStart,days),end:addDays(drag.origEnd,days),deps:[t.id],done:false,progress:0};
+          setTimeout(()=>setSelected(nid),0);
+          return [...ts,copy];
+        }
+        if(drag.kind==='group-move'&&days!==0){
+          let next=ts.map(t=>{ const o=drag.groupOffsets?.[t.id]; return o?{...t,start:addDays(o.start,days),end:addDays(o.end,days)}:t; });
+          for(const id of Object.keys(drag.groupOffsets||{})) next=cascadeAfterMove(next,id);
+          return next;
+        }
+        if(drag.kind==='l'&&days!==0){
+          return ts.map(t=>{ if(t.id!==drag.id)return t; let ns=addDays(drag.origStart,days); if(ns>t.end)ns=t.end; return{...t,start:ns}; });
+        }
+        if(drag.kind==='r'&&days!==0){
+          const next=ts.map(t=>{ if(t.id!==drag.id)return t; let ne=addDays(drag.origEnd,days); if(ne<t.start)ne=t.start; return{...t,end:ne}; });
+          return cascadeAfterMove(next,drag.id);
+        }
+        return ts;
+      };
+
+      updateTasks(ts=>applyMove(ts));
+      setDrag(null);
+    };
+
+    window.addEventListener('pointermove',onMove);
+    window.addEventListener('pointerup',onUp,{once:true});
+    return ()=>{ window.removeEventListener('pointermove',onMove); window.removeEventListener('pointerup',onUp); };
+  },[drag,lasso,dayW,rowH,axis,tw.snapToDay,rows,tasks,xForDay,updateTasks]);
+
+  // ── Task operations ──
+  const splitTask=useCallback(id=>{
+    updateTasks(ts=>{
+      const idx=ts.findIndex(t=>t.id===id); if(idx<0)return ts;
+      const t=ts[idx]; const dur=diffDays(t.start,t.end)+1;
+      if(dur<2||t.milestone||t.kind==='project')return ts;
+      const half=Math.floor(dur/2);
+      const nid=t.id+'-b'+Math.random().toString(36).slice(2,5);
+      const next=[...ts]; next[idx]={...t,end:addDays(t.start,half-1)};
+      const b={...t,id:nid,start:addDays(t.start,half),end:t.end,title:t.title+' (cont.)',deps:[t.id],progress:0,done:false};
+      next.splice(idx+1,0,b);
+      return next.map((x,i)=>{ if(i<=idx+1)return x; if(!x.deps?.includes(t.id))return x; return{...x,deps:x.deps.map(d=>d===t.id?nid:d)}; });
+    });
+  },[updateTasks]);
+
+  const toggleMilestone=useCallback(id=>{ updateTasks(ts=>ts.map(t=>{ if(t.id!==id||t.kind==='project')return t; return t.milestone?{...t,milestone:false,end:addDays(t.start,2)}:{...t,milestone:true,end:t.start}; })); },[updateTasks]);
+  const setLagOnIncoming=useCallback((id,d)=>{ updateTasks(ts=>ts.map(t=>t.id===id?{...t,lag:d}:t)); },[updateTasks]);
+  const toggleBlocking=useCallback(id=>{ updateTasks(ts=>ts.map(t=>t.id===id?{...t,blocking:!t.blocking}:t)); },[updateTasks]);
+
+  const duplicateTask=useCallback(id=>{
+    updateTasks(ts=>{
+      const idx=ts.findIndex(t=>t.id===id); if(idx<0)return ts;
+      const t=ts[idx]; if(t.kind==='project')return ts;
+      const dur=diffDays(t.start,t.end);
+      const nid=t.id+'-dup'+Math.random().toString(36).slice(2,5);
+      const copy={...t,id:nid,title:t.title+' (copy)',start:addDays(t.end,1),end:addDays(t.end,1+dur),deps:[t.id],done:false,progress:0};
+      const next=[...ts]; next.splice(idx+1,0,copy); return next;
+    });
+  },[updateTasks]);
+
+  const focusDepSubtree=useCallback(id=>{
+    setFocusChain(prev=>{ const c=getDepChain(tasks,id); return(prev&&prev.size===c.size&&[...c].every(x=>prev.has(x)))?null:c; });
+  },[tasks]);
+
+  const commitRename=useCallback(()=>{
+    setRenaming(r=>{ if(!r)return null; const v=r.value.trim(); if(v)updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,title:v}:t)); return null; });
+  },[updateTasks]);
+
+  // Auto-commit duration buffer
+  useEffect(()=>{
+    if(!durationBuf||!selected)return;
+    const tid=setTimeout(()=>{
+      const n=parseInt(durationBuf,10);
+      if(!isNaN(n)&&n>0) updateTasks(ts=>{ const next=ts.map(t=>t.id===selected&&!t.milestone&&t.kind!=='project'?{...t,end:addDays(t.start,n-1)}:t); return cascadeAfterMove(next,selected); });
+      setDurationBuf('');
+    },700);
+    return ()=>clearTimeout(tid);
+  },[durationBuf,selected,updateTasks]);
+
+  // ── Keyboard ──
+  useEffect(()=>{
+    const onKey=e=>{
+      if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);return; }
+      if(!selected)return;
+      const t=tasks.find(x=>x.id===selected); if(!t)return;
+      const mod=e.metaKey||e.ctrlKey;
+      if(mod&&(e.key==='s'||e.key==='S')) return; // handled by global effect
+      if(mod&&(e.key==='d'||e.key==='D')){e.preventDefault();duplicateTask(selected);return;}
+      if(mod&&(e.key==='e'||e.key==='E')){e.preventDefault();focusDepSubtree(selected);return;}
+      if(e.key==='F2'||(e.key==='Enter'&&!durationBuf)){e.preventDefault();setRenaming({id:selected,value:t.title});return;}
+      if(e.key==='Enter'&&durationBuf){
+        e.preventDefault(); const n=parseInt(durationBuf,10);
+        if(!isNaN(n)&&n>0) updateTasks(ts=>cascadeAfterMove(ts.map(tt=>tt.id===selected&&!tt.milestone&&tt.kind!=='project'?{...tt,end:addDays(tt.start,n-1)}:tt),selected));
+        setDurationBuf(''); return;
+      }
+      if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&e.shiftKey){
+        e.preventDefault(); const d=e.key==='ArrowLeft'?-1:1;
+        updateTasks(ts=>{ const next=ts.map(tt=>{ if(tt.id!==selected||tt.kind==='project'||tt.milestone)return tt; const ne=addDays(tt.end,d); return parseYmd(ne)<parseYmd(tt.start)?tt:{...tt,end:ne}; }); return cascadeAfterMove(next,selected); }); return;
+      }
+      if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+        e.preventDefault(); const d=e.key==='ArrowLeft'?-1:1;
+        updateTasks(ts=>cascadeAfterMove(ts.map(tt=>tt.id===selected?{...tt,start:addDays(tt.start,d),end:addDays(tt.end,d)}:tt),selected)); return;
+      }
+      if(/^[0-9]$/.test(e.key)&&!mod&&!t.milestone&&t.kind!=='project'){e.preventDefault();setDurationBuf(b=>(b+e.key).slice(0,3));return;}
+      if((e.key==='Backspace'||e.key==='Delete')&&durationBuf){e.preventDefault();setDurationBuf(b=>b.slice(0,-1));return;}
+      if(e.key==='Delete'||e.key==='Backspace') updateTasks(ts=>ts.map(tt=>tt.id===selected?{...tt,deps:[]}:tt));
+    };
+    window.addEventListener('keydown',onKey);
+    return ()=>window.removeEventListener('keydown',onKey);
+  },[selected,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks]);
+
+  // Click-away for ctx menus and file menu
+  useEffect(()=>{
+    if(!ctxMenu&&!projCtxMenu&&!fileMenuOpen)return;
+    const fn=()=>{setCtxMenu(null);setProjCtxMenu(null);setFileMenuOpen(false);};
+    window.addEventListener('mousedown',fn); window.addEventListener('scroll',fn,true);
+    return ()=>{ window.removeEventListener('mousedown',fn); window.removeEventListener('scroll',fn,true); };
+  },[ctxMenu,projCtxMenu,fileMenuOpen]);
+
+  // ── Render ──
+  const tinyCol  = dayW<10;
+  const smallCol = dayW<20;
+  const currentZoom = dayW>=36?'D':dayW>=16?'W':dayW>=8?'M':'Q';
+
+  // ─── Welcome / first launch ───
+  if(showWelcome){
+    return (
+      <Fragment>
+        <div className="welcome-overlay">
+          <div className="welcome-card">
+            <div className="welcome-logo">TL</div>
+            <div className="welcome-title">Timeline</div>
+            <div className="welcome-subtitle">Plan projects on a timeline. Save them anywhere.</div>
+            <div className="welcome-actions">
+              <button className="welcome-btn primary" onClick={()=>createNewProject()}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                New project
+              </button>
+              <button className="welcome-btn" onClick={openWorkspace} disabled={!FSA_AVAILABLE}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Open workspace…
+              </button>
+              <button className="welcome-btn" onClick={loadSample}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+                Open sample project
+              </button>
+            </div>
+            {!FSA_AVAILABLE && <div className="welcome-warn">Saving requires Chrome or Edge — your browser cannot persist files.</div>}
+            <div className="welcome-hint">Local app. Your data stays on your machine.</div>
+          </div>
+        </div>
+        <GanttTweaks tw={tw} setTweak={setTweak}/>
+      </Fragment>
+    );
+  }
+
+  // ─── Main app ───
+  return (
+    <Fragment>
+    <div className="app">
+
+      {/* ── Topbar ── */}
+      <div className="topbar">
+        <div className="tb-logo"><span className="tb-icon">TL</span><span>Timeline</span></div>
+        <span className="tb-sep"/>
+
+        {/* File menu */}
+        <div className="file-menu-wrap">
+          <button className={`tb-btn${fileMenuOpen?' active':''}`}
+                  onMouseDown={e=>e.stopPropagation()}
+                  onClick={()=>setFileMenuOpen(o=>!o)}>
+            File {dirty && <span className="dirty-dot" title="Unsaved changes"/>}
+          </button>
+          {fileMenuOpen && (
+            <div className="file-menu-drop" onMouseDown={e=>e.stopPropagation()}>
+              <div className="file-menu-item" onClick={()=>{createNewProject();setFileMenuOpen(false);}}>New project…</div>
+              <div className="file-menu-item" onClick={()=>{openWorkspace();setFileMenuOpen(false);}}>Open workspace…</div>
+              <div className="file-menu-sep"/>
+              <div className="file-menu-item" onClick={()=>{saveWorkspace(false);setFileMenuOpen(false);}}>
+                Save<span className="kbd">Ctrl S</span>
+              </div>
+              <div className="file-menu-item" onClick={()=>{saveWorkspace(true);setFileMenuOpen(false);}}>
+                Save as…<span className="kbd">Ctrl ⇧ S</span>
+              </div>
+              <div className="file-menu-sep"/>
+              <div className="file-menu-item" onClick={()=>{setShowWelcome(true);setFileMenuOpen(false);}}>Home screen</div>
+            </div>
+          )}
+        </div>
+
+        <span className="tb-sep"/>
+        <div className="tb-crumb">
+          <span>{fileHandle?.name || 'Unsaved'}</span>
+          <span>›</span>
+          <span className="tb-crumb-active">{activeProject?.name || '—'}</span>
+        </div>
+
+        <div className="tb-spacer"/>
+
+        {/* Zoom presets */}
+        <div className="zoom-presets" title="Zoom level">
+          {[['Q',4],['M',8],['W',20],['D',48]].map(([k,w])=>(
+            <button key={k} className={`zp-btn${currentZoom===k?' active':''}`} onClick={()=>setTweak('dayWidth',w)}>{k}</button>
+          ))}
+        </div>
+
+        <div className="zoom-pill" title="Day width">
+          <button onClick={()=>setTweak('dayWidth',Math.max(4,dayW-4))}>−</button>
+          <div className="label">{dayW}px</div>
+          <button onClick={()=>setTweak('dayWidth',Math.min(80,dayW+4))}>+</button>
+        </div>
+
+        <button className="tb-btn" onClick={()=>{ const el=gridScrollRef.current; const idx=diffDays(axis.start,todayStr); el?.scrollTo({left:Math.max(0,idx*dayW-el.clientWidth/3),behavior:'smooth'}); }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg> Today
+        </button>
+
+        <span className="tb-sep"/>
+
+        {/* Baseline */}
+        <button className={`tb-btn${baseline?' active':''}`}
+                disabled={!activeProject}
+                title={baseline?'Clear baseline snapshot':'Capture current plan as baseline'}
+                onClick={()=>{
+                  if(!activeProject) return;
+                  if(baseline) updateActiveProject({baseline:null});
+                  else updateActiveProject({baseline:new Map(tasks.map(t=>[t.id,{start:t.start,end:t.end}]))});
+                }}>
+          {baseline?'Baseline ✓':'Snapshot'}
+        </button>
+
+        {/* Auto-stagger */}
+        {conflicts.size>0&&(
+          <button className="tb-btn" style={{color:'var(--p2)',borderColor:'rgba(245,158,11,.4)'}} title="Auto-stagger overlapping owner tasks"
+            onClick={()=>updateTasks(ts=>autoStagger(ts))}>
+            ⚡ Stagger
+          </button>
+        )}
+
+        {/* Settings */}
+        <button className="tb-icon-btn" title="Settings" onClick={()=>window.postMessage({type:'__activate_edit_mode'},'*')}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+
+        <button className="tb-btn primary"
+                disabled={!activeProject}
+                onClick={()=>{
+                  if(!activeProject) return;
+                  const nid='task-'+Date.now().toString(36);
+                  const nt={id:nid,parent:null,project:'WORK',title:'New task',start:todayStr,end:addDays(todayStr,2),priority:'p3',progress:0,color:'#a5b4fc'};
+                  updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
+                }}>+ New task</button>
+      </div>
+
+      {/* ── Body ── */}
+      <div className="body">
+
+        {/* Project panel */}
+        <div className={`proj-panel${projectPanelOpen?'':' collapsed'}`}>
+          <div className="proj-panel-hdr">
+            {projectPanelOpen && <span className="proj-panel-title">Projects</span>}
+            <button className="proj-panel-toggle" onClick={()=>setProjectPanelOpen(o=>!o)}
+                    title={projectPanelOpen?'Collapse':'Expand'}>
+              {projectPanelOpen?'‹':'›'}
+            </button>
+          </div>
+          {projectPanelOpen && (
+            <div className="proj-panel-body">
+              {projects.length===0 && <div className="proj-empty">No projects yet</div>}
+              {projects.map(p=>{
+                const isRenaming = projRenaming?.id===p.id;
+                const cnt = p.tasks.filter(t=>!t.kind).length;
+                return (
+                  <div key={p.id}
+                       className={`proj-item${activeProjectId===p.id?' active':''}`}
+                       onClick={()=>switchProject(p.id)}
+                       onDoubleClick={()=>setProjRenaming({id:p.id,value:p.name})}
+                       onContextMenu={e=>{e.preventDefault();setProjCtxMenu({x:e.clientX,y:e.clientY,projectId:p.id});}}>
+                    <span className="proj-item-dot" style={{background:p.color||'#7c3aed'}}/>
+                    {isRenaming
+                      ? <input className="proj-rename-input" autoFocus
+                          value={projRenaming.value}
+                          onChange={e=>setProjRenaming({...projRenaming,value:e.target.value})}
+                          onBlur={()=>{const v=projRenaming.value.trim();if(v)updateProjectById(p.id,{name:v});setProjRenaming(null);}}
+                          onKeyDown={e=>{
+                            if(e.key==='Enter'){const v=projRenaming.value.trim();if(v)updateProjectById(p.id,{name:v});setProjRenaming(null);}
+                            if(e.key==='Escape')setProjRenaming(null);
+                            e.stopPropagation();
+                          }}
+                          onClick={e=>e.stopPropagation()}/>
+                      : <>
+                          <span className="proj-item-name">{p.name}</span>
+                          <span className="proj-item-cnt">{cnt}</span>
+                        </>
+                    }
+                  </div>
+                );
+              })}
+              <button className="proj-add-btn" onClick={()=>createNewProject()}>+ New project</button>
+            </div>
+          )}
+        </div>
+
+        {/* Left task pane */}
+        <div className="lpane">
+          <div className="lpane-hdr">
+            <h2>Tasks</h2>
+            <span className="pill">{tasks.filter(t=>!t.kind).length} items</span>
+          </div>
+          <div className="lpane-body" ref={lpaneBodyRef} onScroll={onLpaneScroll} style={{minWidth:0}}>
+            {!activeProject && (
+              <div style={{padding:'24px 14px',color:'var(--t4)',fontSize:11,fontStyle:'italic'}}>
+                Select a project on the left, or create a new one.
+              </div>
+            )}
+            {rows.map((r)=>{
+              if(r.isProject){
+                const open=!collapsed.has(r.id);
+                const cnt=tasks.filter(t=>t.parent===r.id).length;
+                return (
+                  <div className="group-row" data-pid={r.project} key={r.id}
+                    onClick={()=>setCollapsed(c=>{const n=new Set(c);n.has(r.id)?n.delete(r.id):n.add(r.id);return n;})}>
+                    <svg className={`group-chv${open?' open':''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    <span className="group-dot"/><span className="group-name">{r.title}</span><span className="group-cnt">{cnt}</span>
+                  </div>
+                );
+              }
+              if(r.isOwnerGroup){
+                const open=!collapsed.has(r.id);
+                const cnt=tasks.filter(t=>!t.kind&&t.owner===r.owner).length;
+                return (
+                  <div className="owner-group-row" key={r.id}
+                    onClick={()=>setCollapsed(c=>{const n=new Set(c);n.has(r.id)?n.delete(r.id):n.add(r.id);return n;})}>
+                    <svg className={`group-chv${open?' open':''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    <div className="owner-avatar" style={{background:r.color+'33',borderColor:r.color+'88',color:r.color}}>{r.owner.slice(0,2).toUpperCase()}</div>
+                    <span className="group-name">{r.owner}</span><span className="group-cnt">{cnt}</span>
+                  </div>
+                );
+              }
+              const sel=selected===r.id, isRen=renaming?.id===r.id;
+              return (
+                <div className={`task-row is-child${r.done?' done':''}${sel?' selected':''}${hoverRow===r.id?' hover':''}`} key={r.id}
+                  onMouseEnter={()=>setHoverRow(r.id)} onMouseLeave={()=>setHoverRow(null)}
+                  onClick={()=>setSelected(r.id)} onDoubleClick={()=>setRenaming({id:r.id,value:r.title})}
+                  onContextMenu={e=>{e.preventDefault();setSelected(r.id);setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                  <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
+                  {isRen
+                    ?<input className="row-rename" autoFocus value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
+                    :<span className="ttl">{r.title}</span>
+                  }
+                  <span className="pri" title={`Priority ${r.priority}`}>
+                    {[3,6,9].slice(0,r.priority==='p1'?3:r.priority==='p2'?2:1).map((h,i)=>(
+                      <span key={i} className="pri-bar" style={{height:h+'px',background:r.priority==='p1'?'var(--p1)':r.priority==='p2'?'var(--p2)':'var(--p3)'}}/>
+                    ))}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right pane */}
+        <div className="rpane">
+
+          {showMinimap && activeProject && rows.length>0 && <Minimap rows={rows} axis={axis} dayW={dayW} totalW={totalW} gridScrollRef={gridScrollRef}/>}
+
+          {/* Timeline header */}
+          <div className="timeline-hdr">
+            <div className="hdr-scroll" ref={hdrScrollRef}>
+              <div className="hdr-track" style={{width:totalW+'px'}}>
+                {monthSpans.map((m,i)=>(
+                  <div key={i} className="hdr-month" style={{left:m.idx*dayW+'px',width:m.len*dayW+'px'}}>
+                    {m.label}<span className="yr">{m.year}</span>
+                  </div>
+                ))}
+                {axis.days.map((d,i)=>{
+                  const we=isWeekend(d), dt=parseYmd(d), isToday=d===todayStr, ms=dt.getDate()===1;
+                  return (
+                    <div key={d} className={`hdr-day${we?' weekend':''}${isToday?' today':''}${ms?' month-start':''}${tinyCol?' tiny':''}`}
+                      style={{left:i*dayW+'px',width:dayW+'px'}}>
+                      {!tinyCol&&<div className="dow">{smallCol?DOW[dt.getDay()][0]:DOW[dt.getDay()]}</div>}
+                      {!tinyCol&&<div className="dom">{dt.getDate()}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Grid */}
+          <div className="grid-scroll" ref={gridScrollRef} onScroll={onGridScroll} onPointerDown={onGridPointerDown}>
+            <div className="grid-track" style={{width:totalW+'px',height:Math.max(200, rows.length*rowH)+'px'}}>
+
+              {!activeProject && (
+                <div className="empty-state">
+                  <h3>No project selected</h3>
+                  <div>Pick or create a project on the left.</div>
+                </div>
+              )}
+              {activeProject && rows.length===0 && (
+                <div className="empty-state">
+                  <h3>{activeProject.name}</h3>
+                  <div>Drag on an empty row to create a task — or use + New task.</div>
+                </div>
+              )}
+
+              {/* Background layer */}
+              <div className="grid-bg">
+                {axis.days.map((d,i)=>{
+                  const we=isWeekend(d)&&tw.showWeekends!==false, ms=parseYmd(d).getDate()===1;
+                  return <div key={d} className={`grid-col${we?' weekend':''}${ms?' month-start':''}`} style={{left:i*dayW+'px',width:dayW+'px'}}/>;
+                })}
+                <div className="today-line" style={{left:xForDay(todayStr)+dayW/2+'px'}}/>
+                {sprintBands.map(band=>(
+                  <Fragment key={'sb'+band.dayIdx}>
+                    {band.isEven&&<div className="sprint-band even" style={{left:band.dayIdx*dayW+'px',width:Math.min(7,axis.days.length-band.dayIdx)*dayW+'px'}}/>}
+                    <div className={`sprint-bound${band.n%2===0?' release':''}`} data-label={band.label} style={{left:band.dayIdx*dayW+'px'}}/>
+                  </Fragment>
+                ))}
+                {rows.filter(r=>r.milestone).map(ms=>(
+                  <div key={'rib-'+ms.id} className={`milestone-ribbon${ms.done?' done-ribbon':''}`} data-label={ms.title}
+                    style={{left:xForDay(ms.start)+dayW/2-1+'px','--ribbon-c':ms.color||'var(--accent-2)'}}/>
+                ))}
+                {hoveredBarId&&(()=>{ const row=rows.find(r=>r.id===hoveredBarId); if(!row||row.isProject)return null; return <div className="hover-guide-band" style={{left:xForDay(row.start)+'px',width:(row.milestone?dayW:(diffDays(row.start,row.end)+1)*dayW)+'px'}}/>; })()}
+                {rows.map((r,i)=>(
+                  <div key={r.id} className={`row-line${r.isProject||r.isOwnerGroup?' group':''}${selected===r.id?' selected-row':''}`} style={{top:i*rowH+'px'}}/>
+                ))}
+                {showNowCurtain&&<div className="now-curtain" style={{width:Math.max(0,xForDay(todayStr)+dayW/2)+'px'}}/>}
+                {showFloat&&rows.map((r,i)=>{
+                  if(r.isProject||r.isOwnerGroup||r.milestone||r.done)return null;
+                  const fl=floatMap.get(r.id)||0; if(fl<=0)return null;
+                  const live=livePreview(r); const end=live?live.end:r.end;
+                  const bg=r.color||'var(--accent-2)';
+                  return <div key={'fg-'+r.id} className="float-ghost" style={{left:xForDay(addDays(end,1))+'px',width:fl*dayW+'px',top:i*rowH+(rowH-22)/2+'px',background:`linear-gradient(to right,${bg}55,transparent)`}}/>;
+                })}
+                {showProbBars&&rows.map((r,i)=>{
+                  if(!r.pessimistic||r.isProject||r.milestone)return null;
+                  const live=livePreview(r); const end=live?live.end:r.end;
+                  const bg=r.color||'var(--accent-2)';
+                  return <div key={'pt-'+r.id} className="prob-tail" style={{left:xForDay(end)+'px',width:r.pessimistic*dayW+'px',top:i*rowH+(rowH-22)/2+'px',background:`linear-gradient(to right,${bg}99,${bg}33,transparent)`}}/>;
+                })}
+                {baseline&&rows.map((r,i)=>{
+                  if(r.isProject||r.isOwnerGroup||r.milestone)return null;
+                  const bl=baseline.get(r.id); if(!bl)return null;
+                  if(bl.start===r.start&&bl.end===r.end)return null;
+                  const slip=bl.end<r.end;
+                  return <div key={'bl-'+r.id} className="baseline-bar" title={`Baseline: ${fmtShort(bl.start)} → ${fmtShort(bl.end)}`}
+                    style={{left:xForDay(bl.start)+'px',width:(diffDays(bl.start,bl.end)+1)*dayW-2+'px',top:i*rowH+(rowH-22)/2+20+'px',background:slip?'var(--p2)':'var(--t4)'}}/>;
+                })}
+                {snapInfo&&<div className="snap-guide-mag" style={{left:snapInfo.x+'px'}}/>}
+              </div>
+
+              {/* Dependency SVG */}
+              {tw.showDeps!==false&&(
+                <svg className="dep-svg" width={totalW} height={rows.length*rowH}>
+                  <defs>
+                    <marker id="dep-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#66837c"/></marker>
+                    <marker id="dep-arrow-preview" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#14b8a6"/></marker>
+                  </defs>
+                  {rows.flatMap((r,i)=>{
+                    if(!r.deps)return[];
+                    const live=livePreview(r); const childX=xForDay(live?live.start:r.start);
+                    return r.deps.map(depId=>{
+                      const pi=rows.findIndex(rr=>rr.id===depId); if(pi<0)return null;
+                      const par=rows[pi]; const liveP=livePreview(par);
+                      const parentX=xForDay(liveP?liveP.end:par.end)+dayW;
+                      const isCrit=critical.edges.has(depId+'→'+r.id);
+                      const focusDim=focusChain&&(!focusChain.has(r.id)||!focusChain.has(depId));
+                      const inHover=hoverChain&&hoverChain.has(r.id)&&hoverChain.has(depId);
+                      const hoverDim=hoverChain&&!inHover;
+                      const path=buildArrowPath(pi,i,parentX,childX-4,rows,axis.start,dayW,rowH);
+                      return <path key={r.id+'-'+depId} className={`dep-path${isCrit?' critical':''}${(focusDim||hoverDim)?' dimmed':''}${(inHover&&!isCrit)?' hover-lit':''}`} d={path}/>;
+                    }).filter(Boolean);
+                  })}
+                  {drag?.kind==='dep'&&(()=>{
+                    const fromRow=rows.findIndex(r=>r.id===drag.id); if(fromRow<0)return null;
+                    const ft=rows[fromRow];
+                    const x1=xForDay(ft.end)+dayW, y1=fromRow*rowH+rowH/2;
+                    const gr=gridScrollRef.current?.getBoundingClientRect()||{left:0,top:0};
+                    const x2=drag.currentClientX-gr.left+gridScrollRef.current.scrollLeft;
+                    const y2=drag.currentClientY-gr.top+gridScrollRef.current.scrollTop;
+                    return <path className="dep-path preview" d={`M${x1} ${y1} L${Math.max(x1+8,x2-12)} ${y1} L${Math.max(x1+8,x2-12)} ${y2} L${x2} ${y2}`}/>;
+                  })()}
+                </svg>
+              )}
+
+              {/* Bar layer */}
+              <div className="bar-layer">
+                {drag?.kind==='alt-move'&&drag.deltaDays!==0&&(()=>{
+                  const t=tasks.find(x=>x.id===drag.id); if(!t)return null;
+                  const ri=rows.findIndex(r=>r.id===drag.id); if(ri<0)return null;
+                  const x=xForDay(addDays(drag.origStart,drag.deltaDays));
+                  const w=(diffDays(drag.origStart,drag.origEnd)+1)*dayW-2;
+                  return <div className="alt-ghost" style={{left:x+'px',top:ri*rowH+(rowH-22)/2+'px',width:w+'px',background:t.color||'var(--accent-2)'}}/>;
+                })()}
+                {drag?.kind==='create'&&(()=>{
+                  let s=drag.startDay,en=drag.endDay; if(s>en){const tmp=s;s=en;en=tmp;}
+                  const x=xForDay(s), w=(diffDays(s,en)+1)*dayW;
+                  const top=drag.rowIdx*rowH+(rowH-22)/2;
+                  return <div className="drag-create-hint" style={{left:x+'px',top:top+'px',width:Math.max(dayW,w)+'px'}}>{w>60?`${diffDays(s,en)+1}d`:''}</div>;
+                })()}
+
+                {rows.map((r,i)=>{
+                  const live=livePreview(r);
+                  const start=live?live.start:r.start, end=live?live.end:r.end;
+                  const x=xForDay(start);
+                  const w=r.milestone?dayW:(diffDays(start,end)+1)*dayW-2;
+                  const top=i*rowH+(rowH-22)/2;
+                  const dragging=drag&&drag.id===r.id;
+                  const sel=selected===r.id;
+                  const multiSel=selectedSet.has(r.id);
+                  const isPast=!dragging&&end<todayStr;
+
+                  if(r.isProject||r.isOwnerGroup){
+                    const isOwner=r.isOwnerGroup;
+                    return (
+                      <div key={r.id} className={`bar project${isOwner?' owner-rollup':''}`}
+                        style={{left:x+'px',top:i*rowH+(rowH-12)/2+'px',width:w+'px',height:'12px'}}>
+                        {!isOwner&&<span className="proj-cap"/>}
+                        <div className="bar-ttl">{r.title}</div>
+                      </div>
+                    );
+                  }
+
+                  const focusDimmed=focusChain&&!focusChain.has(r.id);
+                  const hoverDimmed=!focusChain&&hoverChain&&!hoverChain.has(r.id);
+                  const isConflict=conflicts.has(r.id);
+                  const isRenaming=renaming?.id===r.id;
+                  const health=getHealth(r,atRisk.has(r.id));
+                  const liveProgress=(drag?.kind==='prog'&&drag.id===r.id)?(drag.liveProgress??0):(r.progress||0);
+                  const bg=r.done?'#1d342f':(r.color||'var(--accent-2)');
+
+                  if(r.milestone){
+                    return (
+                      <div key={r.id}
+                        className={`bar milestone${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}`}
+                        data-bar-id={r.id} style={{left:x+'px',top:top+'px',width:dayW+'px'}}
+                        onPointerDown={e=>{if(isRenaming)return;beginBarDrag(e,r,'move');}}
+                        onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
+                        onClick={e=>{e.stopPropagation();setSelected(r.id);}}
+                        onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
+                        onContextMenu={e=>{e.preventDefault();setSelected(r.id);setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                        <span className="diamond" style={{background:r.color||'var(--accent-2)'}}/>
+                        {isRenaming
+                          ?<input className="row-rename bar-rename" autoFocus style={{position:'absolute',left:'24px',width:'180px',background:'var(--surface-2)',color:'var(--t1)'}}
+                              value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
+                              onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
+                          :<span className="bar-ttl">{r.title}</span>
+                        }
+                        <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)}/>
+                      </div>
+                    );
+                  }
+
+                  const dur=diffDays(start,end)+1;
+                  return (
+                    <div key={r.id}
+                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}`}
+                      data-bar-id={r.id}
+                      style={{left:x+'px',top:top+'px',width:w+'px',background:`linear-gradient(180deg,${bg},${shade(bg,-.18)})`,border:`1px solid ${shade(bg,-.35)}`,'--bar-c':bg,'--bar-c-d':shade(bg,-.35),'--bar-c-l':shade(bg,.32)}}
+                      onPointerDown={e=>{if(isRenaming)return;beginBarDrag(e,r,'move');}}
+                      onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
+                      onClick={e=>{e.stopPropagation();setSelected(r.id);}}
+                      onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
+                      onContextMenu={e=>{e.preventDefault();setSelected(r.id);setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
+                      title={isRenaming?'':`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${dur}d${r.owner?' · '+r.owner:''}`}>
+                      {liveProgress>0&&<div className="bar-prog" style={{width:(liveProgress*100)+'%',background:`${shade(bg,-.45)}66`}}/>}
+                      {!r.done&&liveProgress>0&&liveProgress<.99&&(
+                        <div className="bar-prog-handle" style={{left:`calc(${Math.max(6,Math.min(94,liveProgress*100))}% - 1px)`}}
+                          onPointerDown={e=>{e.stopPropagation();beginProgDrag(e,r);}}/>
+                      )}
+                      {isRenaming
+                        ?<input className="bar-rename" autoFocus value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
+                            onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
+                        :<div className="bar-ttl">{r.title}</div>
+                      }
+                      {w>90&&!isRenaming&&<div className="bar-meta">{dur}d</div>}
+                      {showOwners&&r.owner&&w>70&&!isRenaming&&<div className="bar-owner">{r.owner.slice(0,2)}</div>}
+                      {health&&!isRenaming&&<div className={`health-pip ${health}`} title={`Health: ${health}`}/>}
+                      {atRisk.has(r.id)&&!r.done&&<div className="bar-risk-edge"/>}
+                      {isConflict&&showConflicts&&<div className="conflict-dot" title="Owner double-booked">!</div>}
+                      <div className="bar-handle l" onPointerDown={e=>beginBarDrag(e,r,'l')}/>
+                      <div className="bar-handle r" onPointerDown={e=>beginBarDrag(e,r,'r')}/>
+                      <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)} title="Drag to link →"/>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {snapInfo&&<div className="snap-badge" style={{left:snapInfo.x+6+'px',top:snapInfo.y+rowH/2-11+'px'}}>{snapInfo.label}</div>}
+              {lasso&&<div className="lasso-rect" style={{left:Math.min(lasso.x1,lasso.x2)+'px',top:Math.min(lasso.y1,lasso.y2)+'px',width:Math.abs(lasso.x2-lasso.x1)+'px',height:Math.abs(lasso.y2-lasso.y1)+'px'}}/>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status bar */}
+      <div className="sbar">
+        <span className="dot"/>
+        <span>
+          {activeProject ? `${activeProject.name} · ` : ''}
+          {tasks.length} tasks · {tasks.filter(t=>t.deps?.length).length} deps
+          {conflicts.size>0?` · ⚠ ${conflicts.size} conflicts`:''}
+          {selectedSet.size>1?` · ${selectedSet.size} selected`:''}
+          {dirty?' · unsaved':''}
+        </span>
+        <span className="right">
+          <span><kbd>drag empty row</kbd> create</span>
+          <span><kbd>⇧+drag</kbd> lasso</span>
+          <span><kbd>⌥+drag</kbd> duplicate</span>
+          <span><kbd>Ctrl+S</kbd> save</span>
+          <span><kbd>0–9</kbd> dur</span>
+          <span><kbd>F2</kbd> rename</span>
+        </span>
+      </div>
+    </div>
+
+    {/* Drag tooltip */}
+    {drag&&(drag.kind==='move'||drag.kind==='l'||drag.kind==='r'||drag.kind==='group-move'||drag.kind==='alt-move')&&(()=>{
+      const t=tasks.find(tt=>tt.id===drag.id); if(!t)return null;
+      const live=livePreview(t); if(!live)return null;
+      const dur=diffDays(live.start,live.end)+1;
+      const verb=drag.kind==='group-move'?`Group ×${selectedSet.size}`:drag.kind==='alt-move'?'Duplicate':drag.kind==='l'?'Resize start':drag.kind==='r'?'Resize end':'Move';
+      return (
+        <div className="drag-tooltip" style={{left:drag.currentClientX+14+'px',top:drag.currentClientY+14+'px'}}>
+          <div className="dt-meta">{verb} · {drag.deltaDays>0?'+':''}{drag.deltaDays}d{drag.snapped?' 🔒 snapped':''}</div>
+          <div className="dt-dates">{fmtShort(live.start)} → {fmtShort(live.end)} ({dur}d)</div>
+        </div>
+      );
+    })()}
+
+    {/* Inspector */}
+    {selected&&(()=>{
+      const i=rows.findIndex(r=>r.id===selected); if(i<0)return null;
+      const r=rows[i]; if(r.isProject||r.isOwnerGroup||renaming?.id===r.id)return null;
+      const live=livePreview(r); const start=live?live.start:r.start, end=live?live.end:r.end;
+      const dur=diffDays(start,end)+1, isCrit=critical.nodes.has(r.id);
+      const grid=gridScrollRef.current; if(!grid)return null;
+      const gRect=grid.getBoundingClientRect();
+      const vx=gRect.left+xForDay(start)-grid.scrollLeft;
+      const vy=gRect.top+i*rowH+(rowH-22)/2-grid.scrollTop;
+      const insTop=Math.max(gRect.top+6,vy-100), insLeft=Math.max(gRect.left+6,Math.min(vx-6,gRect.right-360));
+      return (
+        <div className="inspector" style={{position:'fixed',left:insLeft+'px',top:insTop+'px'}} onPointerDown={e=>e.stopPropagation()}>
+          <div className="ins-title">{r.title}{isCrit&&<span className="ins-crit">CRITICAL</span>}</div>
+          <div className="ins-row"><span className="lbl">Dates</span><span className="val">{fmtShort(start)} → {fmtShort(end)}</span><span className="dur-pill" style={{marginLeft:'auto'}}>{r.milestone?'◆':dur+'d'}</span></div>
+          {r.owner&&<div className="ins-row"><span className="lbl">Owner</span><span className="val">{r.owner}</span>{conflicts.has(r.id)&&<span style={{marginLeft:'auto',color:'var(--p2)',font:'9px var(--mono)'}}>⚠ conflict</span>}</div>}
+          <div className="ins-row ins-deps-row"><span className="lbl">Deps</span>
+            {!(r.deps?.length)?<span className="ins-dep-empty">none</span>:r.deps.map(id=>{
+              const dt=tasks.find(t=>t.id===id);
+              return <span key={id} className="ins-dep-chip" title="Jump" onClick={()=>setSelected(id)}>{(dt?.title||id).slice(0,22)}</span>;
+            })}
+          </div>
+          {floatMap.has(r.id)&&floatMap.get(r.id)>0&&<div className="ins-row"><span className="lbl">Float</span><span className="val" style={{color:'var(--accent-2)'}}>{floatMap.get(r.id)}d slack</span></div>}
+          <div className="ins-acts">
+            <button className="ins-btn link-btn" onPointerDown={e=>beginDepDrag(e,r)}>link</button>
+            <button className="ins-btn" onClick={()=>setRenaming({id:r.id,value:r.title})}>Rename</button>
+            <button className="ins-btn" onClick={()=>focusDepSubtree(r.id)}>{focusChain?'Unfocus':'Focus chain'}</button>
+            <button className="ins-btn" onClick={()=>duplicateTask(r.id)}>Duplicate</button>
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* Task Context menu */}
+    {ctxMenu&&(()=>{
+      const t=tasks.find(tt=>tt.id===ctxMenu.taskId); if(!t)return null;
+      const cx=Math.min(ctxMenu.x,window.innerWidth-240), cy=Math.min(ctxMenu.y,window.innerHeight-340);
+      return (
+        <div className="ctx-menu" style={{left:cx+'px',top:cy+'px'}} onMouseDown={e=>e.stopPropagation()}>
+          <div className="ctx-hdr">{t.title}</div><div className="ctx-sep"/>
+          <div className="ctx-item" onClick={()=>{splitTask(t.id);setCtxMenu(null);}}>Split task</div>
+          <div className="ctx-item" onClick={()=>{toggleMilestone(t.id);setCtxMenu(null);}}>{t.milestone?'Unset milestone':'→ Milestone'}</div>
+          <div className="ctx-item" onClick={()=>{const v=window.prompt('Lag days (negative = lead):',String(t.lag||0));if(v!==null){const n=parseInt(v,10);if(!isNaN(n))setLagOnIncoming(t.id,n);}setCtxMenu(null);}}>Set lag…<span className="kbd">{t.lag?`+${t.lag}d`:'0d'}</span></div>
+          <div className="ctx-item" onClick={()=>{toggleBlocking(t.id);setCtxMenu(null);}}>{t.blocking?'Unmark blocking':'Mark blocking'}</div>
+          <div className="ctx-sep"/>
+          <div className="ctx-item" onClick={()=>{focusDepSubtree(t.id);setCtxMenu(null);}}>Focus dep chain<span className="kbd">Ctrl E</span></div>
+          <div className="ctx-item" onClick={()=>{duplicateTask(t.id);setCtxMenu(null);}}>Duplicate<span className="kbd">Ctrl D</span></div>
+          <div className="ctx-item" onClick={()=>{setRenaming({id:t.id,value:t.title});setCtxMenu(null);}}>Rename<span className="kbd">F2</span></div>
+          <div className="ctx-sep"/>
+          <div className="ctx-item danger" onClick={()=>{updateTasks(ts=>ts.filter(tt=>tt.id!==t.id).map(tt=>tt.deps?.includes(t.id)?{...tt,deps:tt.deps.filter(d=>d!==t.id)}:tt));setSelected(null);setCtxMenu(null);}}>Delete<span className="kbd">⌫</span></div>
+        </div>
+      );
+    })()}
+
+    {/* Project Context menu */}
+    {projCtxMenu&&(()=>{
+      const p=projects.find(x=>x.id===projCtxMenu.projectId); if(!p)return null;
+      const cx=Math.min(projCtxMenu.x,window.innerWidth-200), cy=Math.min(projCtxMenu.y,window.innerHeight-200);
+      return (
+        <div className="ctx-menu" style={{left:cx+'px',top:cy+'px',minWidth:'180px'}} onMouseDown={e=>e.stopPropagation()}>
+          <div className="ctx-hdr">{p.name}</div><div className="ctx-sep"/>
+          <div className="ctx-item" onClick={()=>{setProjRenaming({id:p.id,value:p.name});setProjCtxMenu(null);}}>Rename<span className="kbd">F2</span></div>
+          <div className="ctx-item" onClick={()=>{duplicateProject(p.id);setProjCtxMenu(null);}}>Duplicate</div>
+          <div className="ctx-sep"/>
+          <div className="ctx-item danger" onClick={()=>{deleteProject(p.id);setProjCtxMenu(null);}}>Delete</div>
+        </div>
+      );
+    })()}
+
+    {/* Duration toast */}
+    {durationBuf&&selected&&(()=>{
+      const i=rows.findIndex(r=>r.id===selected); if(i<0)return null;
+      const r=rows[i]; if(r.isProject||r.milestone)return null;
+      const grid=gridScrollRef.current; if(!grid)return null;
+      const gRect=grid.getBoundingClientRect();
+      const x=gRect.left+xForDay(r.start)-grid.scrollLeft;
+      const y=gRect.top+i*rowH+rowH/2-grid.scrollTop-14;
+      const w=(diffDays(r.start,r.end)+1)*dayW;
+      return <div className="dur-toast" style={{left:Math.min(x+w+12,window.innerWidth-120)+'px',top:Math.max(y,gRect.top+6)+'px'}}>{durationBuf}d<span className="hint"> ↵ apply</span></div>;
+    })()}
+
+    {/* Focus chain banner */}
+    {focusChain&&(
+      <div className="focus-banner">
+        <span>Dep subtree · <strong>{focusChain.size}</strong> tasks</span>
+        <kbd>Ctrl E</kbd> toggle <kbd>Esc</kbd> exit
+        <button className="clear" onClick={()=>setFocusChain(null)}>clear</button>
+      </div>
+    )}
+
+    <GanttTweaks tw={tw} setTweak={setTweak}/>
+    </Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+</body>
+</html>
