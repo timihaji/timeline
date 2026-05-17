@@ -553,6 +553,118 @@
   .welcome-btn svg{width:14px;height:14px;opacity:.7}
   .welcome-hint{font-size:11px;color:var(--t4);margin-top:18px;letter-spacing:.02em}
   .welcome-warn{font-size:11px;color:var(--p2);margin-top:10px;padding:6px 10px;border:1px solid rgba(245,158,11,.3);border-radius:3px;background:rgba(245,158,11,.06);text-align:center}
+
+  /* ── Batch 4: Filter strip ── */
+  .filter-strip{height:38px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--bg-top);border-bottom:1px solid var(--border);position:relative;z-index:5;overflow:hidden;white-space:nowrap}
+  .filter-strip .fs-search{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;height:26px;padding:0 8px;min-width:160px;max-width:240px}
+  .filter-strip .fs-search:focus-within{border-color:var(--accent-border)}
+  .filter-strip .fs-search svg{width:11px;height:11px;color:var(--t4);flex-shrink:0}
+  .filter-strip .fs-search input{flex:1;background:transparent;border:none;color:var(--t1);font:11.5px var(--font);outline:none;padding:0;min-width:0}
+  .filter-strip .fs-search input::placeholder{color:var(--t4)}
+  .filter-strip .fs-search .fs-clear-x{background:transparent;border:none;color:var(--t4);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
+  .filter-strip .fs-search .fs-clear-x:hover{color:var(--t1)}
+  .filter-strip .fs-sep{width:1px;height:18px;background:var(--border-s)}
+  .filter-strip .fs-lbl{font:9.5px var(--mono);color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin-right:2px}
+  .filter-strip .fs-chips{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;overflow:hidden}
+  .filter-strip .fs-chip{height:22px;padding:0 8px;font:10.5px var(--font);border:1px solid var(--border-s);background:var(--surface);color:var(--t3);border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;letter-spacing:.02em}
+  .filter-strip .fs-chip:hover{background:var(--surface-2);color:var(--t1)}
+  .filter-strip .fs-chip.on{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
+  .filter-strip .fs-chip.pri.on.p1{background:rgba(239,68,68,.18);color:var(--p1);border-color:rgba(239,68,68,.5)}
+  .filter-strip .fs-chip.pri.on.p2{background:rgba(245,158,11,.16);color:var(--p2);border-color:rgba(245,158,11,.5)}
+  .filter-strip .fs-chip.pri.on.p3{background:rgba(113,113,122,.22);color:var(--t1);border-color:var(--border-s)}
+  .filter-strip .fs-chip .fs-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .filter-strip .fs-status{height:24px;padding:0 22px 0 8px;background:var(--surface);border:1px solid var(--border-s);color:var(--t2);font:11px var(--font);border-radius:2px;outline:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%2366837c' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 7px center;appearance:none}
+  .filter-strip .fs-status:hover{border-color:var(--accent-border);color:var(--t1)}
+  .filter-strip .fs-status.on{background-color:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
+  .filter-strip .fs-clear{height:24px;padding:0 10px;font:10.5px var(--font);background:transparent;border:1px dashed var(--border-s);color:var(--t3);border-radius:2px;cursor:pointer;letter-spacing:.04em}
+  .filter-strip .fs-clear:hover{border-color:var(--accent-border);color:var(--accent-2);background:var(--accent-dim);border-style:solid}
+  .filter-strip .fs-count{margin-left:auto;font:10px var(--mono);color:var(--t4);letter-spacing:.04em;flex-shrink:0}
+  .filter-strip .fs-count strong{color:var(--accent-2);font-weight:600}
+
+  /* ── Batch 4: View switcher (topbar) ── */
+  .view-switcher{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border-s);border-radius:2px;height:28px;padding:2px;gap:1px}
+  .view-switcher .vs-btn{height:100%;padding:0 10px;border:none;background:transparent;color:var(--t3);font:10.5px var(--font);cursor:pointer;border-radius:2px;display:flex;align-items:center;gap:5px;letter-spacing:.02em}
+  .view-switcher .vs-btn:hover{background:var(--surface-2);color:var(--t1)}
+  .view-switcher .vs-btn.active{background:var(--accent-dim);color:var(--accent-2);border:1px solid var(--accent-border);line-height:1}
+  .view-switcher .vs-btn svg{width:11px;height:11px}
+
+  /* ── Batch 4: List view ── */
+  .list-view{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+  .list-view-scroll{flex:1;overflow:auto;position:relative}
+  .list-view table{width:100%;border-collapse:collapse;font:11.5px var(--font);color:var(--t2);table-layout:fixed}
+  .list-view thead th{position:sticky;top:0;z-index:2;background:var(--bg-top);border-bottom:1px solid var(--border);text-align:left;padding:8px 10px;font:10px var(--mono);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);cursor:pointer;user-select:none;white-space:nowrap}
+  .list-view thead th:hover{color:var(--t1)}
+  .list-view thead th.sortable .sort-arr{margin-left:4px;display:inline-block;font-size:9px;color:var(--accent-2);width:8px}
+  .list-view thead th.numeric{text-align:right}
+  .list-view tbody tr{border-bottom:1px solid #0c1c19;cursor:default;transition:background .08s}
+  .list-view tbody tr:hover{background:#0c1c19}
+  .list-view tbody tr.selected{background:linear-gradient(90deg,var(--accent-dim),transparent 60%);box-shadow:inset 2px 0 0 var(--accent-2)}
+  .list-view tbody tr.done td{color:var(--t4);opacity:.55}
+  .list-view tbody tr.done td.lv-title-cell .lv-title-text{text-decoration:line-through}
+  .list-view tbody td{padding:6px 10px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .list-view tbody td.numeric{text-align:right;font:11px var(--mono);color:var(--t3)}
+  .list-view tbody td.lv-wbs{font:9.5px var(--mono);color:var(--t4);letter-spacing:.04em;width:64px}
+  .list-view tbody td.lv-title-cell{font-weight:500;color:var(--t1);position:relative}
+  .list-view tbody td.lv-title-cell .lv-color-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:8px;vertical-align:middle;flex-shrink:0}
+  .list-view tbody td.lv-title-cell .lv-recur{color:var(--accent-2);margin-right:4px}
+  .list-view tbody td.lv-title-cell .lv-rename{background:var(--surface-2);border:1px solid var(--accent-border);color:var(--t1);font:inherit;padding:1px 5px;border-radius:2px;outline:none;width:calc(100% - 24px)}
+  .list-view tbody td .lv-inline-input{background:var(--surface-2);border:1px solid var(--border-s);color:var(--t1);font:11px var(--font);padding:2px 5px;border-radius:2px;outline:none;width:100%;max-width:130px}
+  .list-view tbody td .lv-inline-input:focus{border-color:var(--accent-border)}
+  .list-view tbody td .lv-inline-seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;padding:1px;gap:1px}
+  .list-view tbody td .lv-inline-seg button{height:18px;width:24px;padding:0;border:none;background:transparent;color:var(--t3);font:9.5px var(--font);cursor:pointer;border-radius:1px;letter-spacing:.02em}
+  .list-view tbody td .lv-inline-seg button:hover{color:var(--t1);background:var(--surface-3)}
+  .list-view tbody td .lv-inline-seg button.active.p1{background:rgba(239,68,68,.2);color:var(--p1)}
+  .list-view tbody td .lv-inline-seg button.active.p2{background:rgba(245,158,11,.18);color:var(--p2)}
+  .list-view tbody td .lv-inline-seg button.active.p3{background:rgba(113,113,122,.22);color:var(--t1)}
+  .list-view tbody td .lv-status-pill{display:inline-block;padding:1px 6px;border-radius:2px;font:9.5px var(--mono);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--border-s);color:var(--t3);background:var(--surface)}
+  .list-view tbody td .lv-status-pill.done{background:rgba(20,184,166,.16);color:var(--accent-2);border-color:var(--accent-border)}
+  .list-view tbody td .lv-status-pill.overdue{background:rgba(239,68,68,.16);color:var(--p1);border-color:rgba(239,68,68,.4)}
+  .list-view tbody td .lv-status-pill.atrisk{background:rgba(245,158,11,.16);color:var(--p2);border-color:rgba(245,158,11,.4)}
+  .list-view tbody td .lv-status-pill.active{background:var(--surface-2);color:var(--t2)}
+  .list-view-empty{padding:60px 20px;text-align:center;color:var(--t4);font-size:12px;font-style:italic}
+  .list-view-empty h3{font-size:14px;color:var(--t2);font-weight:600;margin-bottom:8px;font-style:normal;letter-spacing:.02em}
+
+  /* ── Batch 4: Calendar view ── */
+  .calendar-view{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-height:0}
+  .calendar-view-hdr{height:44px;flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 14px;background:var(--bg-top);border-bottom:1px solid var(--border)}
+  .calendar-view-hdr .cv-nav-btn{width:26px;height:26px;border:1px solid var(--border-s);background:var(--surface);color:var(--t3);border-radius:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1}
+  .calendar-view-hdr .cv-nav-btn:hover{background:var(--surface-2);color:var(--t1);border-color:var(--accent-border)}
+  .calendar-view-hdr .cv-title{font-size:14px;font-weight:600;color:var(--t1);letter-spacing:-.2px;margin:0 6px;min-width:170px}
+  .calendar-view-hdr .cv-today-btn{height:26px;padding:0 10px;border:1px solid var(--border-s);background:var(--surface);color:var(--t2);border-radius:2px;cursor:pointer;font:11px var(--font);display:flex;align-items:center;gap:5px}
+  .calendar-view-hdr .cv-today-btn:hover{background:var(--surface-2);color:var(--t1);border-color:var(--accent-border)}
+  .calendar-view-hdr .cv-meta{margin-left:auto;font:10px var(--mono);color:var(--t4);letter-spacing:.04em}
+  .calendar-grid{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+  .calendar-dow-row{display:grid;grid-template-columns:repeat(7,1fr);flex-shrink:0;background:var(--bg-top);border-bottom:1px solid var(--border)}
+  .calendar-dow-row .cv-dow{padding:6px 8px;font:9.5px var(--mono);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t4);text-align:center;border-right:1px solid #0c1c19}
+  .calendar-dow-row .cv-dow:last-child{border-right:none}
+  .calendar-dow-row .cv-dow.weekend{color:var(--t3)}
+  .calendar-weeks{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-height:0}
+  .calendar-week{display:grid;grid-template-columns:repeat(7,1fr);min-height:96px;border-bottom:1px solid var(--border);position:relative}
+  .calendar-week:last-child{border-bottom:none}
+  .calendar-cell{border-right:1px solid #0c1c19;padding:4px 6px 2px;position:relative;min-height:0;overflow:hidden;background:var(--bg)}
+  .calendar-cell:last-child{border-right:none}
+  .calendar-cell.weekend{background:#05100e80}
+  .calendar-cell.other-month{opacity:.35;background:var(--bg-side)}
+  .calendar-cell.today{background:linear-gradient(180deg,var(--accent-dim),transparent 60%)}
+  .calendar-cell.today .cv-date-num{color:#fff;font-weight:700}
+  .calendar-cell.holiday::before{content:'';position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--p1);box-shadow:0 0 4px var(--p1);opacity:.7}
+  .cv-date-num{font:10.5px var(--mono);color:var(--t3);font-weight:500;line-height:1;display:block;margin-bottom:4px;letter-spacing:.04em}
+  .calendar-cell.weekend .cv-date-num{color:var(--t4)}
+  .calendar-strips{position:absolute;left:0;right:0;top:22px;display:flex;flex-direction:column;gap:1px;padding:0 1px;pointer-events:none}
+  .calendar-strip{height:16px;border-radius:2px;display:flex;align-items:center;padding:0 5px;font:9.5px var(--font);font-weight:500;color:#021412;cursor:pointer;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 1px rgba(0,0,0,.3);text-shadow:0 1px 0 rgba(255,255,255,.1)}
+  .calendar-strip:hover{filter:brightness(1.12);z-index:5}
+  .calendar-strip.selected{outline:1.5px solid var(--accent-2);outline-offset:1px;z-index:6}
+  .calendar-strip.done{filter:saturate(.4) brightness(.85);text-decoration:line-through}
+  .calendar-strip.milestone{background:var(--accent-2) !important;color:#021412;font-weight:700}
+  .calendar-strip.continues-left{border-top-left-radius:0;border-bottom-left-radius:0}
+  .calendar-strip.continues-right{border-top-right-radius:0;border-bottom-right-radius:0}
+  .calendar-strip.recur-i{opacity:.7}
+  .cv-strip-more{height:14px;padding:0 5px;font:9px var(--mono);color:var(--t4);cursor:default;letter-spacing:.04em}
+  .calendar-empty{padding:60px 20px;text-align:center;color:var(--t4);font-size:12px;font-style:italic}
+  .calendar-empty h3{font-size:14px;color:var(--t2);font-weight:600;margin-bottom:8px;font-style:normal;letter-spacing:.02em}
+
 </style>
 </head>
 <body data-bar-style="capsule" data-screen-label="Timeline">
@@ -1840,6 +1952,559 @@ function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject }){
 Object.assign(window,{ Minimap, GanttTweaks });
 </script>
 
+<!-- ════════════════ COMPONENTS: SearchFilterBar, ListView, CalendarView (Batch 4) ════════════════ -->
+<script type="text/babel">
+const { useState: _useState4, useEffect: _useEffect4, useRef: _useRef4, useCallback: _useCallback4, useMemo: _useMemo4 } = React;
+const { todayStr: _ts4, parseYmd: _py4, ymd: _ymd4, addDays: _ad4, diffDays: _dd4, fmtShort: _fs4,
+        isWorkingDay: _iwd4, formatDuration: _fd4, formatCost: _fc4, MONTHS: _MO4, depList: _dl4,
+        DEFAULT_CALENDAR: _DC4 } = window;
+
+// Status helpers shared with main app
+function classifyStatus(t){
+  if (t.done) return 'done';
+  const today = _ts4;
+  if (t.end < today && !t.done) return 'overdue';
+  // 'at-risk' if has baselineEnd and slipping or progress lags expected
+  if (t.baselineEnd && _dd4(t.baselineEnd, t.end) >= 2) return 'atrisk';
+  const startD = _py4(t.start), endD = _py4(t.end), todayD = _py4(today);
+  if (endD >= todayD){
+    const dur = Math.max(1, _dd4(t.start, t.end) + 1);
+    const elapsed = Math.max(0, (todayD - startD) / 86400000);
+    const expected = Math.min(1, elapsed/dur);
+    const actual = t.progress || 0;
+    if (expected - actual > 0.3) return 'atrisk';
+  }
+  return 'active';
+}
+
+// ── Search / Filter Bar ───────────────────────────────────────────
+function SearchFilterBar({ filter, setFilter, owners, totalCount, visibleCount }){
+  const q = filter.q || '';
+  const ownersSel = filter.owners || new Set();
+  const prisSel = filter.priorities || new Set();
+  const status = filter.status || 'all';
+  const anyActive = !!q || ownersSel.size>0 || prisSel.size>0 || status !== 'all';
+
+  const ownerNames = (owners||[]).map(o => o.name).filter(Boolean);
+
+  const toggleOwner = (n) => {
+    const next = new Set(ownersSel);
+    next.has(n) ? next.delete(n) : next.add(n);
+    setFilter(f => ({...f, owners: next}));
+  };
+  const togglePri = (p) => {
+    const next = new Set(prisSel);
+    next.has(p) ? next.delete(p) : next.add(p);
+    setFilter(f => ({...f, priorities: next}));
+  };
+
+  return (
+    <div className="filter-strip">
+      <div className="fs-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input placeholder="Search tasks…" value={q}
+          onChange={e=>setFilter(f=>({...f, q: e.target.value}))}/>
+        {q && <button className="fs-clear-x" title="Clear search" onClick={()=>setFilter(f=>({...f, q:''}))}>×</button>}
+      </div>
+      {ownerNames.length>0 && (
+        <>
+          <span className="fs-sep"/>
+          <span className="fs-lbl">Owner</span>
+          <div className="fs-chips">
+            {ownerNames.map(n => {
+              const o = (owners||[]).find(x=>x.name===n);
+              const on = ownersSel.has(n);
+              return (
+                <button key={n} className={`fs-chip${on?' on':''}`} onClick={()=>toggleOwner(n)} title={`Toggle ${n}`}>
+                  <span className="fs-dot" style={{background: o?.color||'var(--accent-2)'}}/>{n}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+      <span className="fs-sep"/>
+      <span className="fs-lbl">Pri</span>
+      <div className="fs-chips">
+        {['p1','p2','p3'].map(p => {
+          const on = prisSel.has(p);
+          return (
+            <button key={p} className={`fs-chip pri ${p}${on?' on':''}`} onClick={()=>togglePri(p)}>{p.toUpperCase()}</button>
+          );
+        })}
+      </div>
+      <span className="fs-sep"/>
+      <span className="fs-lbl">Status</span>
+      <select className={`fs-status${status!=='all'?' on':''}`}
+        value={status} onChange={e=>setFilter(f=>({...f, status:e.target.value}))}>
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="done">Done</option>
+        <option value="overdue">Overdue</option>
+        <option value="atrisk">At-risk</option>
+      </select>
+      {anyActive && (
+        <button className="fs-clear" onClick={()=>setFilter({q:'',owners:new Set(),priorities:new Set(),status:'all'})}>Clear filters</button>
+      )}
+      <span className="fs-count"><strong>{visibleCount}</strong> of {totalCount} tasks</span>
+    </div>
+  );
+}
+
+// ── List View ─────────────────────────────────────────────────────
+function ListView({ tasks, expandedTasks, wbsMap, owners, selected, selectedSet, setSelected, setSelectedSet,
+                   updateTasks, applySchedule, calendar, setCtxMenu, addOwnerToList }){
+  const [sortKey, setSortKey] = _useState4('wbs');
+  const [sortDir, setSortDir] = _useState4('asc');
+  const [editing, setEditing] = _useState4(null); // {id, field, value}
+
+  // Only source rows (no recurring instances), and no project group rows
+  const rows = _useMemo4(() => {
+    return expandedTasks.filter(t => !t.recurrenceParent && t.kind !== 'project');
+  }, [expandedTasks]);
+
+  const ownersByName = _useMemo4(() => new Map((owners||[]).map(o => [o.name, o])), [owners]);
+
+  const sorted = _useMemo4(() => {
+    const dur = (t) => Math.max(1, _dd4(t.start, t.end) + 1);
+    const cost = (t) => {
+      if (typeof t.cost === 'number' && !isNaN(t.cost)) return t.cost;
+      if (t.owner && ownersByName.has(t.owner)){
+        const o = ownersByName.get(t.owner);
+        if (typeof o.hourlyRate === 'number') return o.hourlyRate * dur(t) * 8;
+      }
+      return 0;
+    };
+    const depsN = (t) => (t.deps||[]).length;
+    const priRank = { p1:0, p2:1, p3:2 };
+    const stRank = { overdue:0, atrisk:1, active:2, done:3 };
+    const get = (t) => {
+      switch(sortKey){
+        case 'wbs': {
+          const w = wbsMap.get(t.id) || '';
+          return w.split('.').map(n => parseInt(n,10) || 0);
+        }
+        case 'title': return (t.title||'').toLowerCase();
+        case 'owner': return (t.owner||'').toLowerCase();
+        case 'start': return t.start || '';
+        case 'end':   return t.end || '';
+        case 'dur':   return dur(t);
+        case 'pri':   return priRank[t.priority] ?? 99;
+        case 'status':return stRank[classifyStatus(t)] ?? 99;
+        case 'cost':  return cost(t);
+        case 'deps':  return depsN(t);
+        default: return 0;
+      }
+    };
+    const arr = [...rows];
+    arr.sort((a,b) => {
+      const va = get(a), vb = get(b);
+      let cmp = 0;
+      if (Array.isArray(va) && Array.isArray(vb)){
+        const len = Math.max(va.length, vb.length);
+        for (let i=0;i<len;i++){ const x = va[i]||0, y = vb[i]||0; if (x !== y){ cmp = x<y?-1:1; break; } }
+      } else if (typeof va === 'string' && typeof vb === 'string'){
+        cmp = va.localeCompare(vb);
+      } else {
+        cmp = (va||0) - (vb||0);
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return arr;
+  }, [rows, sortKey, sortDir, wbsMap, ownersByName]);
+
+  const onSort = (k) => {
+    if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(k); setSortDir('asc'); }
+  };
+
+  const arr = (k) => sortKey === k ? (sortDir === 'asc' ? '↑' : '↓') : '';
+
+  const commitEdit = (t) => {
+    if (!editing) return;
+    const v = editing.value;
+    if (editing.field === 'title'){
+      const trimmed = (v||'').trim();
+      if (trimmed) updateTasks(ts => ts.map(x => x.id === t.id ? {...x, title: trimmed} : x));
+    } else if (editing.field === 'start'){
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v)){
+        updateTasks(ts => applySchedule(ts.map(x => {
+          if (x.id !== t.id) return x;
+          const d0 = _dd4(x.start, x.end);
+          const ne = _ad4(v, d0);
+          return {...x, start: v, end: ne < v ? v : ne};
+        }), t.id));
+      }
+    } else if (editing.field === 'end'){
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v)){
+        updateTasks(ts => applySchedule(ts.map(x => x.id === t.id ? {...x, end: v < x.start ? x.start : v} : x), t.id));
+      }
+    }
+    setEditing(null);
+  };
+
+  const onRowClick = (e, t) => {
+    if (e.shiftKey){
+      setSelectedSet(prev => { const n = new Set(prev); n.has(t.id) ? n.delete(t.id) : n.add(t.id); return n; });
+    } else {
+      setSelected(t.id);
+      setSelectedSet(new Set([t.id]));
+    }
+  };
+
+  if (!sorted.length){
+    return (
+      <div className="list-view">
+        <div className="list-view-empty">
+          <h3>No tasks match</h3>
+          <div>Try clearing filters, or create a task in the Gantt view.</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="list-view">
+      <div className="list-view-scroll">
+        <table>
+          <colgroup>
+            <col style={{width:'56px'}}/>
+            <col/>
+            <col style={{width:'110px'}}/>
+            <col style={{width:'110px'}}/>
+            <col style={{width:'110px'}}/>
+            <col style={{width:'70px'}}/>
+            <col style={{width:'74px'}}/>
+            <col style={{width:'90px'}}/>
+            <col style={{width:'82px'}}/>
+            <col style={{width:'60px'}}/>
+          </colgroup>
+          <thead>
+            <tr>
+              <th className="sortable" onClick={()=>onSort('wbs')}>WBS<span className="sort-arr">{arr('wbs')}</span></th>
+              <th className="sortable" onClick={()=>onSort('title')}>Title<span className="sort-arr">{arr('title')}</span></th>
+              <th className="sortable" onClick={()=>onSort('owner')}>Owner<span className="sort-arr">{arr('owner')}</span></th>
+              <th className="sortable" onClick={()=>onSort('start')}>Start<span className="sort-arr">{arr('start')}</span></th>
+              <th className="sortable" onClick={()=>onSort('end')}>End<span className="sort-arr">{arr('end')}</span></th>
+              <th className="sortable numeric" onClick={()=>onSort('dur')}>Dur<span className="sort-arr">{arr('dur')}</span></th>
+              <th className="sortable" onClick={()=>onSort('pri')}>Pri<span className="sort-arr">{arr('pri')}</span></th>
+              <th className="sortable" onClick={()=>onSort('status')}>Status<span className="sort-arr">{arr('status')}</span></th>
+              <th className="sortable numeric" onClick={()=>onSort('cost')}>Cost<span className="sort-arr">{arr('cost')}</span></th>
+              <th className="sortable numeric" onClick={()=>onSort('deps')}>Deps<span className="sort-arr">{arr('deps')}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map(t => {
+              const isSel = selected === t.id || selectedSet.has(t.id);
+              const wbs = wbsMap.get(t.id) || '';
+              const dur = Math.max(1, _dd4(t.start, t.end) + 1);
+              const st = classifyStatus(t);
+              const cost = (() => {
+                if (typeof t.cost === 'number' && !isNaN(t.cost)) return t.cost;
+                if (t.owner && ownersByName.has(t.owner)){
+                  const o = ownersByName.get(t.owner);
+                  if (typeof o.hourlyRate === 'number') return o.hourlyRate * dur * 8;
+                }
+                return 0;
+              })();
+              const editingThis = (field) => editing && editing.id === t.id && editing.field === field;
+              const bg = t.color ? (t.color + '0F') : 'transparent';
+              return (
+                <tr key={t.id} className={`${isSel?'selected':''} ${t.done?'done':''}`}
+                    style={{background:bg}}
+                    onClick={e=>onRowClick(e, t)}
+                    onContextMenu={e=>{e.preventDefault(); if(!selectedSet.has(t.id)){setSelected(t.id);setSelectedSet(new Set([t.id]));} setCtxMenu({x:e.clientX,y:e.clientY,taskId:t.id});}}>
+                  <td className="lv-wbs">{wbs}</td>
+                  <td className="lv-title-cell"
+                      onDoubleClick={()=>setEditing({id:t.id, field:'title', value:t.title})}>
+                    <span className="lv-color-dot" style={{background: t.color || 'var(--t4)'}}/>
+                    {t.recurrence && <span className="lv-recur" title="Recurring source">↻</span>}
+                    {editingThis('title')
+                      ? <input className="lv-rename" autoFocus value={editing.value}
+                          onChange={e=>setEditing({...editing, value:e.target.value})}
+                          onBlur={()=>commitEdit(t)}
+                          onClick={e=>e.stopPropagation()}
+                          onKeyDown={e=>{ if(e.key==='Enter') commitEdit(t); if(e.key==='Escape') setEditing(null); e.stopPropagation(); }}/>
+                      : <span className="lv-title-text">{t.title}</span>
+                    }
+                  </td>
+                  <td onDoubleClick={()=>setEditing({id:t.id, field:'owner', value:t.owner||''})}>
+                    {editingThis('owner') ? (
+                      <select className="lv-inline-input" autoFocus value={editing.value}
+                        onClick={e=>e.stopPropagation()}
+                        onChange={e=>{
+                          const v = e.target.value;
+                          updateTasks(ts => ts.map(x => x.id === t.id ? {...x, owner: v||undefined} : x));
+                          setEditing(null);
+                        }}
+                        onBlur={()=>setEditing(null)}>
+                        <option value="">— none —</option>
+                        {(owners||[]).map(o => <option key={o.name} value={o.name}>{o.name}</option>)}
+                        {t.owner && !(owners||[]).some(o=>o.name===t.owner) && <option value={t.owner}>{t.owner}</option>}
+                      </select>
+                    ) : (t.owner || <span style={{color:'var(--t4)'}}>—</span>)}
+                  </td>
+                  <td onDoubleClick={()=>setEditing({id:t.id, field:'start', value:t.start})}>
+                    {editingThis('start') ? (
+                      <input className="lv-inline-input" autoFocus type="date" value={editing.value}
+                        onClick={e=>e.stopPropagation()}
+                        onChange={e=>setEditing({...editing, value:e.target.value})}
+                        onBlur={()=>commitEdit(t)}
+                        onKeyDown={e=>{ if(e.key==='Enter') commitEdit(t); if(e.key==='Escape') setEditing(null); e.stopPropagation(); }}/>
+                    ) : _fs4(t.start)}
+                  </td>
+                  <td onDoubleClick={()=>setEditing({id:t.id, field:'end', value:t.end})}>
+                    {editingThis('end') ? (
+                      <input className="lv-inline-input" autoFocus type="date" value={editing.value}
+                        onClick={e=>e.stopPropagation()}
+                        onChange={e=>setEditing({...editing, value:e.target.value})}
+                        onBlur={()=>commitEdit(t)}
+                        onKeyDown={e=>{ if(e.key==='Enter') commitEdit(t); if(e.key==='Escape') setEditing(null); e.stopPropagation(); }}/>
+                    ) : _fs4(t.end)}
+                  </td>
+                  <td className="numeric">{t.milestone ? '◆' : dur+'d'}</td>
+                  <td onDoubleClick={()=>setEditing({id:t.id, field:'pri', value:t.priority||'p3'})}>
+                    {editingThis('pri') ? (
+                      <span className="lv-inline-seg" onClick={e=>e.stopPropagation()}>
+                        {['p1','p2','p3'].map(p => (
+                          <button key={p} className={`${p}${(editing.value===p)?' active':''}`}
+                            onClick={()=>{
+                              updateTasks(ts => ts.map(x => x.id === t.id ? {...x, priority: p} : x));
+                              setEditing(null);
+                            }}>{p.toUpperCase()}</button>
+                        ))}
+                      </span>
+                    ) : (
+                      <span style={{
+                        font:'10px var(--mono)',
+                        color: t.priority==='p1'?'var(--p1)':t.priority==='p2'?'var(--p2)':'var(--t3)',
+                        fontWeight:600, letterSpacing:'.04em'
+                      }}>{(t.priority||'p3').toUpperCase()}</span>
+                    )}
+                  </td>
+                  <td><span className={`lv-status-pill ${st}`}>{st === 'atrisk' ? 'AT-RISK' : st.toUpperCase()}</span></td>
+                  <td className="numeric">{cost > 0 ? _fc4(cost) : <span style={{color:'var(--t4)'}}>—</span>}</td>
+                  <td className="numeric">{(t.deps||[]).length || <span style={{color:'var(--t4)'}}>0</span>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Calendar View ─────────────────────────────────────────────────
+function CalendarView({ tasks, expandedTasks, calendar, selected, selectedSet,
+                       setSelected, setSelectedSet, setCtxMenu }){
+  const [cursor, setCursor] = _useState4(() => {
+    const d = _py4(_ts4);
+    return { y: d.getFullYear(), m: d.getMonth() };
+  });
+
+  const cal = calendar || _DC4;
+  const workingDays = Array.isArray(cal.workingDays) ? cal.workingDays : _DC4.workingDays;
+  const holidays = new Set(Array.isArray(cal.holidays) ? cal.holidays : []);
+  // Determine week start: if Mon (1) is a working day use Mon-first, else Sun-first.
+  const weekStart = workingDays.includes(1) ? 1 : 0;
+  const dowLabels = weekStart === 1
+    ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const isWeekendDow = (dow) => !workingDays.includes(dow);
+
+  // Build month grid (weeks of 7 days)
+  const grid = _useMemo4(() => {
+    const first = new Date(cursor.y, cursor.m, 1);
+    const last = new Date(cursor.y, cursor.m + 1, 0);
+    const startDow = first.getDay();
+    const offset = (startDow - weekStart + 7) % 7;
+    const gridStart = new Date(cursor.y, cursor.m, 1 - offset);
+    // End at week containing last day
+    const lastDow = last.getDay();
+    const tailPad = (weekStart === 1 ? 7 : 6) - ((lastDow - weekStart + 7) % 7);
+    const gridEnd = new Date(cursor.y, cursor.m, last.getDate() + tailPad);
+    const days = [];
+    let cur = new Date(gridStart);
+    while (cur <= gridEnd){
+      days.push({
+        date: new Date(cur),
+        ymd: _ymd4(cur),
+        dom: cur.getDate(),
+        dow: cur.getDay(),
+        isCurMonth: cur.getMonth() === cursor.m,
+      });
+      cur.setDate(cur.getDate() + 1);
+    }
+    // Split into weeks
+    const weeks = [];
+    for (let i=0;i<days.length;i+=7) weeks.push(days.slice(i, i+7));
+    return weeks;
+  }, [cursor, weekStart]);
+
+  // Tasks intersecting this month: any task overlapping [gridStart..gridEnd]
+  const monthStart = grid.length ? grid[0][0].ymd : _ts4;
+  const monthEnd = grid.length ? grid[grid.length-1][6].ymd : _ts4;
+  const visibleTasks = _useMemo4(() => {
+    return expandedTasks.filter(t => {
+      if (t.kind === 'project') return false;
+      return t.start <= monthEnd && t.end >= monthStart;
+    });
+  }, [expandedTasks, monthStart, monthEnd]);
+
+  // For each task, compute strip segments per week.
+  // For each week we need: { taskId, startCol, endCol (inclusive), continuesLeft, continuesRight, lane }
+  const weekSegments = _useMemo4(() => {
+    const perWeek = grid.map(() => []);
+    for (const t of visibleTasks){
+      grid.forEach((week, wi) => {
+        const wStart = week[0].ymd;
+        const wEnd = week[6].ymd;
+        if (t.end < wStart || t.start > wEnd) return;
+        const segStart = t.start < wStart ? wStart : t.start;
+        const segEnd = t.end > wEnd ? wEnd : t.end;
+        const startCol = week.findIndex(d => d.ymd === segStart);
+        const endCol = week.findIndex(d => d.ymd === segEnd);
+        if (startCol < 0 || endCol < 0) return;
+        perWeek[wi].push({
+          task: t,
+          startCol,
+          endCol,
+          continuesLeft: t.start < wStart,
+          continuesRight: t.end > wEnd,
+        });
+      });
+    }
+    // Lane assignment per week
+    return perWeek.map(segs => {
+      segs.sort((a,b) => a.startCol - b.startCol || (b.endCol - b.startCol) - (a.endCol - a.startCol));
+      const lanes = []; // array of lane end cols
+      for (const s of segs){
+        let lane = 0;
+        while (lane < lanes.length && lanes[lane] >= s.startCol) lane++;
+        if (lane === lanes.length) lanes.push(s.endCol);
+        else lanes[lane] = s.endCol;
+        s.lane = lane;
+      }
+      return segs;
+    });
+  }, [grid, visibleTasks]);
+
+  const monthLabel = _MO4[cursor.m] + ' ' + cursor.y;
+  const prevMonth = () => setCursor(c => {
+    const m = c.m - 1; if (m < 0) return { y: c.y - 1, m: 11 };
+    return { y: c.y, m };
+  });
+  const nextMonth = () => setCursor(c => {
+    const m = c.m + 1; if (m > 11) return { y: c.y + 1, m: 0 };
+    return { y: c.y, m };
+  });
+  const goToday = () => {
+    const d = _py4(_ts4);
+    setCursor({ y: d.getFullYear(), m: d.getMonth() });
+  };
+
+  const today = _ts4;
+
+  const onChipClick = (e, t) => {
+    e.stopPropagation();
+    if (e.shiftKey){
+      setSelectedSet(prev => { const n = new Set(prev); n.has(t.id) ? n.delete(t.id) : n.add(t.id); return n; });
+    } else {
+      setSelected(t.id);
+      setSelectedSet(new Set([t.id]));
+    }
+  };
+  const onChipCtx = (e, t) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (t.recurrenceParent) return;
+    if (!selectedSet.has(t.id)){ setSelected(t.id); setSelectedSet(new Set([t.id])); }
+    setCtxMenu({x:e.clientX, y:e.clientY, taskId:t.id});
+  };
+
+  const MAX_LANES_VISIBLE = 4;
+
+  return (
+    <div className="calendar-view">
+      <div className="calendar-view-hdr">
+        <button className="cv-nav-btn" title="Previous month" onClick={prevMonth}>‹</button>
+        <button className="cv-nav-btn" title="Next month" onClick={nextMonth}>›</button>
+        <div className="cv-title">{monthLabel}</div>
+        <button className="cv-today-btn" onClick={goToday}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>
+          Today
+        </button>
+        <span className="cv-meta">{visibleTasks.length} task{visibleTasks.length===1?'':'s'} this month</span>
+      </div>
+      <div className="calendar-grid">
+        <div className="calendar-dow-row">
+          {dowLabels.map((lbl,i) => {
+            const dow = (weekStart + i) % 7;
+            return <div key={i} className={`cv-dow${isWeekendDow(dow)?' weekend':''}`}>{lbl}</div>;
+          })}
+        </div>
+        <div className="calendar-weeks">
+          {grid.length === 0 ? (
+            <div className="calendar-empty">
+              <h3>Empty month</h3>
+              <div>No grid to render.</div>
+            </div>
+          ) : grid.map((week, wi) => {
+            const segs = weekSegments[wi] || [];
+            return (
+              <div key={wi} className="calendar-week">
+                {week.map((d, di) => {
+                  const isToday = d.ymd === today;
+                  const isWE = isWeekendDow(d.dow);
+                  const isHol = holidays.has(d.ymd);
+                  return (
+                    <div key={di} className={`calendar-cell${isWE?' weekend':''}${d.isCurMonth?'':' other-month'}${isToday?' today':''}${isHol?' holiday':''}`}
+                         title={isHol?'Holiday':''}>
+                      <span className="cv-date-num">{d.dom}</span>
+                    </div>
+                  );
+                })}
+                {/* Strips overlay */}
+                {segs.slice().sort((a,b)=>a.lane-b.lane).filter(s => s.lane < MAX_LANES_VISIBLE).map((s, idx) => {
+                  const t = s.task;
+                  const left = (s.startCol / 7) * 100;
+                  const right = ((s.endCol + 1) / 7) * 100;
+                  const width = right - left;
+                  const top = 22 + s.lane * 17;
+                  const isSel = selected === t.id || selectedSet.has(t.id);
+                  const bg = t.color || (t.milestone ? 'var(--accent-2)' : '#a5b4fc');
+                  return (
+                    <div key={t.id + '-' + wi + '-' + idx}
+                      className={`calendar-strip${t.done?' done':''}${t.milestone?' milestone':''}${s.continuesLeft?' continues-left':''}${s.continuesRight?' continues-right':''}${t.recurrenceParent?' recur-i':''}${isSel?' selected':''}`}
+                      style={{position:'absolute', left:`calc(${left}% + 2px)`, width:`calc(${width}% - 4px)`, top:top+'px', background: bg}}
+                      title={`${t.title} · ${_fs4(t.start)} → ${_fs4(t.end)}${t.owner?' · '+t.owner:''}`}
+                      onClick={(e)=>onChipClick(e, t)}
+                      onContextMenu={(e)=>onChipCtx(e, t)}>
+                      {t.milestone ? '◆ ' : ''}{t.title}{t.recurrenceParent ? ' ↻' : ''}
+                    </div>
+                  );
+                })}
+                {(() => {
+                  const hidden = segs.filter(s => s.lane >= MAX_LANES_VISIBLE).length;
+                  if (!hidden) return null;
+                  return (
+                    <div key={'more-'+wi} className="cv-strip-more"
+                      style={{position:'absolute', right:6, bottom:3}}>+{hidden} more</div>
+                  );
+                })()}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { SearchFilterBar, ListView, CalendarView, classifyStatus });
+</script>
+
 <!-- ════════════════ MAIN APP ════════════════ -->
 <script type="text/babel">
 const { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, Fragment } = React;
@@ -1855,6 +2520,7 @@ const {
   computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
   addMonths, expandRecurring,
   loadTemplates, saveTemplates, sanitizeForTemplate, instantiateTemplate,
+  SearchFilterBar, ListView, CalendarView, classifyStatus,
 } = window;
 
 const DEP_TYPES = ['FS','SS','FF','SF'];
@@ -1930,6 +2596,20 @@ function App(){
   const [bulkPicker,  setBulkPicker]  = useState(null);
   // Inspector disclosure state (per-task) — uses session-local Set
   const [insOpen,     setInsOpen]     = useState({notes:false, links:false, custom:false});
+
+  // ── Batch 4: filter + view state ──
+  const [filter, setFilter] = useState({
+    q: '', owners: new Set(), priorities: new Set(), status: 'all'
+  });
+  // Debounced text for the search input — fires 150ms after typing stops.
+  const [debouncedQ, setDebouncedQ] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedQ(filter.q), 150);
+    return () => clearTimeout(id);
+  }, [filter.q]);
+  // View mode persisted in tweaks
+  const viewMode = tw.viewMode === 'list' || tw.viewMode === 'calendar' ? tw.viewMode : 'gantt';
+  const setViewMode = useCallback((mode) => { setTweak('viewMode', mode); }, [setTweak]);
 
   // ── Recurrence editor popover: {taskId, draft:{pattern,interval,count}}
   const [recurEditor, setRecurEditor] = useState(null);
@@ -2156,6 +2836,7 @@ function App(){
     setSelected(null);
     setSelectedSet(new Set());
     setFocusChain(null);
+    setFilter({q:'', owners:new Set(), priorities:new Set(), status:'all'});
   }, []);
 
   const loadSample = useCallback(() => {
@@ -2410,7 +3091,76 @@ function App(){
   // Source task fields like deps stay on the source only; instances inherit deps:[]
   // so the scheduler doesn't try to reshape them.
   const expandedTasks = useMemo(()=>expandRecurring(tasks, calendar),[tasks, calendar]);
-  const rows      = useMemo(()=>buildRows(expandedTasks,collapsed,groupBy),[expandedTasks,collapsed,groupBy]);
+
+  // ── Filter computation (Batch 4) ──
+  // Active task filter — produces a Set<id> of tasks that match the filter. A
+  // project group is considered visible if any of its non-project children match.
+  const filterActive = useMemo(() => {
+    return !!debouncedQ || (filter.owners?.size>0) || (filter.priorities?.size>0) || (filter.status && filter.status !== 'all');
+  }, [debouncedQ, filter.owners, filter.priorities, filter.status]);
+
+  const filteredTaskIds = useMemo(() => {
+    if (!filterActive) {
+      // All tasks visible — return null to short-circuit downstream
+      return null;
+    }
+    const q = (debouncedQ || '').trim().toLowerCase();
+    const ownersSel = filter.owners || new Set();
+    const prisSel = filter.priorities || new Set();
+    const status = filter.status || 'all';
+    const matchesTask = (t) => {
+      if (t.kind === 'project') return false; // project rows aren't direct matches
+      if (q && !(t.title || '').toLowerCase().includes(q)) return false;
+      if (ownersSel.size > 0 && !ownersSel.has(t.owner)) return false;
+      if (prisSel.size > 0 && !prisSel.has(t.priority || 'p3')) return false;
+      if (status !== 'all'){
+        const st = classifyStatus(t);
+        if (st !== status) return false;
+      }
+      return true;
+    };
+    const out = new Set();
+    for (const t of expandedTasks){
+      if (matchesTask(t)) out.add(t.id);
+    }
+    // Promote ancestor projects if any child matched
+    const byId = new Map(expandedTasks.map(t => [t.id, t]));
+    const projHasMatch = new Set();
+    for (const id of out){
+      let cur = byId.get(id);
+      while (cur && cur.parent){
+        const par = byId.get(cur.parent);
+        if (!par) break;
+        if (par.kind === 'project') projHasMatch.add(par.id);
+        cur = par;
+      }
+    }
+    for (const pid of projHasMatch) out.add(pid);
+    return out;
+  }, [filterActive, debouncedQ, filter.owners, filter.priorities, filter.status, expandedTasks]);
+
+  // Tasks fed into buildRows. When the filter is active we drop non-matching tasks;
+  // buildRows will naturally drop projects with no remaining children.
+  const tasksForRows = useMemo(() => {
+    if (!filteredTaskIds) return expandedTasks;
+    return expandedTasks.filter(t => filteredTaskIds.has(t.id));
+  }, [expandedTasks, filteredTaskIds]);
+
+  const rows      = useMemo(()=>buildRows(tasksForRows,collapsed,groupBy),[tasksForRows,collapsed,groupBy]);
+
+  // Count for "N of M tasks" — excludes project rows and recurring instances.
+  const totalTaskCount = useMemo(() => {
+    return expandedTasks.filter(t => t.kind !== 'project' && !t.recurrenceParent).length;
+  }, [expandedTasks]);
+  const visibleTaskCount = useMemo(() => {
+    if (!filteredTaskIds) return totalTaskCount;
+    let c = 0;
+    for (const t of expandedTasks){
+      if (t.kind === 'project' || t.recurrenceParent) continue;
+      if (filteredTaskIds.has(t.id)) c++;
+    }
+    return c;
+  }, [filteredTaskIds, expandedTasks, totalTaskCount]);
   const critical  = useMemo(()=>computeCriticalPath(expandedTasks,calendar),[expandedTasks,calendar]);
   const atRisk    = useMemo(()=>computeAtRisk(expandedTasks),[expandedTasks]);
   const floatMap  = useMemo(()=>showFloat?computeFloat(expandedTasks,calendar):new Map(),[expandedTasks,showFloat,calendar]);
@@ -3053,6 +3803,22 @@ function App(){
           <button onClick={()=>setTweak('dayWidth',Math.min(80,dayW+4))}>+</button>
         </div>
 
+        {/* View switcher (Batch 4) — Gantt / List / Calendar */}
+        <div className="view-switcher" title="Switch view">
+          <button className={`vs-btn${viewMode==='gantt'?' active':''}`} onClick={()=>setViewMode('gantt')} title="Gantt timeline view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="9" height="3" rx="1"/><rect x="8" y="11" width="11" height="3" rx="1"/><rect x="5" y="17" width="8" height="3" rx="1"/></svg>
+            Gantt
+          </button>
+          <button className={`vs-btn${viewMode==='list'?' active':''}`} onClick={()=>setViewMode('list')} title="List / table view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+            List
+          </button>
+          <button className={`vs-btn${viewMode==='calendar'?' active':''}`} onClick={()=>setViewMode('calendar')} title="Calendar / month view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            Cal
+          </button>
+        </div>
+
         <button className="tb-btn" onClick={()=>{ const el=gridScrollRef.current; const idx=diffDays(axis.start,todayStr); el?.scrollTo({left:Math.max(0,idx*dayW-el.clientWidth/3),behavior:'smooth'}); }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg> Today
         </button>
@@ -3225,10 +3991,35 @@ function App(){
         {/* Right pane */}
         <div className="rpane">
 
-          {showMinimap && activeProject && rows.length>0 && <Minimap rows={rows} axis={axis} dayW={dayW} totalW={totalW} gridScrollRef={gridScrollRef}/>}
+          {/* Filter strip (Batch 4) — always visible above all views */}
+          {activeProject && (
+            <SearchFilterBar filter={filter} setFilter={setFilter} owners={owners}
+              totalCount={totalTaskCount} visibleCount={visibleTaskCount}/>
+          )}
 
-          {/* Timeline header */}
-          <div className="timeline-hdr">
+          {/* ── LIST VIEW ── */}
+          {viewMode === 'list' && activeProject && (
+            <ListView tasks={tasks} expandedTasks={tasksForRows}
+              wbsMap={wbsMap} owners={owners}
+              selected={selected} selectedSet={selectedSet}
+              setSelected={setSelected} setSelectedSet={setSelectedSet}
+              updateTasks={updateTasks} applySchedule={applySchedule}
+              calendar={calendar} setCtxMenu={setCtxMenu} addOwnerToList={addOwnerToList}/>
+          )}
+
+          {/* ── CALENDAR VIEW ── */}
+          {viewMode === 'calendar' && activeProject && (
+            <CalendarView tasks={tasks} expandedTasks={tasksForRows}
+              calendar={calendar}
+              selected={selected} selectedSet={selectedSet}
+              setSelected={setSelected} setSelectedSet={setSelectedSet}
+              setCtxMenu={setCtxMenu}/>
+          )}
+
+          {viewMode === 'gantt' && showMinimap && activeProject && rows.length>0 && <Minimap rows={rows} axis={axis} dayW={dayW} totalW={totalW} gridScrollRef={gridScrollRef}/>}
+
+          {/* Timeline header — Gantt only */}
+          {viewMode === 'gantt' && (<div className="timeline-hdr">
             <div className="hdr-scroll" ref={hdrScrollRef}>
               <div className="hdr-track" style={{width:totalW+'px'}}>
                 {monthSpans.map((m,i)=>(
@@ -3248,10 +4039,10 @@ function App(){
                 })}
               </div>
             </div>
-          </div>
+          </div>)}
 
           {/* Grid */}
-          <div className="grid-scroll" ref={gridScrollRef} onScroll={onGridScroll} onPointerDown={onGridPointerDown}>
+          {viewMode === 'gantt' && (<div className="grid-scroll" ref={gridScrollRef} onScroll={onGridScroll} onPointerDown={onGridPointerDown}>
             <div className="grid-track" style={{width:totalW+'px',height:Math.max(200, rows.length*rowH)+'px'}}>
 
               {!activeProject && (
@@ -3470,7 +4261,7 @@ function App(){
               {snapInfo&&<div className="snap-badge" style={{left:snapInfo.x+6+'px',top:snapInfo.y+rowH/2-11+'px'}}>{snapInfo.label}</div>}
               {lasso&&<div className="lasso-rect" style={{left:Math.min(lasso.x1,lasso.x2)+'px',top:Math.min(lasso.y1,lasso.y2)+'px',width:Math.abs(lasso.x2-lasso.x1)+'px',height:Math.abs(lasso.y2-lasso.y1)+'px'}}/>}
             </div>
-          </div>
+          </div>)}
         </div>
       </div>
 
@@ -3511,21 +4302,34 @@ function App(){
 
     {/* Inspector */}
     {selected&&(()=>{
-      const i=rows.findIndex(r=>r.id===selected); if(i<0)return null;
-      const r=rows[i]; if(r.isProject||r.isOwnerGroup||renaming?.id===r.id)return null;
-      // Recurring instances are not directly editable — they redirect users
-      // to the source task. Suppress the inspector entirely on instances.
+      // Look up the live task. In non-Gantt views, rows[] is the Gantt build,
+      // so we cannot rely on findIndex there — locate by id via expandedTasks.
+      let r = rows.find(x=>x.id===selected) || expandedTasks.find(x=>x.id===selected);
+      if (!r) return null;
+      if (r.isProject||r.isOwnerGroup||r.kind==='project'||renaming?.id===r.id) return null;
       if (r.recurrenceParent) return null;
-      // The row from `rows` may be a stale snapshot from buildRows. Pull the live task by id.
       const taskLive = tasks.find(t=>t.id===r.id) || r;
-      const live=livePreview(r); const start=live?live.start:r.start, end=live?live.end:r.end;
+      const live = viewMode === 'gantt' ? livePreview(r) : null;
+      const start=live?live.start:r.start, end=live?live.end:r.end;
       const dur=diffDays(start,end)+1, isCrit=critical.nodes.has(r.id);
       const insDurLabel = formatDuration(start, end, calendar);
-      const grid=gridScrollRef.current; if(!grid)return null;
-      const gRect=grid.getBoundingClientRect();
-      const vx=gRect.left+xForDay(start)-grid.scrollLeft;
-      const vy=gRect.top+i*rowH+(rowH-22)/2-grid.scrollTop;
-      const insTop=Math.max(gRect.top+6,vy-100), insLeft=Math.max(gRect.left+6,Math.min(vx-6,gRect.right-360));
+
+      // Position: anchored to bar in Gantt, else to top-right of rpane area.
+      let insTop, insLeft;
+      if (viewMode === 'gantt'){
+        const i = rows.findIndex(x=>x.id===selected);
+        const grid=gridScrollRef.current;
+        if (i<0 || !grid) return null;
+        const gRect=grid.getBoundingClientRect();
+        const vx=gRect.left+xForDay(start)-grid.scrollLeft;
+        const vy=gRect.top+i*rowH+(rowH-22)/2-grid.scrollTop;
+        insTop=Math.max(gRect.top+6,vy-100);
+        insLeft=Math.max(gRect.left+6,Math.min(vx-6,gRect.right-360));
+      } else {
+        // For List/Calendar views, anchor to top-right of window.
+        insLeft = Math.max(12, window.innerWidth - 360);
+        insTop = 110;
+      }
       const ownersByName=new Map(owners.map(o=>[o.name,o]));
       const computedCost=computeTaskCost(taskLive, ownersByName);
       const hasExplicitCost=typeof taskLive.cost==='number' && !isNaN(taskLive.cost);
