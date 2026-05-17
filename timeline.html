@@ -250,6 +250,56 @@
   .ins-dep-chip:hover{background:rgba(20,184,166,.25)}
   .ins-dep-empty{font:10px var(--mono);color:var(--t4)}
 
+  /* Inspector editing surfaces (Batch 1) */
+  .inspector{min-width:300px;max-width:340px}
+  .ins-fields{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  .ins-field{display:flex;flex-direction:column;gap:3px}
+  .ins-field-lbl{font:9.5px var(--mono);color:var(--t4);letter-spacing:.06em;text-transform:uppercase}
+  .ins-input,.ins-textarea,.ins-date,.ins-select,.ins-num{background:var(--surface-2);border:1px solid var(--border-s);color:var(--t1);font:11px var(--font);padding:4px 6px;border-radius:2px;outline:none;width:100%}
+  .ins-input:focus,.ins-textarea:focus,.ins-date:focus,.ins-select:focus,.ins-num:focus{border-color:var(--accent-border)}
+  .ins-textarea{font-family:var(--font);resize:vertical;min-height:36px;max-height:128px;line-height:1.4}
+  .ins-row-2{display:flex;gap:6px}
+  .ins-row-2>*{flex:1;min-width:0}
+  .ins-seg{display:flex;background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;padding:1px;gap:1px}
+  .ins-seg button{flex:1;height:22px;border:none;background:transparent;color:var(--t3);font:10.5px var(--font);cursor:pointer;border-radius:2px;letter-spacing:.04em}
+  .ins-seg button:hover{color:var(--t1);background:var(--surface-3)}
+  .ins-seg button.active{background:var(--accent-dim);color:var(--accent-2);border:1px solid var(--accent-border);line-height:1}
+  .ins-seg button.p1.active{background:rgba(239,68,68,.18);color:var(--p1);border-color:rgba(239,68,68,.5)}
+  .ins-seg button.p2.active{background:rgba(245,158,11,.16);color:var(--p2);border-color:rgba(245,158,11,.5)}
+  .ins-seg button.p3.active{background:rgba(113,113,122,.18);color:var(--t2);border-color:var(--border-s)}
+  .ins-swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+  .ins-swatch{width:100%;aspect-ratio:1;border-radius:3px;border:2px solid transparent;cursor:pointer;outline:none;padding:0}
+  .ins-swatch:hover{filter:brightness(1.15)}
+  .ins-swatch.active{border-color:var(--t1);box-shadow:0 0 0 1px var(--accent-2)}
+  .ins-hex{width:78px;font-family:var(--mono);font-size:10px;text-transform:uppercase}
+  .ins-disclose{display:flex;align-items:center;justify-content:space-between;cursor:pointer;color:var(--t3);font:10px var(--font);padding:3px 0;user-select:none;letter-spacing:.04em;text-transform:uppercase}
+  .ins-disclose:hover{color:var(--t1)}
+  .ins-disclose .chv{transition:transform .15s;display:inline-block;color:var(--t4);font-size:9px}
+  .ins-disclose.open .chv{transform:rotate(90deg)}
+  .ins-disclose-cnt{font:9.5px var(--mono);color:var(--t4);margin-left:auto;margin-right:6px}
+  .ins-link-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;font:10px var(--mono);color:var(--accent-2);max-width:170px}
+  .ins-link-chip a{color:var(--accent-2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+  .ins-link-chip a:hover{text-decoration:underline}
+  .ins-link-chip .del{background:transparent;border:none;color:var(--t4);cursor:pointer;font-size:11px;padding:0 1px;line-height:1}
+  .ins-link-chip .del:hover{color:var(--p1)}
+  .ins-add-btn{align-self:flex-start;background:transparent;border:1px dashed var(--border-s);color:var(--t3);font:10px var(--font);padding:2px 8px;border-radius:2px;cursor:pointer}
+  .ins-add-btn:hover{border-color:var(--accent-border);color:var(--accent-2);background:var(--accent-dim)}
+  .ins-cf-row{display:grid;grid-template-columns:1fr 1fr auto;gap:4px;align-items:center}
+  .ins-cf-row .ins-input{font-size:10.5px;padding:3px 5px}
+  .ins-cf-row .del{background:transparent;border:none;color:var(--t4);cursor:pointer;width:18px;height:18px;font-size:11px;line-height:1;border-radius:2px}
+  .ins-cf-row .del:hover{color:var(--p1);background:rgba(239,68,68,.1)}
+  .ins-cost-line{font:10px var(--mono);color:var(--t3);margin-top:2px}
+  .ins-cost-line strong{color:var(--accent-2)}
+
+  /* WBS badge in task row */
+  .task-row .wbs{font:9.5px var(--mono);color:var(--t4);background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;padding:0 4px;height:14px;line-height:13px;letter-spacing:.04em;flex-shrink:0;min-width:18px;text-align:center}
+  .task-row.selected .wbs{color:var(--accent-2);border-color:var(--accent-border);background:var(--accent-dim)}
+  .group-row .group-cost{font:9.5px var(--mono);color:var(--accent-2);margin-left:6px}
+
+  /* Bulk-op picker popover */
+  .bulk-picker{position:fixed;background:var(--surface);border:1px solid var(--accent-border);border-radius:3px;box-shadow:var(--shadow-lg);padding:8px;z-index:600;min-width:200px}
+  .bulk-picker .bp-title{font:10px var(--mono);color:var(--t4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+
   /* Right-click context menu */
   .ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;z-index:500;min-width:220px;font:11.5px var(--font);color:var(--t2);user-select:none}
   .ctx-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:2px;cursor:pointer}
@@ -732,17 +782,27 @@ function genId(prefix){ return (prefix||'p') + Date.now().toString(36) + Math.ra
 
 function newProject(name){
   const palette = ['#7c3aed','#14b8a6','#f472b6','#a5b4fc','#fcd34d','#86efac','#f59e0b','#5eead4'];
-  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [] };
+  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [], owners: [] };
 }
 
 function sampleWorkspace(){
-  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: DEMO_TASKS };
-  return { version: 1, projects: [p], activeProjectId: p.id };
+  const owners = [
+    { name: 'Alex',   hourlyRate: 110, color: '#a5b4fc' },
+    { name: 'Sam',    hourlyRate: 95,  color: '#fcd34d' },
+    { name: 'Jordan', hourlyRate: 85,  color: '#86efac' },
+    { name: 'Chris',  hourlyRate: 120, color: '#f472b6' },
+  ];
+  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: DEMO_TASKS, owners };
+  return { version: 2, projects: [p], activeProjectId: p.id };
 }
 
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 const MIGRATIONS = [
-  // { from: 1, to: 2, migrate(data){ ...; data.version = 2; return data; } },
+  { from: 1, to: 2, migrate(data){
+    data.projects = (data.projects || []).map(p => ({...p, owners: p.owners || []}));
+    data.version = 2;
+    return data;
+  } },
 ];
 
 function migrateWorkspace(data){
@@ -788,6 +848,7 @@ function parseWorkspace(json){
       created: p.created || todayStr,
       tasks: Array.isArray(p.tasks) ? p.tasks : [],
       baseline: p.baseline ? new Map(Object.entries(p.baseline)) : null,
+      owners: Array.isArray(p.owners) ? p.owners : [],
     }))
   };
 }
@@ -1066,6 +1127,102 @@ function shade(c,pct){
   return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
 
+// ── WBS numbering (auto from parent/child tree, project-order based) ──
+function computeWbsMap(tasks){
+  const byParent = new Map();
+  for (const t of tasks){
+    const k = t.parent || '__root';
+    if (!byParent.has(k)) byParent.set(k, []);
+    byParent.get(k).push(t);
+  }
+  // Preserve insertion order from `tasks` array (already grouped by project in demo).
+  const out = new Map();
+  // Find projects (root-level kind==='project') first, then assign children.
+  const roots = (byParent.get('__root')||[]).filter(t=>t.kind==='project');
+  for (const proj of roots){
+    // project itself: no WBS badge
+    out.set(proj.id, '');
+    const walk = (parentId, prefix) => {
+      const kids = byParent.get(parentId) || [];
+      kids.forEach((k, i) => {
+        const code = prefix ? `${prefix}.${i+1}` : `${i+1}`;
+        out.set(k.id, code);
+        walk(k.id, code);
+      });
+    };
+    walk(proj.id, '');
+  }
+  // Orphans (tasks with no project parent) — number them sequentially as "Loose"
+  const orphans = (byParent.get('__root')||[]).filter(t=>t.kind!=='project');
+  orphans.forEach((o, i) => {
+    out.set(o.id, `${i+1}`);
+    const walk = (parentId, prefix) => {
+      const kids = byParent.get(parentId) || [];
+      kids.forEach((k, i) => {
+        const code = `${prefix}.${i+1}`;
+        out.set(k.id, code);
+        walk(k.id, code);
+      });
+    };
+    walk(o.id, `${i+1}`);
+  });
+  return out;
+}
+
+// ── Cost helpers ──
+// Compute a single task's cost. Use explicit `cost` if set; else if task has an
+// owner mapped to a known hourlyRate, compute rate × duration × 8h.
+function computeTaskCost(task, ownersByName){
+  if (task == null) return 0;
+  if (typeof task.cost === 'number' && !isNaN(task.cost)) return task.cost;
+  if (task.owner && ownersByName){
+    const o = ownersByName.get(task.owner);
+    if (o && typeof o.hourlyRate === 'number' && !isNaN(o.hourlyRate)){
+      const dur = Math.max(1, diffDays(task.start, task.end) + 1);
+      return o.hourlyRate * dur * 8;
+    }
+  }
+  return 0;
+}
+
+function computeCostRollup(tasks, owners){
+  const ownersByName = new Map((owners||[]).map(o => [o.name, o]));
+  const byParent = new Map();
+  for (const t of tasks){
+    const k = t.parent || '__root';
+    if (!byParent.has(k)) byParent.set(k, []);
+    byParent.get(k).push(t);
+  }
+  const total = new Map(); // taskId -> rolled-up cost (self + descendants)
+  const visit = (id) => {
+    if (total.has(id)) return total.get(id);
+    const kids = byParent.get(id) || [];
+    let sum = 0;
+    for (const k of kids){
+      sum += visit(k.id);
+    }
+    const me = tasks.find(t => t.id === id);
+    if (me && me.kind !== 'project') sum += computeTaskCost(me, ownersByName);
+    total.set(id, sum);
+    return sum;
+  };
+  for (const t of tasks) visit(t.id);
+  // Project totals — sum of their children
+  let grand = 0;
+  for (const t of tasks){
+    if (t.kind === 'project') grand += total.get(t.id) || 0;
+    else if (!t.parent) grand += total.get(t.id) || 0;
+  }
+  return { perTask: total, grand };
+}
+
+function formatCost(n){
+  if (typeof n !== 'number' || !isFinite(n) || n === 0) return '$0';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+  if (n >= 1000) return '$' + Math.round(n/100)/10 + 'k';
+  return '$' + Math.round(n).toLocaleString();
+}
+
 Object.assign(window,{
   DAY_MS,TODAY,todayStr,
   ymd,parseYmd,addDays,diffDays,fmtShort,isWeekend,
@@ -1076,6 +1233,7 @@ Object.assign(window,{
   buildArrowPath,shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
   CURRENT_VERSION, MIGRATIONS, migrateWorkspace,
+  computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
 });
 </script>
 
@@ -1187,7 +1345,11 @@ const {
   cascadeAfterMove, computeFloat, detectConflicts, autoStagger,
   buildArrowPath, shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
+  computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
 } = window;
+
+// Color presets for inspector swatch grid (8 colors)
+const COLOR_PRESETS = ['#a5b4fc','#7c3aed','#f472b6','#ef4444','#f59e0b','#fcd34d','#86efac','#14b8a6'];
 
 const FSA_AVAILABLE = typeof window.showOpenFilePicker === 'function';
 
@@ -1219,6 +1381,11 @@ function App(){
   const [durationBuf, setDurationBuf] = useState('');
   const [ctxMenu,     setCtxMenu]     = useState(null);
   const [focusChain,  setFocusChain]  = useState(null);
+
+  // Bulk-op picker: {x,y,kind:'owner'|'color'|'priority', ids:Set}
+  const [bulkPicker,  setBulkPicker]  = useState(null);
+  // Inspector disclosure state (per-task) — uses session-local Set
+  const [insOpen,     setInsOpen]     = useState({notes:false, links:false, custom:false});
 
   // ── Derived: active project ──
   const activeProject = useMemo(
@@ -1387,7 +1554,7 @@ function App(){
       parent: t.parent ? (idMap.get(t.parent) ?? t.parent) : null,
       deps: (t.deps || []).map(d => idMap.get(d) ?? d),
     }));
-    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks };
+    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks, owners: (p.owners||[]).map(o=>({...o})) };
     commitMutation('duplicate project', ps => [...ps, np]);
     setActiveProjectId(np.id);
   }, [projects, commitMutation]);
@@ -1555,6 +1722,9 @@ function App(){
   const atRisk    = useMemo(()=>computeAtRisk(tasks),[tasks]);
   const floatMap  = useMemo(()=>showFloat?computeFloat(tasks):new Map(),[tasks,showFloat]);
   const conflicts = useMemo(()=>showConflicts?detectConflicts(tasks):new Set(),[tasks,showConflicts]);
+  const wbsMap    = useMemo(()=>computeWbsMap(tasks),[tasks]);
+  const owners    = activeProject?.owners ?? [];
+  const costRoll  = useMemo(()=>computeCostRollup(tasks, owners),[tasks, owners]);
 
   const hoverChain = useMemo(()=>{
     if(!hoveredBarId||focusChain) return null;
@@ -1897,6 +2067,47 @@ function App(){
     setFocusChain(prev=>{ const c=getDepChain(tasks,id); return(prev&&prev.size===c.size&&[...c].every(x=>prev.has(x)))?null:c; });
   },[tasks]);
 
+  // ── Bulk operations (multi-select) ──
+  const bulkDelete=useCallback((ids)=>{
+    const idset = ids instanceof Set ? ids : new Set(ids);
+    updateTasks(ts=>ts
+      .filter(tt=>!idset.has(tt.id))
+      .map(tt=>tt.deps?.some(d=>idset.has(d))?{...tt,deps:tt.deps.filter(d=>!idset.has(d))}:tt));
+    setSelected(null); setSelectedSet(new Set());
+  },[updateTasks]);
+
+  const bulkSetField=useCallback((ids, field, value)=>{
+    const idset = ids instanceof Set ? ids : new Set(ids);
+    updateTasks(ts=>ts.map(t=>idset.has(t.id)?{...t,[field]:value}:t));
+  },[updateTasks]);
+
+  const bulkDuplicate=useCallback((ids)=>{
+    const idset = ids instanceof Set ? ids : new Set(ids);
+    const newIds = new Set();
+    updateTasks(ts=>{
+      const src = ts.filter(t=>idset.has(t.id) && t.kind!=='project');
+      const idMap = new Map();
+      const copies = src.map(t=>{
+        const nid = t.id + '-dup' + Math.random().toString(36).slice(2,5);
+        idMap.set(t.id, nid); newIds.add(nid);
+        const dur = diffDays(t.start, t.end);
+        const ns = addDays(t.end, 1);
+        return {...t, id:nid, title:t.title+' (copy)', start:ns, end:addDays(ns,dur), deps:[t.id], done:false, progress:0};
+      });
+      return [...ts, ...copies];
+    });
+    setTimeout(()=>{ setSelectedSet(newIds); if(newIds.size===1) setSelected([...newIds][0]); }, 0);
+  },[updateTasks]);
+
+  // Adds an owner to the active project's owners list (idempotent)
+  const addOwnerToList=useCallback((name)=>{
+    if (!name || !activeProject) return;
+    const list = activeProject.owners || [];
+    if (list.some(o => o.name === name)) return;
+    updateActiveProject({ owners: [...list, { name }] });
+  },[activeProject, updateActiveProject]);
+
+
   const commitRename=useCallback(()=>{
     setRenaming(r=>{ if(!r)return null; const v=r.value.trim(); if(v)updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,title:v}:t)); return null; });
   },[updateTasks]);
@@ -1916,7 +2127,7 @@ function App(){
   useEffect(()=>{
     const onKey=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);return; }
+      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);return; }
       if(!selected)return;
       const t=tasks.find(x=>x.id===selected); if(!t)return;
       const mod=e.metaKey||e.ctrlKey;
@@ -1957,13 +2168,13 @@ function App(){
     return ()=>window.removeEventListener('keydown',onKey);
   },[selected,selectedSet,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks]);
 
-  // Click-away for ctx menus and file menu
+  // Click-away for ctx menus and file menu and bulk picker
   useEffect(()=>{
-    if(!ctxMenu&&!projCtxMenu&&!fileMenuOpen)return;
-    const fn=()=>{setCtxMenu(null);setProjCtxMenu(null);setFileMenuOpen(false);};
+    if(!ctxMenu&&!projCtxMenu&&!fileMenuOpen&&!bulkPicker)return;
+    const fn=()=>{setCtxMenu(null);setProjCtxMenu(null);setFileMenuOpen(false);setBulkPicker(null);};
     window.addEventListener('mousedown',fn); window.addEventListener('scroll',fn,true);
     return ()=>{ window.removeEventListener('mousedown',fn); window.removeEventListener('scroll',fn,true); };
-  },[ctxMenu,projCtxMenu,fileMenuOpen]);
+  },[ctxMenu,projCtxMenu,fileMenuOpen,bulkPicker]);
 
   // ── Render ──
   const tinyCol  = dayW<10;
@@ -2198,11 +2409,14 @@ function App(){
               if(r.isProject){
                 const open=!collapsed.has(r.id);
                 const cnt=tasks.filter(t=>t.parent===r.id).length;
+                const projCost = costRoll.perTask.get(r.id) || 0;
                 return (
                   <div className="group-row" data-pid={r.project} key={r.id}
                     onClick={()=>setCollapsed(c=>{const n=new Set(c);n.has(r.id)?n.delete(r.id):n.add(r.id);return n;})}>
                     <svg className={`group-chv${open?' open':''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                    <span className="group-dot"/><span className="group-name">{r.title}</span><span className="group-cnt">{cnt}</span>
+                    <span className="group-dot"/><span className="group-name">{r.title}</span>
+                    {projCost>0 && <span className="group-cost" title={`Rollup cost`}>{formatCost(projCost)} total</span>}
+                    <span className="group-cnt">{cnt}</span>
                   </div>
                 );
               }
@@ -2219,12 +2433,14 @@ function App(){
                 );
               }
               const sel=selected===r.id, isRen=renaming?.id===r.id;
+              const wbsCode = wbsMap.get(r.id);
               return (
                 <div className={`task-row is-child${r.done?' done':''}${sel?' selected':''}${hoverRow===r.id?' hover':''}`} key={r.id}
                   onMouseEnter={()=>setHoverRow(r.id)} onMouseLeave={()=>setHoverRow(null)}
                   onClick={()=>setSelected(r.id)} onDoubleClick={()=>setRenaming({id:r.id,value:r.title})}
-                  onContextMenu={e=>{e.preventDefault();setSelected(r.id);setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                  onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
                   <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
+                  {wbsCode && <span className="wbs" title={`WBS ${wbsCode}`}>{wbsCode}</span>}
                   {isRen
                     ?<input className="row-rename" autoFocus value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
                     :<span className="ttl">{r.title}</span>
@@ -2394,8 +2610,10 @@ function App(){
 
                   if(r.isProject||r.isOwnerGroup){
                     const isOwner=r.isOwnerGroup;
+                    const projCost = isOwner ? 0 : (costRoll.perTask.get(r.id) || 0);
                     return (
                       <div key={r.id} className={`bar project${isOwner?' owner-rollup':''}`}
+                        title={projCost>0 ? `${r.title} · ${formatCost(projCost)} total` : r.title}
                         style={{left:x+'px',top:i*rowH+(rowH-12)/2+'px',width:w+'px',height:'12px'}}>
                         {!isOwner&&<span className="proj-cap"/>}
                         <div className="bar-ttl">{r.title}</div>
@@ -2420,10 +2638,10 @@ function App(){
                         onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
                         onClick={e=>{e.stopPropagation();setSelected(r.id);}}
                         onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
-                        onContextMenu={e=>{e.preventDefault();setSelected(r.id);setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                        onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
                         <span className="diamond" style={{background:r.color||'var(--accent-2)'}}/>
                         {isRenaming
-                          ?<input className="row-rename bar-rename" autoFocus style={{position:'absolute',left:'24px',width:'180px',background:'var(--surface-2)',color:'var(--t1)'}}
+                          ?<input className="row-rename bar-rename" style={{position:'absolute',left:'24px',width:'180px',background:'var(--surface-2)',color:'var(--t1)'}}
                               value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
                               onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
                           :<span className="bar-ttl">{r.title}</span>
@@ -2443,15 +2661,15 @@ function App(){
                       onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
                       onClick={e=>{e.stopPropagation();setSelected(r.id);}}
                       onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
-                      onContextMenu={e=>{e.preventDefault();setSelected(r.id);setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
-                      title={isRenaming?'':`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${dur}d${r.owner?' · '+r.owner:''}`}>
+                      onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
+                      title={isRenaming?'':`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${dur}d${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}`}>
                       {liveProgress>0&&<div className="bar-prog" style={{width:(liveProgress*100)+'%',background:`${shade(bg,-.45)}66`}}/>}
                       {!r.done&&liveProgress>0&&liveProgress<.99&&(
                         <div className="bar-prog-handle" style={{left:`calc(${Math.max(6,Math.min(94,liveProgress*100))}% - 1px)`}}
                           onPointerDown={e=>{e.stopPropagation();beginProgDrag(e,r);}}/>
                       )}
                       {isRenaming
-                        ?<input className="bar-rename" autoFocus value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
+                        ?<input className="bar-rename" value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
                             onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
                         :<div className="bar-ttl">{r.title}</div>
                       }
@@ -2514,6 +2732,8 @@ function App(){
     {selected&&(()=>{
       const i=rows.findIndex(r=>r.id===selected); if(i<0)return null;
       const r=rows[i]; if(r.isProject||r.isOwnerGroup||renaming?.id===r.id)return null;
+      // The row from `rows` may be a stale snapshot from buildRows. Pull the live task by id.
+      const taskLive = tasks.find(t=>t.id===r.id) || r;
       const live=livePreview(r); const start=live?live.start:r.start, end=live?live.end:r.end;
       const dur=diffDays(start,end)+1, isCrit=critical.nodes.has(r.id);
       const grid=gridScrollRef.current; if(!grid)return null;
@@ -2521,21 +2741,204 @@ function App(){
       const vx=gRect.left+xForDay(start)-grid.scrollLeft;
       const vy=gRect.top+i*rowH+(rowH-22)/2-grid.scrollTop;
       const insTop=Math.max(gRect.top+6,vy-100), insLeft=Math.max(gRect.left+6,Math.min(vx-6,gRect.right-360));
+      const ownersByName=new Map(owners.map(o=>[o.name,o]));
+      const computedCost=computeTaskCost(taskLive, ownersByName);
+      const hasExplicitCost=typeof taskLive.cost==='number' && !isNaN(taskLive.cost);
+      const links=Array.isArray(taskLive.links)?taskLive.links:[];
+      const cf=taskLive.customFields && typeof taskLive.customFields==='object' ? taskLive.customFields : {};
+      const cfEntries=Object.entries(cf);
+
+      const setPriority = (p) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,priority:p}:t));
+      const setColor = (c) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,color:c}:t));
+      const setStart = (s) => updateTasks(ts=>cascadeAfterMove(ts.map(t=>{
+        if(t.id!==r.id) return t;
+        // keep duration if both, else snap end
+        const dur0 = diffDays(t.start, t.end);
+        const ne = addDays(s, dur0);
+        return {...t, start:s, end: ne < s ? s : ne };
+      }), r.id));
+      const setEnd = (e) => updateTasks(ts=>cascadeAfterMove(ts.map(t=>{
+        if(t.id!==r.id) return t;
+        return {...t, end: e < t.start ? t.start : e };
+      }), r.id));
+      const setOwner = (name) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,owner:name||undefined}:t));
+      const setNotes = (v) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,notes:v}:t));
+      const setCost = (v) => {
+        const n = v === '' ? null : Number(v);
+        if (n != null && (isNaN(n) || !isFinite(n))) return;
+        updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,cost: n==null?null:n}:t));
+      };
+      const updateLinks = (next) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,links:next}:t));
+      const updateCustom = (next) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,customFields:next}:t));
+
       return (
         <div className="inspector" style={{position:'fixed',left:insLeft+'px',top:insTop+'px'}} onPointerDown={e=>e.stopPropagation()}>
-          <div className="ins-title">{r.title}{isCrit&&<span className="ins-crit">CRITICAL</span>}</div>
+          <div className="ins-title">{taskLive.title}{isCrit&&<span className="ins-crit">CRITICAL</span>}</div>
           <div className="ins-row"><span className="lbl">Dates</span><span className="val">{fmtShort(start)} → {fmtShort(end)}</span><span className="dur-pill" style={{marginLeft:'auto'}}>{r.milestone?'◆':dur+'d'}</span></div>
-          {r.owner&&<div className="ins-row"><span className="lbl">Owner</span><span className="val">{r.owner}</span>{conflicts.has(r.id)&&<span style={{marginLeft:'auto',color:'var(--p2)',font:'9px var(--mono)'}}>⚠ conflict</span>}</div>}
           <div className="ins-row ins-deps-row"><span className="lbl">Deps</span>
-            {!(r.deps?.length)?<span className="ins-dep-empty">none</span>:r.deps.map(id=>{
+            {!(taskLive.deps?.length)?<span className="ins-dep-empty">none</span>:taskLive.deps.map(id=>{
               const dt=tasks.find(t=>t.id===id);
               return <span key={id} className="ins-dep-chip" title="Jump" onClick={()=>setSelected(id)}>{(dt?.title||id).slice(0,22)}</span>;
             })}
           </div>
           {floatMap.has(r.id)&&floatMap.get(r.id)>0&&<div className="ins-row"><span className="lbl">Float</span><span className="val" style={{color:'var(--accent-2)'}}>{floatMap.get(r.id)}d slack</span></div>}
+
+          <div className="ins-fields">
+            {/* Date pickers */}
+            {!r.milestone && (
+              <div className="ins-row-2">
+                <div className="ins-field">
+                  <span className="ins-field-lbl">Start</span>
+                  <input className="ins-date" type="date" value={taskLive.start} onChange={e=>{ if(e.target.value) setStart(e.target.value); }}/>
+                </div>
+                <div className="ins-field">
+                  <span className="ins-field-lbl">End</span>
+                  <input className="ins-date" type="date" value={taskLive.end} onChange={e=>{ if(e.target.value) setEnd(e.target.value); }}/>
+                </div>
+              </div>
+            )}
+            {r.milestone && (
+              <div className="ins-field">
+                <span className="ins-field-lbl">Milestone date</span>
+                <input className="ins-date" type="date" value={taskLive.start} onChange={e=>{ if(e.target.value){ const v=e.target.value; updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,start:v,end:v}:t)); }}}/>
+              </div>
+            )}
+
+            {/* Priority */}
+            <div className="ins-field">
+              <span className="ins-field-lbl">Priority</span>
+              <div className="ins-seg">
+                {['p1','p2','p3'].map(p=>(
+                  <button key={p} className={`${p}${taskLive.priority===p?' active':''}`}
+                    onClick={()=>setPriority(p)}>{p.toUpperCase()}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Owner */}
+            <div className="ins-field">
+              <span className="ins-field-lbl">Owner</span>
+              <div className="ins-row-2">
+                <select className="ins-select" value={taskLive.owner||''} onChange={e=>setOwner(e.target.value)}>
+                  <option value="">— none —</option>
+                  {owners.map(o=><option key={o.name} value={o.name}>{o.name}{typeof o.hourlyRate==='number'?` ($${o.hourlyRate}/h)`:''}</option>)}
+                  {taskLive.owner && !owners.some(o=>o.name===taskLive.owner) && <option value={taskLive.owner}>{taskLive.owner} (ad-hoc)</option>}
+                </select>
+                <input className="ins-input" placeholder="+ new owner" onKeyDown={e=>{
+                  if(e.key==='Enter'){
+                    const v=e.target.value.trim();
+                    if(v){ addOwnerToList(v); setOwner(v); e.target.value=''; }
+                  }
+                }}/>
+              </div>
+              {conflicts.has(r.id)&&<span style={{color:'var(--p2)',font:'9px var(--mono)',marginTop:'2px'}}>⚠ owner double-booked</span>}
+            </div>
+
+            {/* Color */}
+            <div className="ins-field">
+              <span className="ins-field-lbl">Color</span>
+              <div className="ins-swatches">
+                {COLOR_PRESETS.map(c=>(
+                  <button key={c} className={`ins-swatch${taskLive.color===c?' active':''}`}
+                    style={{background:c}} title={c} onClick={()=>setColor(c)}/>
+                ))}
+              </div>
+              <input className="ins-input ins-hex" type="text" placeholder="#hex" value={taskLive.color||''}
+                onChange={e=>{ const v=e.target.value.trim(); if(/^#[0-9a-fA-F]{3,8}$/.test(v)) setColor(v); else if(v==='') setColor(undefined); else if(v.length<=9){ updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,color:v}:t)); }}}/>
+            </div>
+
+            {/* Cost */}
+            <div className="ins-field">
+              <span className="ins-field-lbl">Cost (number)</span>
+              <input className="ins-num" type="number" step="any" placeholder="auto"
+                value={hasExplicitCost ? String(taskLive.cost) : ''}
+                onChange={e=>setCost(e.target.value)}/>
+              {computedCost>0 && !hasExplicitCost && (
+                <span className="ins-cost-line">Computed: <strong>{formatCost(computedCost)}</strong> (owner rate × duration × 8h)</span>
+              )}
+              {hasExplicitCost && (
+                <span className="ins-cost-line">Explicit: <strong>{formatCost(taskLive.cost)}</strong></span>
+              )}
+            </div>
+
+            {/* Notes (disclosure) */}
+            <div>
+              <div className={`ins-disclose${insOpen.notes?' open':''}`} onClick={()=>setInsOpen(o=>({...o,notes:!o.notes}))}>
+                <span><span className="chv">▶</span> Notes</span>
+                {!!taskLive.notes && <span className="ins-disclose-cnt">{taskLive.notes.length}c</span>}
+              </div>
+              {insOpen.notes && (
+                <textarea className="ins-textarea" rows={3} placeholder="Description, context, links…"
+                  value={taskLive.notes||''} onChange={e=>setNotes(e.target.value)}/>
+              )}
+            </div>
+
+            {/* Links (disclosure) */}
+            <div>
+              <div className={`ins-disclose${insOpen.links?' open':''}`} onClick={()=>setInsOpen(o=>({...o,links:!o.links}))}>
+                <span><span className="chv">▶</span> Links</span>
+                {links.length>0 && <span className="ins-disclose-cnt">{links.length}</span>}
+              </div>
+              {insOpen.links && (
+                <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:3}}>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                    {links.map((l,idx)=>(
+                      <span key={idx} className="ins-link-chip">
+                        <a href={l.url} target="_blank" rel="noopener noreferrer" title={l.url}>{l.label||l.url.replace(/^https?:\/\//,'').slice(0,22)}</a>
+                        <button className="del" title="Remove" onClick={()=>updateLinks(links.filter((_,j)=>j!==idx))}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                  <button className="ins-add-btn" onClick={()=>{
+                    const url=window.prompt('Link URL:','https://');
+                    if(!url||!url.trim()) return;
+                    const lbl=window.prompt('Label (optional):','');
+                    const next=[...links,{url:url.trim(), label:(lbl||'').trim()||undefined}];
+                    updateLinks(next);
+                  }}>+ add link</button>
+                </div>
+              )}
+            </div>
+
+            {/* Custom fields (disclosure) */}
+            <div>
+              <div className={`ins-disclose${insOpen.custom?' open':''}`} onClick={()=>setInsOpen(o=>({...o,custom:!o.custom}))}>
+                <span><span className="chv">▶</span> Custom fields</span>
+                {cfEntries.length>0 && <span className="ins-disclose-cnt">{cfEntries.length}</span>}
+              </div>
+              {insOpen.custom && (
+                <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:3}}>
+                  {cfEntries.map(([k,v],idx)=>(
+                    <div key={idx} className="ins-cf-row">
+                      <input className="ins-input" value={k} onChange={e=>{
+                        const newKey=e.target.value;
+                        if(newKey===k) return;
+                        const next={};
+                        cfEntries.forEach(([kk,vv],j)=>{ next[j===idx?newKey:kk]=vv; });
+                        updateCustom(next);
+                      }}/>
+                      <input className="ins-input" value={v} placeholder="value" onChange={e=>{
+                        updateCustom({...cf,[k]:e.target.value});
+                      }}/>
+                      <button className="del" title="Remove" onClick={()=>{
+                        const next={...cf}; delete next[k]; updateCustom(next);
+                      }}>×</button>
+                    </div>
+                  ))}
+                  <button className="ins-add-btn" onClick={()=>{
+                    // generate unique key
+                    let base='field', i=1;
+                    while(Object.prototype.hasOwnProperty.call(cf,`${base}${i}`)) i++;
+                    updateCustom({...cf,[`${base}${i}`]:''});
+                  }}>+ add field</button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="ins-acts">
             <button className="ins-btn link-btn" onPointerDown={e=>beginDepDrag(e,r)}>link</button>
-            <button className="ins-btn" onClick={()=>setRenaming({id:r.id,value:r.title})}>Rename</button>
+            <button className="ins-btn" onClick={()=>setRenaming({id:r.id,value:taskLive.title})}>Rename</button>
             <button className="ins-btn" onClick={()=>focusDepSubtree(r.id)}>{focusChain?'Unfocus':'Focus chain'}</button>
             <button className="ins-btn" onClick={()=>duplicateTask(r.id)}>Duplicate</button>
           </div>
@@ -2546,7 +2949,25 @@ function App(){
     {/* Task Context menu */}
     {ctxMenu&&(()=>{
       const t=tasks.find(tt=>tt.id===ctxMenu.taskId); if(!t)return null;
-      const cx=Math.min(ctxMenu.x,window.innerWidth-240), cy=Math.min(ctxMenu.y,window.innerHeight-340);
+      const isBulk = selectedSet.size > 1 && selectedSet.has(t.id);
+      const cx=Math.min(ctxMenu.x,window.innerWidth-260), cy=Math.min(ctxMenu.y,window.innerHeight-340);
+
+      if (isBulk) {
+        const ids = new Set(selectedSet);
+        return (
+          <div className="ctx-menu" style={{left:cx+'px',top:cy+'px'}} onMouseDown={e=>e.stopPropagation()}>
+            <div className="ctx-hdr">{ids.size} tasks selected</div><div className="ctx-sep"/>
+            <div className="ctx-item" onClick={()=>{ setBulkPicker({x:ctxMenu.x,y:ctxMenu.y,kind:'owner',ids}); setCtxMenu(null); }}>Set owner…</div>
+            <div className="ctx-item" onClick={()=>{ setBulkPicker({x:ctxMenu.x,y:ctxMenu.y,kind:'color',ids}); setCtxMenu(null); }}>Set color…</div>
+            <div className="ctx-item" onClick={()=>{ setBulkPicker({x:ctxMenu.x,y:ctxMenu.y,kind:'priority',ids}); setCtxMenu(null); }}>Set priority…</div>
+            <div className="ctx-sep"/>
+            <div className="ctx-item" onClick={()=>{ bulkDuplicate(ids); setCtxMenu(null); }}>Duplicate selected</div>
+            <div className="ctx-sep"/>
+            <div className="ctx-item danger" onClick={()=>{ bulkDelete(ids); setCtxMenu(null); }}>Delete selected ({ids.size})<span className="kbd">⌫</span></div>
+          </div>
+        );
+      }
+
       return (
         <div className="ctx-menu" style={{left:cx+'px',top:cy+'px'}} onMouseDown={e=>e.stopPropagation()}>
           <div className="ctx-hdr">{t.title}</div><div className="ctx-sep"/>
@@ -2560,6 +2981,47 @@ function App(){
           <div className="ctx-item" onClick={()=>{setRenaming({id:t.id,value:t.title});setCtxMenu(null);}}>Rename<span className="kbd">F2</span></div>
           <div className="ctx-sep"/>
           <div className="ctx-item danger" onClick={()=>{updateTasks(ts=>ts.filter(tt=>tt.id!==t.id).map(tt=>tt.deps?.includes(t.id)?{...tt,deps:tt.deps.filter(d=>d!==t.id)}:tt));setSelected(null);setCtxMenu(null);}}>Delete<span className="kbd">⌫</span></div>
+        </div>
+      );
+    })()}
+
+    {/* Bulk picker popover */}
+    {bulkPicker&&(()=>{
+      const cx=Math.min(bulkPicker.x,window.innerWidth-260), cy=Math.min(bulkPicker.y,window.innerHeight-260);
+      const ids=bulkPicker.ids;
+      const close=()=>setBulkPicker(null);
+      return (
+        <div className="bulk-picker" style={{left:cx+'px',top:cy+'px'}} onMouseDown={e=>e.stopPropagation()}>
+          <div className="bp-title">Apply to {ids.size} tasks</div>
+          {bulkPicker.kind==='owner' && (
+            <div style={{display:'flex',flexDirection:'column',gap:5}}>
+              <select className="ins-select" defaultValue="" onChange={e=>{ const v=e.target.value; bulkSetField(ids,'owner', v||undefined); close(); }}>
+                <option value="">— none / clear —</option>
+                {owners.map(o=><option key={o.name} value={o.name}>{o.name}</option>)}
+              </select>
+              <input className="ins-input" placeholder="+ new owner & assign" onKeyDown={e=>{
+                if(e.key==='Enter'){
+                  const v=e.target.value.trim();
+                  if(v){ addOwnerToList(v); bulkSetField(ids,'owner',v); close(); }
+                }
+              }}/>
+            </div>
+          )}
+          {bulkPicker.kind==='color' && (
+            <div className="ins-swatches">
+              {COLOR_PRESETS.map(c=>(
+                <button key={c} className="ins-swatch" style={{background:c}} title={c}
+                  onClick={()=>{ bulkSetField(ids,'color',c); close(); }}/>
+              ))}
+            </div>
+          )}
+          {bulkPicker.kind==='priority' && (
+            <div className="ins-seg">
+              {['p1','p2','p3'].map(p=>(
+                <button key={p} className={p} onClick={()=>{ bulkSetField(ids,'priority',p); close(); }}>{p.toUpperCase()}</button>
+              ))}
+            </div>
+          )}
         </div>
       );
     })()}
