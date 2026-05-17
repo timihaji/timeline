@@ -246,8 +246,12 @@
   .ins-btn.link-btn{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border);cursor:crosshair;font-weight:600}
   .ins-btn.link-btn:hover{background:rgba(20,184,166,.22);color:#5eead4}
   .ins-deps-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .ins-dep-chip{font:10px var(--mono);color:var(--accent-2);background:var(--accent-dim);border:1px solid var(--accent-border);padding:1px 5px;border-radius:2px;cursor:pointer}
+  .ins-dep-chip{font:10px var(--mono);color:var(--accent-2);background:var(--accent-dim);border:1px solid var(--accent-border);padding:1px 2px 1px 5px;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
   .ins-dep-chip:hover{background:rgba(20,184,166,.25)}
+  .ins-dep-chip .ins-dep-chip-ttl{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ins-dep-chip .ins-dep-type,.ins-dep-chip .ins-dep-lag{font:9px var(--mono);font-weight:700;background:var(--surface-2);color:var(--t2);border:1px solid var(--border-s);border-radius:2px;padding:0 4px;height:14px;line-height:12px;cursor:pointer;letter-spacing:.04em}
+  .ins-dep-chip .ins-dep-type:hover,.ins-dep-chip .ins-dep-lag:hover{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
+  .ins-dep-chip .ins-dep-lag{color:var(--t3);font-weight:500;letter-spacing:0}
   .ins-dep-empty{font:10px var(--mono);color:var(--t4)}
 
   /* Inspector editing surfaces (Batch 1) */
@@ -742,6 +746,63 @@ const todayStr = ymd(TODAY);
 const DOW    = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+// ── Working calendar helpers ──
+const DEFAULT_CALENDAR = { workingDays: [1,2,3,4,5], holidays: [] };
+function getCalendar(c){
+  if(!c) return DEFAULT_CALENDAR;
+  const wd = Array.isArray(c.workingDays) && c.workingDays.length ? c.workingDays : DEFAULT_CALENDAR.workingDays;
+  const hd = Array.isArray(c.holidays) ? c.holidays : [];
+  return { workingDays: wd, holidays: hd };
+}
+function isWorkingDay(s, calendar){
+  const cal = getCalendar(calendar);
+  if (cal.holidays.includes(s)) return false;
+  const dow = parseYmd(s).getDay();
+  return cal.workingDays.includes(dow);
+}
+// Inclusive working-day count between two dates. If end < start returns negative.
+function workingDaysBetween(start, end, calendar){
+  if (!start || !end) return 0;
+  const cal = getCalendar(calendar);
+  const a = parseYmd(start), b = parseYmd(end);
+  const sign = a <= b ? 1 : -1;
+  let s = sign > 0 ? a : b;
+  const e = sign > 0 ? b : a;
+  let count = 0, cur = ymd(s);
+  while (parseYmd(cur) <= e){
+    if (isWorkingDay(cur, cal)) count++;
+    cur = addDays(cur, 1);
+    if (count > 99999) break;
+  }
+  return sign * count;
+}
+// Returns ymd string n working days after start. n may be 0 (returns start
+// snapped forward to next working day), positive, or negative.
+function addWorkingDays(start, n, calendar){
+  const cal = getCalendar(calendar);
+  let cur = start;
+  if (n === 0) {
+    // snap to working day forward
+    let safety = 0;
+    while (!isWorkingDay(cur, cal) && safety++ < 4000) cur = addDays(cur, 1);
+    return cur;
+  }
+  const step = n > 0 ? 1 : -1;
+  let remaining = Math.abs(n);
+  let safety = 0;
+  while (remaining > 0 && safety++ < 40000){
+    cur = addDays(cur, step);
+    if (isWorkingDay(cur, cal)) remaining--;
+  }
+  return cur;
+}
+function formatDuration(start, end, calendar){
+  const total = diffDays(start, end) + 1;
+  const work = workingDaysBetween(start, end, calendar);
+  if (work === total) return `${total}d`;
+  return `${work}d (${total} total)`;
+}
+
 // ── Demo data — relative to today so the sample always looks alive ──
 function buildDemoTasks(){
   const d = (n) => addDays(todayStr, n);
@@ -782,7 +843,7 @@ function genId(prefix){ return (prefix||'p') + Date.now().toString(36) + Math.ra
 
 function newProject(name){
   const palette = ['#7c3aed','#14b8a6','#f472b6','#a5b4fc','#fcd34d','#86efac','#f59e0b','#5eead4'];
-  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [], owners: [] };
+  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [], owners: [], calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade' };
 }
 
 function sampleWorkspace(){
@@ -792,15 +853,41 @@ function sampleWorkspace(){
     { name: 'Jordan', hourlyRate: 85,  color: '#86efac' },
     { name: 'Chris',  hourlyRate: 120, color: '#f472b6' },
   ];
-  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: DEMO_TASKS, owners };
-  return { version: 2, projects: [p], activeProjectId: p.id };
+  // Convert demo task deps to v3 shape (already FS, lag 0) so the sample mirrors current saved format.
+  const demoTasks = DEMO_TASKS.map(t => ({
+    ...t,
+    deps: (t.deps || []).map(d => typeof d === 'string' ? {id:d, type:'FS', lag:0} : d),
+  }));
+  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: demoTasks, owners, calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade' };
+  return { version: 3, projects: [p], activeProjectId: p.id };
 }
 
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 const MIGRATIONS = [
   { from: 1, to: 2, migrate(data){
     data.projects = (data.projects || []).map(p => ({...p, owners: p.owners || []}));
     data.version = 2;
+    return data;
+  } },
+  { from: 2, to: 3, migrate(data){
+    data.projects = (data.projects || []).map(p => ({
+      ...p,
+      calendar: p.calendar || {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]},
+      autoSchedule: p.autoSchedule || 'cascade',
+      tasks: (p.tasks || []).map(t => {
+        const lag = typeof t.lag === 'number' ? t.lag : 0;
+        const next = {
+          ...t,
+          deps: (t.deps || []).map(d =>
+            typeof d === 'string' ? {id: d, type: 'FS', lag} : d
+          ),
+        };
+        // Per-task lag is deprecated — promoted to per-dep above.
+        delete next.lag;
+        return next;
+      }),
+    }));
+    data.version = 3;
     return data;
   } },
 ];
@@ -849,6 +936,8 @@ function parseWorkspace(json){
       tasks: Array.isArray(p.tasks) ? p.tasks : [],
       baseline: p.baseline ? new Map(Object.entries(p.baseline)) : null,
       owners: Array.isArray(p.owners) ? p.owners : [],
+      calendar: p.calendar || {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]},
+      autoSchedule: p.autoSchedule || 'cascade',
     }))
   };
 }
@@ -913,22 +1002,41 @@ function buildRowsByOwner(tasks, collapsed){
   return out;
 }
 
+// ── Dep helpers (v3 shape: [{id, type, lag}]) ──
+function normalizeDep(d){
+  if (!d) return null;
+  if (typeof d === 'string') return {id: d, type: 'FS', lag: 0};
+  return {id: d.id, type: d.type || 'FS', lag: typeof d.lag === 'number' ? d.lag : 0};
+}
+function depList(t){
+  return (t?.deps || []).map(normalizeDep).filter(Boolean);
+}
+
 // ── Critical path ──
-function computeCriticalPath(tasks){
+function computeCriticalPath(tasks, calendar){
   const byId  = new Map(tasks.map(t=>[t.id,t]));
   const memo  = new Map();
+  const dur   = t => Math.max(1, workingDaysBetween(t.start, t.end, calendar));
   const visit = id=>{
     if (memo.has(id)) return memo.get(id);
     const t=byId.get(id); if(!t) return {finish:0,prev:null};
-    const dur=diffDays(t.start,t.end)+1;
-    let best={finish:dur,prev:null};
-    for (const d of (t.deps||[])){
-      const r=visit(d); const f=r.finish+dur;
-      if(f>best.finish) best={finish:f,prev:d};
+    const td = dur(t);
+    let best={finish:td,prev:null};
+    for (const d of depList(t)){
+      const r=visit(d.id); if(!r) continue;
+      const pred=byId.get(d.id); if(!pred) continue;
+      const pdur = dur(pred);
+      // Effective predecessor finish in this branch (working days)
+      let predFinish;
+      if (d.type === 'SS')      predFinish = (r.finish - pdur) + d.lag + td;
+      else if (d.type === 'FF') predFinish = r.finish + d.lag;
+      else if (d.type === 'SF') predFinish = (r.finish - pdur) + d.lag;
+      else                      predFinish = r.finish + d.lag + td; // FS
+      if (predFinish > best.finish) best = {finish: predFinish, prev: d.id};
     }
     memo.set(id,best); return best;
   };
-  const deps=new Set(); for(const t of tasks) for(const d of (t.deps||[])) deps.add(d);
+  const deps=new Set(); for(const t of tasks) for(const d of depList(t)) deps.add(d.id);
   let leaf=null,max=-1;
   for(const t of tasks){
     if(t.kind==='project') continue;
@@ -946,12 +1054,12 @@ function computeAtRisk(tasks){
   const byId=new Map(tasks.map(t=>[t.id,t]));
   const atRisk=new Set();
   for(const ms of tasks.filter(t=>t.milestone&&!t.done)){
-    const stack=[...(ms.deps||[])]; const seen=new Set();
+    const stack=depList(ms).map(d=>d.id); const seen=new Set();
     while(stack.length){
       const id=stack.pop(); if(seen.has(id)) continue; seen.add(id);
       const t=byId.get(id); if(!t) continue;
       if(t.end>=ms.start) atRisk.add(id);
-      for(const d of (t.deps||[])) stack.push(d);
+      for(const d of depList(t)) stack.push(d.id);
     }
   }
   return atRisk;
@@ -977,58 +1085,137 @@ function getHealth(t, isAtRisk){
 function getDepChain(tasks, id){
   const byId=new Map(tasks.map(t=>[t.id,t]));
   const dependents=new Map();
-  for(const t of tasks) for(const d of (t.deps||[])){
-    if(!dependents.has(d)) dependents.set(d,[]);
-    dependents.get(d).push(t.id);
+  for(const t of tasks) for(const d of depList(t)){
+    if(!dependents.has(d.id)) dependents.set(d.id,[]);
+    dependents.get(d.id).push(t.id);
   }
   const result=new Set([id]);
   const up=[id];
-  while(up.length){ const cur=up.pop(); for(const d of (byId.get(cur)?.deps||[])) if(!result.has(d)){result.add(d);up.push(d);} }
+  while(up.length){ const cur=up.pop(); for(const d of depList(byId.get(cur))) if(!result.has(d.id)){result.add(d.id);up.push(d.id);} }
   const down=[id];
   while(down.length){ const cur=down.pop(); for(const c of (dependents.get(cur)||[])) if(!result.has(c)){result.add(c);down.push(c);} }
   return result;
 }
 
+// Compute child start/end given a predecessor + dep edge, respecting type and lag.
+// Returns {start, end} the child must satisfy (minimum start; for FF/SF, end constraint).
+function applyDepConstraint(child, pred, dep, calendar){
+  const dur = diffDays(child.start, child.end); // keep duration
+  const type = dep.type || 'FS';
+  const lag = dep.lag || 0;
+  if (type === 'FS'){
+    const minStart = addWorkingDays(pred.end, 1 + lag, calendar);
+    if (child.start < minStart) {
+      const ns = minStart;
+      return { start: ns, end: addDays(ns, dur) };
+    }
+  } else if (type === 'SS'){
+    const minStart = addWorkingDays(pred.start, lag, calendar);
+    if (child.start < minStart) {
+      const ns = minStart;
+      return { start: ns, end: addDays(ns, dur) };
+    }
+  } else if (type === 'FF'){
+    const minEnd = addWorkingDays(pred.end, lag, calendar);
+    if (child.end < minEnd) {
+      const ne = minEnd;
+      return { start: addDays(ne, -dur), end: ne };
+    }
+  } else if (type === 'SF'){
+    const minEnd = addWorkingDays(pred.start, lag, calendar);
+    if (child.end < minEnd) {
+      const ne = minEnd;
+      return { start: addDays(ne, -dur), end: ne };
+    }
+  }
+  return null;
+}
+
 // ── Cascade shift dependents ──
-function cascadeAfterMove(tasks, movedId){
+function cascadeAfterMove(tasks, movedId, calendar){
   const byId=new Map(tasks.map(t=>[t.id,{...t}]));
-  const deps=new Map();
-  for(const t of tasks) for(const d of (t.deps||[])){
-    if(!deps.has(d)) deps.set(d,[]);
-    deps.get(d).push(t.id);
+  const dependents=new Map();
+  for(const t of tasks) for(const d of depList(t)){
+    if(!dependents.has(d.id)) dependents.set(d.id,[]);
+    dependents.get(d.id).push({childId: t.id, dep: d});
   }
   const stack=[movedId]; const seen=new Set();
   while(stack.length){
     const id=stack.pop(); if(seen.has(id)) continue; seen.add(id);
     const t=byId.get(id); if(!t) continue;
-    const minStart=addDays(t.end,1);
-    for(const nid of (deps.get(id)||[])){
-      const child=byId.get(nid); if(!child) continue;
-      if(child.start<minStart){
-        const dur=diffDays(child.start,child.end);
-        child.start=minStart; child.end=addDays(minStart,dur); stack.push(nid);
+    for(const {childId, dep} of (dependents.get(id)||[])){
+      const child=byId.get(childId); if(!child) continue;
+      const adj = applyDepConstraint(child, t, dep, calendar);
+      if (adj){
+        child.start = adj.start; child.end = adj.end;
+        stack.push(childId);
       }
     }
   }
   return Array.from(byId.values());
 }
 
+// ── Full forward pass auto-schedule ──
+// Topological forward pass: every task starts at max(pred constraint) per its incoming deps.
+// Cycles => bail without changes (warn — Batch 5 will replace with friendly UI).
+function fullAutoSchedule(tasks, calendar){
+  const byId = new Map(tasks.map(t => [t.id, {...t}]));
+  // Indegree by incoming dep count
+  const indeg = new Map();
+  for (const t of tasks) indeg.set(t.id, 0);
+  for (const t of tasks) for (const d of depList(t)){
+    if (byId.has(d.id)) indeg.set(t.id, (indeg.get(t.id)||0) + 1);
+  }
+  const queue = [];
+  for (const [id, n] of indeg) if (n === 0) queue.push(id);
+  const order = [];
+  // Successor map for indegree decrement
+  const succs = new Map();
+  for (const t of tasks) for (const d of depList(t)){
+    if (!byId.has(d.id)) continue;
+    if (!succs.has(d.id)) succs.set(d.id, []);
+    succs.get(d.id).push(t.id);
+  }
+  while (queue.length){
+    const id = queue.shift();
+    order.push(id);
+    for (const s of (succs.get(id) || [])){
+      indeg.set(s, indeg.get(s) - 1);
+      if (indeg.get(s) === 0) queue.push(s);
+    }
+  }
+  if (order.length !== tasks.length){
+    console.warn('fullAutoSchedule: cycle detected in deps, leaving tasks unchanged');
+    return tasks;
+  }
+  for (const id of order){
+    const t = byId.get(id);
+    if (!t || t.kind === 'project') continue;
+    for (const d of depList(t)){
+      const pred = byId.get(d.id); if (!pred) continue;
+      const adj = applyDepConstraint(t, pred, d, calendar);
+      if (adj){ t.start = adj.start; t.end = adj.end; }
+    }
+  }
+  return Array.from(byId.values());
+}
+
 // ── Slack / float ──
-function computeFloat(tasks){
+function computeFloat(tasks, calendar){
   const byId=new Map(tasks.map(t=>[t.id,t]));
-  const deps=new Map();
-  for(const t of tasks) for(const d of (t.deps||[])){
-    if(!deps.has(d)) deps.set(d,[]);
-    deps.get(d).push(t.id);
+  const dependents=new Map();
+  for(const t of tasks) for(const d of depList(t)){
+    if(!dependents.has(d.id)) dependents.set(d.id,[]);
+    dependents.get(d.id).push(t.id);
   }
   const projEnd=tasks.reduce((mx,t)=>t.end>mx?t.end:mx,'2020-01-01');
   const out=new Map();
   for(const t of tasks){
     if(t.kind==='project'||t.milestone){out.set(t.id,0);continue;}
-    const succs=deps.get(t.id)||[];
-    if(!succs.length){out.set(t.id,Math.max(0,diffDays(t.end,projEnd)));continue;}
+    const succs=dependents.get(t.id)||[];
+    if(!succs.length){out.set(t.id,Math.max(0,workingDaysBetween(t.end,projEnd,calendar)-1));continue;}
     let minF=Infinity;
-    for(const sid of succs){ const s=byId.get(sid); if(s) minF=Math.min(minF,diffDays(t.end,s.start)-1); }
+    for(const sid of succs){ const s=byId.get(sid); if(s) minF=Math.min(minF, workingDaysBetween(t.end, s.start, calendar)-1); }
     out.set(t.id,Math.max(0,minF===Infinity?0:minF));
   }
   return out;
@@ -1227,9 +1414,11 @@ Object.assign(window,{
   DAY_MS,TODAY,todayStr,
   ymd,parseYmd,addDays,diffDays,fmtShort,isWeekend,
   DOW,MONTHS,DEMO_TASKS,
+  DEFAULT_CALENDAR, isWorkingDay, workingDaysBetween, addWorkingDays, formatDuration,
+  normalizeDep, depList,
   buildRows,buildRowsByProject,buildRowsByOwner,
   computeCriticalPath,computeAtRisk,getHealth,getDepChain,
-  cascadeAfterMove,computeFloat,detectConflicts,autoStagger,
+  cascadeAfterMove,fullAutoSchedule,computeFloat,detectConflicts,autoStagger,
   buildArrowPath,shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
   CURRENT_VERSION, MIGRATIONS, migrateWorkspace,
@@ -1297,9 +1486,38 @@ function Minimap({ rows, axis, dayW, totalW, gridScrollRef }){
   );
 }
 
-function GanttTweaks({ tw, setTweak }){
+const DOW_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject }){
   if(!window.TweaksPanel) return null;
   const { TweaksPanel, TweakSection, TweakSlider, TweakToggle, TweakSelect } = window;
+  const DEFAULT_CAL = window.DEFAULT_CALENDAR;
+  const calendar = activeProject?.calendar ?? DEFAULT_CAL;
+  const workingDays = Array.isArray(calendar.workingDays) ? calendar.workingDays : DEFAULT_CAL.workingDays;
+  const holidays = Array.isArray(calendar.holidays) ? calendar.holidays : [];
+  const autoSchedule = activeProject?.autoSchedule || 'cascade';
+
+  const toggleDow = (d) => {
+    if (!activeProject) return;
+    const has = workingDays.includes(d);
+    const nx = has ? workingDays.filter(x=>x!==d) : [...workingDays, d].sort((a,b)=>a-b);
+    updateActiveProject({ calendar: { workingDays: nx, holidays } });
+  };
+  const setHolidayAt = (idx, val) => {
+    if (!activeProject) return;
+    const nx = [...holidays];
+    if (val) nx[idx] = val; else nx.splice(idx, 1);
+    updateActiveProject({ calendar: { workingDays, holidays: nx } });
+  };
+  const addHoliday = () => {
+    if (!activeProject) return;
+    const today = new Date().toISOString().slice(0,10);
+    updateActiveProject({ calendar: { workingDays, holidays: [...holidays, today] } });
+  };
+  const setAutoSchedule = (v) => {
+    if (!activeProject) return;
+    updateActiveProject({ autoSchedule: v });
+  };
 
   return (
     <TweaksPanel title="Settings">
@@ -1327,7 +1545,53 @@ function GanttTweaks({ tw, setTweak }){
         <TweakToggle label="Show dependencies" value={tw.showDeps!==false}      onChange={v=>setTweak('showDeps',v)}/>
         <TweakToggle label="Compact bars"      value={!!tw.compactBars}         onChange={v=>setTweak('compactBars',v)}/>
         <TweakToggle label="Snap to day"       value={tw.snapToDay!==false}     onChange={v=>setTweak('snapToDay',v)}/>
+        {activeProject && (
+          <div className="twk-row">
+            <div className="twk-lbl"><span>Auto-schedule</span></div>
+            <select className="twk-field" value={autoSchedule} onChange={e=>setAutoSchedule(e.target.value)}>
+              <option value="cascade">Cascade direct dependents</option>
+              <option value="off">Off (manual)</option>
+              <option value="full">Full auto-schedule</option>
+            </select>
+          </div>
+        )}
       </TweakSection>
+      {activeProject && (
+        <TweakSection title="Active calendar">
+          <div className="twk-row">
+            <div className="twk-lbl"><span>Working days</span></div>
+            <div style={{display:'flex',gap:3,flexWrap:'wrap'}}>
+              {DOW_LABELS.map((lbl,i)=>{
+                const on = workingDays.includes(i);
+                return (
+                  <button key={i} type="button" onClick={()=>toggleDow(i)}
+                    style={{height:24,minWidth:32,padding:'0 6px',borderRadius:3,cursor:'pointer',
+                      border:'1px solid '+(on?'rgba(20,184,166,.6)':'rgba(34,64,58,.8)'),
+                      background:on?'rgba(20,184,166,.2)':'rgba(8,20,18,.7)',
+                      color:on?'#5eead4':'rgba(230,255,251,.6)',
+                      font:'10px var(--mono)',fontWeight:600}}>{lbl}</button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="twk-row">
+            <div className="twk-lbl"><span>Holidays</span><span className="twk-val">{holidays.length}</span></div>
+            <div style={{display:'flex',flexDirection:'column',gap:3}}>
+              {holidays.map((h, idx)=>(
+                <div key={idx} style={{display:'flex',gap:4,alignItems:'center'}}>
+                  <input type="date" className="twk-field" style={{flex:1}} value={h||''}
+                    onChange={e=>setHolidayAt(idx, e.target.value)}/>
+                  <button type="button" onClick={()=>setHolidayAt(idx, '')}
+                    style={{height:26,width:26,border:'1px solid rgba(34,64,58,.8)',background:'rgba(8,20,18,.7)',
+                      color:'rgba(230,255,251,.55)',borderRadius:4,cursor:'pointer',fontSize:13,lineHeight:1}}>×</button>
+                </div>
+              ))}
+              <button type="button" onClick={addHoliday} className="twk-btn"
+                style={{borderStyle:'dashed',color:'rgba(230,255,251,.7)'}}>+ add holiday</button>
+            </div>
+          </div>
+        </TweakSection>
+      )}
     </TweaksPanel>
   );
 }
@@ -1341,12 +1605,17 @@ const { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect, Frag
 const {
   DAY_MS, todayStr, parseYmd, addDays, diffDays, fmtShort, isWeekend, ymd,
   DOW, MONTHS,
+  DEFAULT_CALENDAR, isWorkingDay, workingDaysBetween, addWorkingDays, formatDuration,
+  normalizeDep, depList,
   buildRows, computeCriticalPath, computeAtRisk, getHealth, getDepChain,
-  cascadeAfterMove, computeFloat, detectConflicts, autoStagger,
+  cascadeAfterMove, fullAutoSchedule, computeFloat, detectConflicts, autoStagger,
   buildArrowPath, shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
   computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
 } = window;
+
+const DEP_TYPES = ['FS','SS','FF','SF'];
+const nextDepType = t => DEP_TYPES[(DEP_TYPES.indexOf(t||'FS') + 1) % DEP_TYPES.length];
 
 // Color presets for inspector swatch grid (8 colors)
 const COLOR_PRESETS = ['#a5b4fc','#7c3aed','#f472b6','#ef4444','#f59e0b','#fcd34d','#86efac','#14b8a6'];
@@ -1394,6 +1663,17 @@ function App(){
   );
   const tasks    = activeProject?.tasks ?? [];
   const baseline = activeProject?.baseline ?? null;
+  const calendar = activeProject?.calendar ?? DEFAULT_CALENDAR;
+  const autoSchedule = activeProject?.autoSchedule ?? 'cascade';
+
+  // Apply scheduling mode after a move. The 'cascade' mode is the default
+  // (downstream direct dependents shift). 'off' skips it entirely. 'full' runs
+  // a forward pass over the whole dep DAG.
+  const applySchedule = useCallback((ts, movedId) => {
+    if (autoSchedule === 'off') return ts;
+    if (autoSchedule === 'full') return fullAutoSchedule(ts, calendar);
+    return cascadeAfterMove(ts, movedId, calendar);
+  }, [autoSchedule, calendar]);
 
   // ── Tweak aliases ──
   const dayW           = tw.dayWidth  || 36;
@@ -1552,9 +1832,13 @@ function App(){
     const finalTasks = renamed.map(t => ({
       ...t,
       parent: t.parent ? (idMap.get(t.parent) ?? t.parent) : null,
-      deps: (t.deps || []).map(d => idMap.get(d) ?? d),
+      deps: (t.deps || []).map(d => {
+        const nd = normalizeDep(d);
+        if (!nd) return null;
+        return {...nd, id: idMap.get(nd.id) ?? nd.id};
+      }).filter(Boolean),
     }));
-    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks, owners: (p.owners||[]).map(o=>({...o})) };
+    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks, owners: (p.owners||[]).map(o=>({...o})), calendar: p.calendar ? {workingDays:[...(p.calendar.workingDays||DEFAULT_CALENDAR.workingDays)], holidays:[...(p.calendar.holidays||[])]} : {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: p.autoSchedule || 'cascade' };
     commitMutation('duplicate project', ps => [...ps, np]);
     setActiveProjectId(np.id);
   }, [projects, commitMutation]);
@@ -1718,9 +2002,9 @@ function App(){
 
   // ── Derived analysis ──
   const rows      = useMemo(()=>buildRows(tasks,collapsed,groupBy),[tasks,collapsed,groupBy]);
-  const critical  = useMemo(()=>computeCriticalPath(tasks),[tasks]);
+  const critical  = useMemo(()=>computeCriticalPath(tasks,calendar),[tasks,calendar]);
   const atRisk    = useMemo(()=>computeAtRisk(tasks),[tasks]);
-  const floatMap  = useMemo(()=>showFloat?computeFloat(tasks):new Map(),[tasks,showFloat]);
+  const floatMap  = useMemo(()=>showFloat?computeFloat(tasks,calendar):new Map(),[tasks,showFloat,calendar]);
   const conflicts = useMemo(()=>showConflicts?detectConflicts(tasks):new Set(),[tasks,showConflicts]);
   const wbsMap    = useMemo(()=>computeWbsMap(tasks),[tasks]);
   const owners    = activeProject?.owners ?? [];
@@ -1911,18 +2195,22 @@ function App(){
 
       if(drag.kind==='move'||drag.kind==='group-move'){
         const t=tasks.find(x=>x.id===drag.id);
-        if(t?.deps?.length){
+        const taskDeps = depList(t);
+        if(taskDeps.length){
           const origStart=drag.origStart||(drag.groupOffsets?.[drag.id]?.start);
           if(origStart){
             const byId=new Map(tasks.map(x=>[x.id,x]));
             const newStart=addDays(origStart,days);
-            for(const depId of t.deps){
-              const dep=byId.get(depId); if(!dep) continue;
-              const ideal=addDays(dep.end,1);
+            for(const dEdge of taskDeps){
+              const dep=byId.get(dEdge.id); if(!dep) continue;
+              const ideal = dEdge.type === 'SS' ? addWorkingDays(dep.start, dEdge.lag, calendar)
+                          : dEdge.type === 'FF' ? addDays(addWorkingDays(dep.end, dEdge.lag, calendar), -diffDays(t.start,t.end))
+                          : dEdge.type === 'SF' ? addDays(addWorkingDays(dep.start, dEdge.lag, calendar), -diffDays(t.start,t.end))
+                          : addWorkingDays(dep.end, 1 + dEdge.lag, calendar);
               if(Math.abs(diffDays(newStart,ideal))<=1){
                 days=diffDays(origStart,ideal); snapped=true;
                 const ri=rows.findIndex(r=>r.id===drag.id);
-                setSnapInfo({x:xForDay(ideal),y:ri*rowH,label:'0d lag'});
+                setSnapInfo({x:xForDay(ideal),y:ri*rowH,label:`${dEdge.lag}d ${dEdge.type}`});
                 break;
               }
             }
@@ -1967,6 +2255,11 @@ function App(){
       if(drag.kind==='create'){
         let s=drag.startDay,en=drag.endDay;
         if(s>en){const tmp=s;s=en;en=tmp;}
+        // Default duration of 3 working days on click-create (drag with no width).
+        if(diffDays(s,en)===0){
+          const ws = isWorkingDay(s, calendar) ? s : addWorkingDays(s, 0, calendar);
+          s = ws; en = addWorkingDays(ws, 2, calendar);
+        }
         if(diffDays(s,en)>=0){
           const nid='task-'+Date.now().toString(36);
           const nt={id:nid,parent:drag.parentId,project:drag.project,title:'New task',
@@ -1982,14 +2275,20 @@ function App(){
         const barEl=target?.closest?.('[data-bar-id]');
         const tid=barEl?.getAttribute('data-bar-id');
         if(tid&&tid!==drag.id){
-          updateTasks(ts=>ts.map(t=>{ if(t.id!==tid)return t; const d=new Set(t.deps||[]); d.add(drag.id); return{...t,deps:[...d]}; }));
+          updateTasks(ts=>ts.map(t=>{
+            if(t.id!==tid) return t;
+            const existing = depList(t);
+            if (existing.some(d => d.id === drag.id)) return t;
+            return {...t, deps:[...existing, {id: drag.id, type:'FS', lag:0}]};
+          }));
         } else if(!tid){
           const src=tasks.find(t=>t.id===drag.id);
           if(src){
             const nid='task-'+Date.now().toString(36);
-            const ns=addDays(src.end,1);
+            const ns=addWorkingDays(src.end,1,calendar);
+            const ne=addWorkingDays(ns,2,calendar);
             const nt={id:nid,parent:src.parent,project:src.project,title:'New successor',
-              start:ns,end:addDays(ns,3),priority:'p3',progress:0,color:src.color||'#a5b4fc',deps:[drag.id]};
+              start:ns,end:ne,priority:'p3',progress:0,color:src.color||'#a5b4fc',deps:[{id:drag.id,type:'FS',lag:0}]};
             updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
           }
         }
@@ -1999,19 +2298,20 @@ function App(){
       const applyMove=ts=>{
         if(drag.kind==='move'&&days!==0){
           const next=ts.map(t=>t.id!==drag.id?t:{...t,start:addDays(drag.origStart,days),end:addDays(drag.origEnd,days)});
-          return cascadeAfterMove(next,drag.id);
+          return applySchedule(next,drag.id);
         }
         if(drag.kind==='alt-move'){
           if(!days)return ts;
           const t=ts.find(x=>x.id===drag.id); if(!t)return ts;
           const nid=t.id+'-c'+Math.random().toString(36).slice(2,5);
-          const copy={...t,id:nid,title:t.title+' (copy)',start:addDays(drag.origStart,days),end:addDays(drag.origEnd,days),deps:[t.id],done:false,progress:0};
+          const copy={...t,id:nid,title:t.title+' (copy)',start:addDays(drag.origStart,days),end:addDays(drag.origEnd,days),deps:[{id:t.id,type:'FS',lag:0}],done:false,progress:0};
           setTimeout(()=>setSelected(nid),0);
           return [...ts,copy];
         }
         if(drag.kind==='group-move'&&days!==0){
           let next=ts.map(t=>{ const o=drag.groupOffsets?.[t.id]; return o?{...t,start:addDays(o.start,days),end:addDays(o.end,days)}:t; });
-          for(const id of Object.keys(drag.groupOffsets||{})) next=cascadeAfterMove(next,id);
+          if (autoSchedule === 'full') next = fullAutoSchedule(next, calendar);
+          else if (autoSchedule === 'cascade') for(const id of Object.keys(drag.groupOffsets||{})) next=cascadeAfterMove(next,id,calendar);
           return next;
         }
         if(drag.kind==='l'&&days!==0){
@@ -2019,7 +2319,7 @@ function App(){
         }
         if(drag.kind==='r'&&days!==0){
           const next=ts.map(t=>{ if(t.id!==drag.id)return t; let ne=addDays(drag.origEnd,days); if(ne<t.start)ne=t.start; return{...t,end:ne}; });
-          return cascadeAfterMove(next,drag.id);
+          return applySchedule(next,drag.id);
         }
         return ts;
       };
@@ -2031,7 +2331,7 @@ function App(){
     window.addEventListener('pointermove',onMove);
     window.addEventListener('pointerup',onUp,{once:true});
     return ()=>{ window.removeEventListener('pointermove',onMove); window.removeEventListener('pointerup',onUp); };
-  },[drag,lasso,dayW,rowH,axis,tw.snapToDay,rows,tasks,xForDay,updateTasks]);
+  },[drag,lasso,dayW,rowH,axis,tw.snapToDay,rows,tasks,xForDay,updateTasks,applySchedule,autoSchedule,calendar]);
 
   // ── Task operations ──
   const splitTask=useCallback(id=>{
@@ -2042,14 +2342,21 @@ function App(){
       const half=Math.floor(dur/2);
       const nid=t.id+'-b'+Math.random().toString(36).slice(2,5);
       const next=[...ts]; next[idx]={...t,end:addDays(t.start,half-1)};
-      const b={...t,id:nid,start:addDays(t.start,half),end:t.end,title:t.title+' (cont.)',deps:[t.id],progress:0,done:false};
+      const b={...t,id:nid,start:addDays(t.start,half),end:t.end,title:t.title+' (cont.)',deps:[{id:t.id,type:'FS',lag:0}],progress:0,done:false};
       next.splice(idx+1,0,b);
-      return next.map((x,i)=>{ if(i<=idx+1)return x; if(!x.deps?.includes(t.id))return x; return{...x,deps:x.deps.map(d=>d===t.id?nid:d)}; });
+      // Rewrite downstream deps pointing at t -> b, preserving type/lag.
+      return next.map((x,i)=>{
+        if(i<=idx+1)return x;
+        const list = depList(x);
+        if(!list.some(d=>d.id===t.id)) return x;
+        return {...x, deps: list.map(d=> d.id===t.id ? {...d, id: nid} : d)};
+      });
     });
   },[updateTasks]);
 
   const toggleMilestone=useCallback(id=>{ updateTasks(ts=>ts.map(t=>{ if(t.id!==id||t.kind==='project')return t; return t.milestone?{...t,milestone:false,end:addDays(t.start,2)}:{...t,milestone:true,end:t.start}; })); },[updateTasks]);
-  const setLagOnIncoming=useCallback((id,d)=>{ updateTasks(ts=>ts.map(t=>t.id===id?{...t,lag:d}:t)); },[updateTasks]);
+  // Update lag uniformly across all incoming deps for a task (best approximation of old per-task lag behavior).
+  const setLagOnIncoming=useCallback((id,lag)=>{ updateTasks(ts=>ts.map(t=>t.id===id?{...t,deps:depList(t).map(d=>({...d,lag}))}:t)); },[updateTasks]);
   const toggleBlocking=useCallback(id=>{ updateTasks(ts=>ts.map(t=>t.id===id?{...t,blocking:!t.blocking}:t)); },[updateTasks]);
 
   const duplicateTask=useCallback(id=>{
@@ -2058,7 +2365,7 @@ function App(){
       const t=ts[idx]; if(t.kind==='project')return ts;
       const dur=diffDays(t.start,t.end);
       const nid=t.id+'-dup'+Math.random().toString(36).slice(2,5);
-      const copy={...t,id:nid,title:t.title+' (copy)',start:addDays(t.end,1),end:addDays(t.end,1+dur),deps:[t.id],done:false,progress:0};
+      const copy={...t,id:nid,title:t.title+' (copy)',start:addDays(t.end,1),end:addDays(t.end,1+dur),deps:[{id:t.id,type:'FS',lag:0}],done:false,progress:0};
       const next=[...ts]; next.splice(idx+1,0,copy); return next;
     });
   },[updateTasks]);
@@ -2072,7 +2379,11 @@ function App(){
     const idset = ids instanceof Set ? ids : new Set(ids);
     updateTasks(ts=>ts
       .filter(tt=>!idset.has(tt.id))
-      .map(tt=>tt.deps?.some(d=>idset.has(d))?{...tt,deps:tt.deps.filter(d=>!idset.has(d))}:tt));
+      .map(tt=>{
+        const list = depList(tt);
+        if (!list.some(d=>idset.has(d.id))) return tt;
+        return {...tt, deps: list.filter(d=>!idset.has(d.id))};
+      }));
     setSelected(null); setSelectedSet(new Set());
   },[updateTasks]);
 
@@ -2092,7 +2403,7 @@ function App(){
         idMap.set(t.id, nid); newIds.add(nid);
         const dur = diffDays(t.start, t.end);
         const ns = addDays(t.end, 1);
-        return {...t, id:nid, title:t.title+' (copy)', start:ns, end:addDays(ns,dur), deps:[t.id], done:false, progress:0};
+        return {...t, id:nid, title:t.title+' (copy)', start:ns, end:addDays(ns,dur), deps:[{id:t.id,type:'FS',lag:0}], done:false, progress:0};
       });
       return [...ts, ...copies];
     });
@@ -2117,11 +2428,11 @@ function App(){
     if(!durationBuf||!selected)return;
     const tid=setTimeout(()=>{
       const n=parseInt(durationBuf,10);
-      if(!isNaN(n)&&n>0) updateTasks(ts=>{ const next=ts.map(t=>t.id===selected&&!t.milestone&&t.kind!=='project'?{...t,end:addDays(t.start,n-1)}:t); return cascadeAfterMove(next,selected); });
+      if(!isNaN(n)&&n>0) updateTasks(ts=>{ const next=ts.map(t=>t.id===selected&&!t.milestone&&t.kind!=='project'?{...t,end:addDays(t.start,n-1)}:t); return applySchedule(next,selected); });
       setDurationBuf('');
     },700);
     return ()=>clearTimeout(tid);
-  },[durationBuf,selected,updateTasks]);
+  },[durationBuf,selected,updateTasks,applySchedule]);
 
   // ── Keyboard ──
   useEffect(()=>{
@@ -2137,16 +2448,16 @@ function App(){
       if(e.key==='F2'||(e.key==='Enter'&&!durationBuf)){e.preventDefault();setRenaming({id:selected,value:t.title});return;}
       if(e.key==='Enter'&&durationBuf){
         e.preventDefault(); const n=parseInt(durationBuf,10);
-        if(!isNaN(n)&&n>0) updateTasks(ts=>cascadeAfterMove(ts.map(tt=>tt.id===selected&&!tt.milestone&&tt.kind!=='project'?{...tt,end:addDays(tt.start,n-1)}:tt),selected));
+        if(!isNaN(n)&&n>0) updateTasks(ts=>applySchedule(ts.map(tt=>tt.id===selected&&!tt.milestone&&tt.kind!=='project'?{...tt,end:addDays(tt.start,n-1)}:tt),selected));
         setDurationBuf(''); return;
       }
       if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&e.shiftKey){
         e.preventDefault(); const d=e.key==='ArrowLeft'?-1:1;
-        updateTasks(ts=>{ const next=ts.map(tt=>{ if(tt.id!==selected||tt.kind==='project'||tt.milestone)return tt; const ne=addDays(tt.end,d); return parseYmd(ne)<parseYmd(tt.start)?tt:{...tt,end:ne}; }); return cascadeAfterMove(next,selected); }); return;
+        updateTasks(ts=>{ const next=ts.map(tt=>{ if(tt.id!==selected||tt.kind==='project'||tt.milestone)return tt; const ne=addDays(tt.end,d); return parseYmd(ne)<parseYmd(tt.start)?tt:{...tt,end:ne}; }); return applySchedule(next,selected); }); return;
       }
       if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
         e.preventDefault(); const d=e.key==='ArrowLeft'?-1:1;
-        updateTasks(ts=>cascadeAfterMove(ts.map(tt=>tt.id===selected?{...tt,start:addDays(tt.start,d),end:addDays(tt.end,d)}:tt),selected)); return;
+        updateTasks(ts=>applySchedule(ts.map(tt=>tt.id===selected?{...tt,start:addDays(tt.start,d),end:addDays(tt.end,d)}:tt),selected)); return;
       }
       if(/^[0-9]$/.test(e.key)&&!mod&&!t.milestone&&t.kind!=='project'){e.preventDefault();setDurationBuf(b=>(b+e.key).slice(0,3));return;}
       if((e.key==='Backspace'||e.key==='Delete')&&durationBuf){e.preventDefault();setDurationBuf(b=>b.slice(0,-1));return;}
@@ -2159,14 +2470,18 @@ function App(){
       if(e.key==='Delete'||e.key==='Backspace'){
         e.preventDefault();
         const ids = selectedSet.size>1 ? new Set(selectedSet) : new Set([selected]);
-        updateTasks(ts=>ts.filter(tt=>!ids.has(tt.id)).map(tt=>tt.deps?.some(d=>ids.has(d))?{...tt,deps:tt.deps.filter(d=>!ids.has(d))}:tt));
+        updateTasks(ts=>ts.filter(tt=>!ids.has(tt.id)).map(tt=>{
+          const list = depList(tt);
+          if (!list.some(d=>ids.has(d.id))) return tt;
+          return {...tt, deps: list.filter(d=>!ids.has(d.id))};
+        }));
         setSelected(null); setSelectedSet(new Set());
         return;
       }
     };
     window.addEventListener('keydown',onKey);
     return ()=>window.removeEventListener('keydown',onKey);
-  },[selected,selectedSet,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks]);
+  },[selected,selectedSet,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks,applySchedule]);
 
   // Click-away for ctx menus and file menu and bulk picker
   useEffect(()=>{
@@ -2220,7 +2535,7 @@ function App(){
             <div className="welcome-hint">Local app. Your data stays on your machine.</div>
           </div>
         </div>
-        <GanttTweaks tw={tw} setTweak={setTweak}/>
+        <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
       </Fragment>
     );
   }
@@ -2339,7 +2654,9 @@ function App(){
                       if (t.kind !== 'project' && t.project) { proj = t.project; break; }
                     }
                   }
-                  const nt={id:nid,parent:null,project:proj,title:'New task',start:todayStr,end:addDays(todayStr,2),priority:'p3',progress:0,color:'#a5b4fc'};
+                  const startD = isWorkingDay(todayStr, calendar) ? todayStr : addWorkingDays(todayStr, 0, calendar);
+                  const endD = addWorkingDays(startD, 2, calendar);
+                  const nt={id:nid,parent:null,project:proj,title:'New task',start:startD,end:endD,priority:'p3',progress:0,color:'#a5b4fc'};
                   updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
                 }}>+ New task</button>
       </div>
@@ -2555,18 +2872,30 @@ function App(){
                     <marker id="dep-arrow-preview" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#14b8a6"/></marker>
                   </defs>
                   {rows.flatMap((r,i)=>{
-                    if(!r.deps)return[];
-                    const live=livePreview(r); const childX=xForDay(live?live.start:r.start);
-                    return r.deps.map(depId=>{
+                    const list = depList(r);
+                    if(!list.length) return [];
+                    const live=livePreview(r);
+                    const childStartX = xForDay(live?live.start:r.start);
+                    const childEndX = xForDay(live?live.end:r.end) + dayW;
+                    return list.map(dep=>{
+                      const depId = dep.id;
                       const pi=rows.findIndex(rr=>rr.id===depId); if(pi<0)return null;
                       const par=rows[pi]; const liveP=livePreview(par);
-                      const parentX=xForDay(liveP?liveP.end:par.end)+dayW;
+                      const parStartX = xForDay(liveP?liveP.start:par.start);
+                      const parEndX = xForDay(liveP?liveP.end:par.end) + dayW;
+                      const type = dep.type || 'FS';
+                      // Anchor points per dep type. Arrow margin: -4 from child side to leave room for the arrowhead.
+                      let parentX, childX;
+                      if (type === 'SS')      { parentX = parStartX; childX = childStartX - 4; }
+                      else if (type === 'FF') { parentX = parEndX;   childX = childEndX + 4; }
+                      else if (type === 'SF') { parentX = parStartX; childX = childEndX + 4; }
+                      else                    { parentX = parEndX;   childX = childStartX - 4; }
                       const isCrit=critical.edges.has(depId+'→'+r.id);
                       const focusDim=focusChain&&(!focusChain.has(r.id)||!focusChain.has(depId));
                       const inHover=hoverChain&&hoverChain.has(r.id)&&hoverChain.has(depId);
                       const hoverDim=hoverChain&&!inHover;
-                      const path=buildArrowPath(pi,i,parentX,childX-4,rows,axis.start,dayW,rowH);
-                      return <path key={r.id+'-'+depId} className={`dep-path${isCrit?' critical':''}${(focusDim||hoverDim)?' dimmed':''}${(inHover&&!isCrit)?' hover-lit':''}`} d={path}/>;
+                      const path=buildArrowPath(pi,i,parentX,childX,rows,axis.start,dayW,rowH);
+                      return <path key={r.id+'-'+depId+'-'+type} className={`dep-path${isCrit?' critical':''}${(focusDim||hoverDim)?' dimmed':''}${(inHover&&!isCrit)?' hover-lit':''}`} d={path}/>;
                     }).filter(Boolean);
                   })}
                   {drag?.kind==='dep'&&(()=>{
@@ -2651,7 +2980,7 @@ function App(){
                     );
                   }
 
-                  const dur=diffDays(start,end)+1;
+                  const durLabel = formatDuration(start, end, calendar);
                   return (
                     <div key={r.id}
                       className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}`}
@@ -2662,7 +2991,7 @@ function App(){
                       onClick={e=>{e.stopPropagation();setSelected(r.id);}}
                       onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
                       onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
-                      title={isRenaming?'':`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${dur}d${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}`}>
+                      title={isRenaming?'':`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${durLabel}${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}`}>
                       {liveProgress>0&&<div className="bar-prog" style={{width:(liveProgress*100)+'%',background:`${shade(bg,-.45)}66`}}/>}
                       {!r.done&&liveProgress>0&&liveProgress<.99&&(
                         <div className="bar-prog-handle" style={{left:`calc(${Math.max(6,Math.min(94,liveProgress*100))}% - 1px)`}}
@@ -2673,7 +3002,7 @@ function App(){
                             onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
                         :<div className="bar-ttl">{r.title}</div>
                       }
-                      {w>90&&!isRenaming&&<div className="bar-meta">{dur}d</div>}
+                      {w>90&&!isRenaming&&<div className="bar-meta">{durLabel}</div>}
                       {showOwners&&r.owner&&w>70&&!isRenaming&&<div className="bar-owner">{r.owner.slice(0,2)}</div>}
                       {health&&!isRenaming&&<div className={`health-pip ${health}`} title={`Health: ${health}`}/>}
                       {atRisk.has(r.id)&&!r.done&&<div className="bar-risk-edge"/>}
@@ -2718,12 +3047,12 @@ function App(){
     {drag&&(drag.kind==='move'||drag.kind==='l'||drag.kind==='r'||drag.kind==='group-move'||drag.kind==='alt-move')&&(()=>{
       const t=tasks.find(tt=>tt.id===drag.id); if(!t)return null;
       const live=livePreview(t); if(!live)return null;
-      const dur=diffDays(live.start,live.end)+1;
+      const durLabel = formatDuration(live.start, live.end, calendar);
       const verb=drag.kind==='group-move'?`Group ×${selectedSet.size}`:drag.kind==='alt-move'?'Duplicate':drag.kind==='l'?'Resize start':drag.kind==='r'?'Resize end':'Move';
       return (
         <div className="drag-tooltip" style={{left:drag.currentClientX+14+'px',top:drag.currentClientY+14+'px'}}>
           <div className="dt-meta">{verb} · {drag.deltaDays>0?'+':''}{drag.deltaDays}d{drag.snapped?' 🔒 snapped':''}</div>
-          <div className="dt-dates">{fmtShort(live.start)} → {fmtShort(live.end)} ({dur}d)</div>
+          <div className="dt-dates">{fmtShort(live.start)} → {fmtShort(live.end)} ({durLabel})</div>
         </div>
       );
     })()}
@@ -2736,6 +3065,7 @@ function App(){
       const taskLive = tasks.find(t=>t.id===r.id) || r;
       const live=livePreview(r); const start=live?live.start:r.start, end=live?live.end:r.end;
       const dur=diffDays(start,end)+1, isCrit=critical.nodes.has(r.id);
+      const insDurLabel = formatDuration(start, end, calendar);
       const grid=gridScrollRef.current; if(!grid)return null;
       const gRect=grid.getBoundingClientRect();
       const vx=gRect.left+xForDay(start)-grid.scrollLeft;
@@ -2750,14 +3080,14 @@ function App(){
 
       const setPriority = (p) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,priority:p}:t));
       const setColor = (c) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,color:c}:t));
-      const setStart = (s) => updateTasks(ts=>cascadeAfterMove(ts.map(t=>{
+      const setStart = (s) => updateTasks(ts=>applySchedule(ts.map(t=>{
         if(t.id!==r.id) return t;
         // keep duration if both, else snap end
         const dur0 = diffDays(t.start, t.end);
         const ne = addDays(s, dur0);
         return {...t, start:s, end: ne < s ? s : ne };
       }), r.id));
-      const setEnd = (e) => updateTasks(ts=>cascadeAfterMove(ts.map(t=>{
+      const setEnd = (e) => updateTasks(ts=>applySchedule(ts.map(t=>{
         if(t.id!==r.id) return t;
         return {...t, end: e < t.start ? t.start : e };
       }), r.id));
@@ -2774,11 +3104,23 @@ function App(){
       return (
         <div className="inspector" style={{position:'fixed',left:insLeft+'px',top:insTop+'px'}} onPointerDown={e=>e.stopPropagation()}>
           <div className="ins-title">{taskLive.title}{isCrit&&<span className="ins-crit">CRITICAL</span>}</div>
-          <div className="ins-row"><span className="lbl">Dates</span><span className="val">{fmtShort(start)} → {fmtShort(end)}</span><span className="dur-pill" style={{marginLeft:'auto'}}>{r.milestone?'◆':dur+'d'}</span></div>
+          <div className="ins-row"><span className="lbl">Dates</span><span className="val">{fmtShort(start)} → {fmtShort(end)}</span><span className="dur-pill" style={{marginLeft:'auto'}}>{r.milestone?'◆':insDurLabel}</span></div>
           <div className="ins-row ins-deps-row"><span className="lbl">Deps</span>
-            {!(taskLive.deps?.length)?<span className="ins-dep-empty">none</span>:taskLive.deps.map(id=>{
-              const dt=tasks.find(t=>t.id===id);
-              return <span key={id} className="ins-dep-chip" title="Jump" onClick={()=>setSelected(id)}>{(dt?.title||id).slice(0,22)}</span>;
+            {!(taskLive.deps?.length)?<span className="ins-dep-empty">none</span>:depList(taskLive).map((dep,depIdx)=>{
+              const dt=tasks.find(t=>t.id===dep.id);
+              const updateDep = (patch) => updateTasks(ts=>applySchedule(ts.map(t=>{
+                if (t.id !== r.id) return t;
+                const list = depList(t);
+                const nx = list.map(d => d.id===dep.id ? {...d, ...patch} : d);
+                return {...t, deps: nx};
+              }), r.id));
+              return (
+                <span key={dep.id} className="ins-dep-chip" title={`Jump to ${dt?.title||dep.id}`} onClick={()=>setSelected(dep.id)}>
+                  <span className="ins-dep-chip-ttl">{(dt?.title||dep.id).slice(0,16)}</span>
+                  <button className="ins-dep-type" title="Cycle FS → SS → FF → SF" onClick={e=>{ e.stopPropagation(); updateDep({type: nextDepType(dep.type)}); }}>{dep.type||'FS'}</button>
+                  <button className="ins-dep-lag" title="Set lag (days, negative=lead)" onClick={e=>{ e.stopPropagation(); const v=window.prompt('Lag days (negative = lead):', String(dep.lag||0)); if(v!==null){ const n=parseInt(v,10); if(!isNaN(n)) updateDep({lag:n}); }}}>{(dep.lag||0)===0?'+lag':`${dep.lag>0?'+':''}${dep.lag}d`}</button>
+                </span>
+              );
             })}
           </div>
           {floatMap.has(r.id)&&floatMap.get(r.id)>0&&<div className="ins-row"><span className="lbl">Float</span><span className="val" style={{color:'var(--accent-2)'}}>{floatMap.get(r.id)}d slack</span></div>}
@@ -2973,14 +3315,14 @@ function App(){
           <div className="ctx-hdr">{t.title}</div><div className="ctx-sep"/>
           <div className="ctx-item" onClick={()=>{splitTask(t.id);setCtxMenu(null);}}>Split task</div>
           <div className="ctx-item" onClick={()=>{toggleMilestone(t.id);setCtxMenu(null);}}>{t.milestone?'Unset milestone':'→ Milestone'}</div>
-          <div className="ctx-item" onClick={()=>{const v=window.prompt('Lag days (negative = lead):',String(t.lag||0));if(v!==null){const n=parseInt(v,10);if(!isNaN(n))setLagOnIncoming(t.id,n);}setCtxMenu(null);}}>Set lag…<span className="kbd">{t.lag?`+${t.lag}d`:'0d'}</span></div>
+          <div className="ctx-item" onClick={()=>{const cur = depList(t)[0]?.lag || 0; const v=window.prompt('Lag days for ALL incoming deps (negative = lead):',String(cur));if(v!==null){const n=parseInt(v,10);if(!isNaN(n))setLagOnIncoming(t.id,n);}setCtxMenu(null);}}>Set lag (all incoming)…<span className="kbd">{(()=>{const l=depList(t)[0]?.lag||0; return l?`${l>0?'+':''}${l}d`:'0d';})()}</span></div>
           <div className="ctx-item" onClick={()=>{toggleBlocking(t.id);setCtxMenu(null);}}>{t.blocking?'Unmark blocking':'Mark blocking'}</div>
           <div className="ctx-sep"/>
           <div className="ctx-item" onClick={()=>{focusDepSubtree(t.id);setCtxMenu(null);}}>Focus dep chain<span className="kbd">Ctrl E</span></div>
           <div className="ctx-item" onClick={()=>{duplicateTask(t.id);setCtxMenu(null);}}>Duplicate<span className="kbd">Ctrl D</span></div>
           <div className="ctx-item" onClick={()=>{setRenaming({id:t.id,value:t.title});setCtxMenu(null);}}>Rename<span className="kbd">F2</span></div>
           <div className="ctx-sep"/>
-          <div className="ctx-item danger" onClick={()=>{updateTasks(ts=>ts.filter(tt=>tt.id!==t.id).map(tt=>tt.deps?.includes(t.id)?{...tt,deps:tt.deps.filter(d=>d!==t.id)}:tt));setSelected(null);setCtxMenu(null);}}>Delete<span className="kbd">⌫</span></div>
+          <div className="ctx-item danger" onClick={()=>{updateTasks(ts=>ts.filter(tt=>tt.id!==t.id).map(tt=>{ const list=depList(tt); if(!list.some(d=>d.id===t.id))return tt; return {...tt, deps: list.filter(d=>d.id!==t.id)}; }));setSelected(null);setCtxMenu(null);}}>Delete<span className="kbd">⌫</span></div>
         </div>
       );
     })()}
@@ -3062,7 +3404,7 @@ function App(){
       </div>
     )}
 
-    <GanttTweaks tw={tw} setTweak={setTweak}/>
+    <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
     </Fragment>
   );
 }
