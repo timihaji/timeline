@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -65,6 +66,22 @@
   .file-menu-item .kbd{margin-left:auto;font:9.5px var(--mono);color:var(--t4);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--bg)}
   .file-menu-sep{height:1px;background:var(--border);margin:4px 2px}
 
+  /* Phase B2: Saved views dropdown */
+  .views-menu-wrap{position:relative;display:flex;align-items:center}
+  .views-menu-btn{background:var(--surface);border:1px solid var(--border-s);border-radius:2px;height:28px;padding:0 8px;color:var(--t3);font:10.5px var(--font);cursor:pointer;display:flex;align-items:center;gap:5px;letter-spacing:.02em}
+  .views-menu-btn:hover{background:var(--surface-2);color:var(--t1)}
+  .views-menu-btn.active{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
+  .views-menu-drop{position:absolute;top:34px;right:0;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;z-index:500;min-width:240px;max-width:320px;font:11.5px var(--font);color:var(--t2)}
+  .views-menu-drop .vm-empty{padding:8px 10px;color:var(--t4);font-size:11px;font-style:italic}
+  .views-menu-drop .vm-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:2px;cursor:pointer;white-space:nowrap}
+  .views-menu-drop .vm-item:hover{background:var(--surface-2);color:var(--t1)}
+  .views-menu-drop .vm-name{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .views-menu-drop .vm-del{background:transparent;border:none;color:var(--t4);font-size:14px;line-height:1;cursor:pointer;padding:0 4px;border-radius:2px}
+  .views-menu-drop .vm-del:hover{color:var(--p1);background:rgba(239,68,68,.1)}
+  .views-menu-drop .vm-sep{height:1px;background:var(--border);margin:4px 2px}
+  .views-menu-drop .vm-save{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:2px;cursor:pointer;color:var(--accent-2);font-weight:600}
+  .views-menu-drop .vm-save:hover{background:var(--accent-dim)}
+
   /* Layout */
   .app{display:flex;flex-direction:column;height:100%}
   .body{flex:1;display:flex;min-height:0;background:var(--bg)}
@@ -93,7 +110,14 @@
   .lpane{width:320px;flex-shrink:0;background:var(--bg-side);border-right:1px solid var(--border);display:flex;flex-direction:column}
   .lpane-hdr{height:54px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);gap:10px;flex-shrink:0}
   .lpane-hdr h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4)}
-  .lpane-hdr .pill{margin-left:auto;font:10px var(--mono);padding:2px 6px;border-radius:2px;background:var(--surface);color:var(--t3);border:1px solid var(--border-s)}
+  .lpane-hdr .pill{font:10px var(--mono);padding:2px 6px;border-radius:2px;background:var(--surface);color:var(--t3);border:1px solid var(--border-s)}
+  .lpane-add-btn{margin-left:auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-s);background:transparent;color:var(--t3);border-radius:3px;cursor:pointer;font-size:15px;line-height:1;padding:0;flex-shrink:0}
+  .lpane-add-btn:hover:not(:disabled){border-color:var(--accent-border);color:var(--accent-2);background:var(--accent-dim)}
+  .lpane-add-btn:disabled{opacity:.35;cursor:not-allowed}
+  .task-row-add{display:flex;align-items:center;gap:8px;height:var(--row-h);padding:0 12px 0 26px;cursor:pointer;color:var(--t4);font-size:12px;border-bottom:1px solid #0c1c19;user-select:none}
+  .task-row-add:hover{background:#0c1c19;color:var(--accent-2)}
+  .task-row-add-plus{width:12px;height:12px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border-s);border-radius:50%;font-size:10px;line-height:1;flex-shrink:0}
+  .task-row-add:hover .task-row-add-plus{border-color:var(--accent-2);border-style:solid}
   .lpane-body{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:120px}
 
   .group-row{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 10px;cursor:pointer;border-bottom:1px solid var(--border);background:var(--bg-side);position:sticky;z-index:1}
@@ -116,9 +140,28 @@
   .task-row .pri-bar{width:2px;border-radius:1px;background:var(--t4)}
   .task-row .est{font:10px var(--mono);color:var(--t4)}
   .task-row.is-project{font-weight:600;color:var(--t1);padding-left:14px}
-  .task-row.is-child{padding-left:38px}
+  /* .task-row.is-child padding-left is now set inline from row.depth (INDENT_PX=16) */
   .task-row.is-child::before{content:'';position:absolute;left:18px;top:0;bottom:0;width:1px;background:var(--border)}
   .task-row.is-child::after{content:'';position:absolute;left:18px;top:50%;width:10px;height:1px;background:var(--border)}
+  /* Drag & drop reorder (SortableJS) — whole row is the drag affordance */
+  .task-row.is-child{cursor:grab}
+  .task-row.is-child.sortable-chosen,.task-row.is-child.sortable-drag{cursor:grabbing}
+  .sortable-ghost{opacity:.25}
+  .sortable-chosen{background:var(--accent-dim,rgba(94,234,212,.10));border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.16);transform:scale(1.01);transform-origin:left center;z-index:5;position:relative}
+  .sortable-drag{cursor:grabbing}
+  .drag-indent-preview{background:var(--accent-dim,rgba(94,234,212,.14)) !important;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(94,234,212,.35),0 6px 18px rgba(0,0,0,.16);padding-left:var(--drag-pad,38px) !important}
+  /* Vertical accent bar at the target depth column during drag.
+     Selector specificity must beat `.task-row.is-child::before` (tree connector). */
+  .task-row.is-child.drag-indent-preview::before{content:'';position:absolute;left:calc(var(--drag-pad,38px) - 8px) !important;top:4px !important;bottom:4px !important;width:3px !important;background:var(--accent-2,#5eead4) !important;border-radius:2px !important;box-shadow:0 0 0 1px rgba(94,234,212,.25) !important;z-index:2}
+  /* Floating drag tooltip — neutral pill near the cursor */
+  .drag-tooltip{position:fixed;pointer-events:none;z-index:9999;padding:4px 10px;border-radius:999px;background:var(--surface-2,#1d342f);color:var(--t1,#fff);font-size:11px;font-weight:500;box-shadow:0 4px 14px rgba(0,0,0,.22);white-space:nowrap;border:1px solid var(--border,rgba(255,255,255,.08));font-family:var(--font,system-ui)}
+  .drag-tooltip.is-blocked{background:#7a1f1f;color:#fff;border-color:rgba(255,160,160,.3)}
+  /* Disclosure chevron on parent task rows — absolutely positioned inside the
+     row's left padding area so it doesn't push the checkbox/title right. */
+  .task-chv{position:absolute;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;color:var(--t3);cursor:pointer;transition:transform .15s,opacity .12s;opacity:.65;z-index:1}
+  .task-chv.open{transform:translateY(-50%) rotate(90deg)}
+  .task-chv:hover{opacity:1}
+  .task-chv svg{width:10px;height:10px;display:block;pointer-events:none}
 
   /* Right timeline */
   .rpane{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;background:var(--bg)}
@@ -139,7 +182,8 @@
 
   .grid-scroll{flex:1;overflow:auto;position:relative;cursor:default}
   .grid-scroll.panning{cursor:grabbing}
-  .grid-track{position:relative;min-height:100%}
+  .grid-track{position:relative;min-height:100%;cursor:grab}
+  .grid-scroll.panning .grid-track{cursor:grabbing}
 
   .grid-bg{position:absolute;inset:0;pointer-events:none}
   .grid-col{position:absolute;top:0;bottom:0;border-right:1px solid #0c1c19}
@@ -147,37 +191,67 @@
   .grid-col.month-start{border-left:1px solid var(--border-s)}
   .today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--accent-2);box-shadow:0 0 12px var(--accent-2);z-index:1;pointer-events:none}
   .today-line::after{content:'TODAY';position:absolute;top:6px;left:6px;font:9px var(--mono);background:var(--accent-2);color:#021412;padding:1px 5px;border-radius:2px;letter-spacing:.08em;font-weight:700;white-space:nowrap}
+  .topbar-clock{font:12px var(--mono);color:var(--text-dim);letter-spacing:.02em;padding:0 10px;display:flex;align-items:center;border-left:1px solid var(--border);border-right:1px solid var(--border);user-select:none;white-space:nowrap;opacity:.8}
 
   .row-line{position:absolute;left:0;right:0;height:var(--row-h);border-bottom:1px solid #0c1c19;pointer-events:none}
   .row-line.group{background:#08191550;border-bottom-color:var(--border)}
   .row-line.hover{background:#0c1c19a0}
 
   /* Bars */
-  .bar-layer{position:absolute;inset:0}
-  .bar{position:absolute;height:22px;border-radius:3px;display:flex;align-items:center;padding:0 8px 0 10px;font-size:11.5px;font-weight:500;color:#021412;cursor:grab;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);transition:box-shadow .12s,transform .12s,filter .12s;white-space:nowrap;overflow:hidden;will-change:transform}
+  .bar-layer{position:absolute;inset:0;cursor:inherit}
+  .bar{position:absolute;height:22px;border-radius:3px;display:flex;align-items:center;padding:0 8px 0 10px;font-size:11.5px;font-weight:500;color:#021412;cursor:grab;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);transition:box-shadow .12s,transform .12s,filter .12s;white-space:nowrap;overflow:visible;will-change:transform}
   .bar:hover{box-shadow:0 2px 4px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.35);filter:brightness(1.06);z-index:5}
   .bar.dragging{cursor:grabbing;box-shadow:0 4px 8px rgba(0,0,0,.55),0 18px 40px rgba(0,0,0,.55);transform:translateY(-1px) scale(1.01);filter:brightness(1.1);z-index:50}
+  .bar[data-zone="l"],.bar[data-zone="r"]{cursor:ew-resize}
+  .bar.dragging[data-zone]{cursor:grabbing}
   .bar.selected{outline:2px solid var(--accent-2);outline-offset:1px;z-index:6}
   .bar.done{filter:saturate(.4) brightness(.85)}
   .bar.done .bar-ttl{text-decoration:line-through;opacity:.7}
   .bar-ttl{flex:1;text-overflow:ellipsis;overflow:hidden;text-shadow:0 1px 0 rgba(255,255,255,.12)}
+  .bar-ttl-ext{position:absolute;font:500 11.5px/22px var(--font);color:var(--t1);white-space:nowrap;pointer-events:none;z-index:2;padding-left:2px;text-shadow:0 1px 1px rgba(0,0,0,.3)}
   .bar-prog{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.22);border-radius:3px 0 0 3px;pointer-events:none}
   .bar-meta{font:10px var(--mono);color:rgba(0,0,0,.55);margin-left:6px;flex-shrink:0}
   .bar.compact{padding:0 4px}
   .bar.compact .bar-ttl{font-size:10.5px}
-  .bar-handle{position:absolute;top:0;bottom:0;width:6px;cursor:ew-resize;background:transparent}
-  .bar-handle::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:2px;height:10px;background:rgba(0,0,0,.35);border-radius:1px}
-  .bar-handle.l{left:0}
-  .bar-handle.l::after{left:2px}
-  .bar-handle.r{right:0}
-  .bar-handle.r::after{right:2px}
-  .bar:hover .bar-handle::after{background:rgba(0,0,0,.55)}
-  .bar.dragging-edge{cursor:ew-resize}
 
-  /* Dep handle */
-  .dep-knob{position:absolute;right:-7px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid #021412;opacity:0;transition:opacity .12s,transform .12s;cursor:crosshair;z-index:7;box-shadow:0 0 0 0 var(--accent-2)}
+  /* Edge resize stripes — visual affordance for the 12px hit zones (hit-test in JS) */
+  .bar:not(.project):not(.milestone)::before,
+  .bar:not(.project):not(.milestone)::after{
+    content:'';position:absolute;top:50%;transform:translateY(-50%);
+    width:3px;height:12px;border-radius:2px;background:rgba(0,0,0,.55);
+    opacity:0;transition:opacity .12s;pointer-events:none;z-index:3;
+  }
+  .bar:not(.project):not(.milestone)::before{left:3px}
+  .bar:not(.project):not(.milestone)::after{right:3px}
+  .bar-layer:hover .bar:not(.project):not(.milestone)::before,
+  .bar-layer:hover .bar:not(.project):not(.milestone)::after{opacity:.4}
+  .bar:hover::before,.bar:hover::after,
+  .bar.selected::before,.bar.selected::after{opacity:.9}
+  .bar.short::before,.bar.short::after{display:none}
+
+  /* Short-bar affordance dot — opens context menu for resize/dep on tiny bars */
+  .bar-short-dot{position:absolute;top:-8px;right:-6px;height:14px;padding:0 4px;border-radius:3px;
+    background:var(--surface-3);border:1px solid var(--border-s);color:var(--t3);
+    display:none;align-items:center;justify-content:center;font:8px var(--mono);font-weight:700;
+    cursor:pointer;z-index:8;opacity:0;transition:opacity .12s,transform .12s;letter-spacing:1px;white-space:nowrap}
+  .bar.short .bar-short-dot{display:flex}
+  .bar.short:hover .bar-short-dot,.bar.short.selected .bar-short-dot{opacity:1}
+  .bar-short-dot:hover{background:var(--surface);color:var(--t1);transform:none}
+
+  /* Dep handle — floats outside the bar's right edge, separated from the resize zone */
+  .dep-knob{position:absolute;right:-22px;top:50%;transform:translateY(-50%);width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid #021412;opacity:0;transition:opacity .12s,transform .12s;cursor:crosshair;z-index:9;box-shadow:0 0 0 0 var(--accent-2)}
+  .dep-knob::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:8px;height:2px;background:var(--accent-2);opacity:.6;pointer-events:none;border-radius:1px}
   .bar:hover .dep-knob,.bar.selected .dep-knob{opacity:1}
   .dep-knob:hover{transform:translateY(-50%) scale(1.25);box-shadow:0 0 0 6px rgba(20,184,166,.18)}
+
+  /* Coarse pointer (touch) — larger hit targets, persistent affordances */
+  @media (pointer:coarse){
+    .bar:not(.project):not(.milestone)::before,
+    .bar:not(.project):not(.milestone)::after{width:4px;height:16px;opacity:.5}
+    .dep-knob{width:20px;height:20px;right:-26px;opacity:.6}
+    .dep-knob::before{left:-10px;width:10px;height:2px}
+    .bar-short-dot{height:18px;padding:0 6px;top:-10px;right:-7px;opacity:.7}
+  }
 
   /* Project (parent) bar */
   .bar.project{background:transparent !important;color:var(--t1);border:none;box-shadow:none;cursor:default;padding:0}
@@ -233,7 +307,10 @@
   .inspector{position:absolute;background:var(--surface);border:1px solid var(--accent-border);border-radius:4px;box-shadow:var(--shadow-lg);padding:10px 12px;z-index:100;min-width:240px;animation:su .12s ease}
   @keyframes su{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
   .inspector::before{content:'';position:absolute;left:14px;bottom:-6px;width:10px;height:10px;background:var(--surface);border-right:1px solid var(--accent-border);border-bottom:1px solid var(--accent-border);transform:rotate(45deg)}
-  .ins-title{font-size:12.5px;font-weight:600;color:var(--t1);margin-bottom:6px;letter-spacing:-.1px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ins-title{font-size:12.5px;font-weight:600;color:var(--t1);margin-bottom:6px;letter-spacing:-.1px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+  .ins-title-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ins-close{flex-shrink:0;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--t3);font:14px/1 var(--font);cursor:pointer;padding:0;margin-left:auto}
+  .ins-close:hover{background:var(--surface-2);color:var(--t1);border-color:var(--border-s)}
   .ins-row{display:flex;align-items:center;gap:8px;font:11px var(--mono);color:var(--t3);margin-bottom:3px}
   .ins-row .lbl{color:var(--t4);min-width:42px;text-transform:uppercase;letter-spacing:.06em;font-size:9.5px}
   .ins-row .val{color:var(--t1)}
@@ -364,8 +441,8 @@
     background: rgba(0,0,0,.25) !important;
     border-radius: 99px 0 0 99px !important;
   }
-  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone) .bar-handle.l{ left:2px }
-  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone) .bar-handle.r{ right:2px }
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone)::before{ left:6px }
+  body[data-bar-style="capsule"] .bar:not(.project):not(.milestone)::after{ right:6px }
 
   /* Sprint bands */
   :root{
@@ -573,6 +650,25 @@
   .help-modal .h-btn{font:11.5px var(--font);padding:6px 14px;border-radius:2px;border:1px solid var(--border-s);background:var(--surface-2);color:var(--t1);cursor:pointer}
   .help-modal .h-btn:hover{background:var(--surface-3)}
 
+  /* ── Phase B1: Command palette (Cmd/Ctrl+K) ── */
+  .palette-overlay{position:fixed;inset:0;background:rgba(2,12,10,.6);z-index:1250;display:flex;align-items:flex-start;justify-content:center;backdrop-filter:blur(2px);padding-top:14vh}
+  .palette{background:var(--surface);border:1px solid var(--border-s);border-radius:8px;box-shadow:var(--shadow-lg);width:560px;max-width:92vw;max-height:60vh;display:flex;flex-direction:column;font:12px var(--font);color:var(--t1);overflow:hidden}
+  .palette .p-input-wrap{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+  .palette .p-input-wrap svg{flex:0 0 auto;color:var(--t4)}
+  .palette .p-input{flex:1;background:transparent;border:none;outline:none;font:13px var(--font);color:var(--t1)}
+  .palette .p-input::placeholder{color:var(--t4)}
+  .palette .p-input-hint{font:9.5px var(--mono);color:var(--t4);padding:1px 6px;border:1px solid var(--border-s);border-radius:2px;background:var(--surface-2)}
+  .palette .p-list{flex:1;overflow-y:auto;padding:4px 0}
+  .palette .p-empty{padding:24px;text-align:center;color:var(--t4);font-size:11.5px}
+  .palette .p-group-title{font:9.5px var(--mono);color:var(--t4);text-transform:uppercase;letter-spacing:.1em;padding:8px 14px 4px}
+  .palette .p-item{display:flex;align-items:center;gap:10px;padding:7px 14px;cursor:pointer;color:var(--t2);font-size:12px;line-height:1.2}
+  .palette .p-item:hover,.palette .p-item.active{background:var(--surface-2);color:var(--t1)}
+  .palette .p-item .p-label{flex:1}
+  .palette .p-item .p-shortcut{font:9.5px var(--mono);color:var(--t4);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--surface-2)}
+  .palette .p-item.active .p-shortcut{color:var(--t2)}
+  .palette .p-foot{padding:6px 14px;border-top:1px solid var(--border);display:flex;gap:14px;justify-content:flex-end;align-items:center;font-size:10.5px;color:var(--t4)}
+  .palette .p-foot .p-key{font:9.5px var(--mono);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--surface-2);color:var(--t3);margin-right:4px}
+
   /* ── Batch 5: Load error modal ── */
   .err-overlay{position:fixed;inset:0;background:rgba(2,12,10,.65);z-index:1300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
   .err-modal{background:var(--surface);border:1px solid var(--border-s);border-radius:6px;box-shadow:var(--shadow-lg);width:420px;max-width:92vw;font:12px var(--font);color:var(--t1)}
@@ -695,9 +791,715 @@
   .calendar-empty{padding:60px 20px;text-align:center;color:var(--t4);font-size:12px;font-style:italic}
   .calendar-empty h3{font-size:14px;color:var(--t2);font-weight:600;margin-bottom:8px;font-style:normal;letter-spacing:.02em}
 
+  /* ─── THINGS 3 theme — soft pastels, white card, friendly ── */
+  body[data-theme="things"]{
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono","Roboto Mono",monospace;
+    --bg:#ffffff; --bg-side:#f7f8fa; --bg-top:#f7f8fa; --bg-grid:#fafbfc;
+    --surface:#ffffff; --surface-2:#f3f4f7; --surface-3:#e9ebf0;
+    --border:rgba(0,0,0,.06); --border-s:rgba(0,0,0,.08);
+    --t1:#1a1a1a; --t2:#3c4046; --t3:#6b7280; --t4:#9aa0a8;
+    --accent:#2c7be5; --accent-2:#2c7be5; --accent-dim:rgba(44,123,229,.10); --accent-border:rgba(44,123,229,.30);
+    --p1:#ff3b30; --p2:#f5c43d; --p3:#9aa0a8;
+    --proj-LIFE:#a8d8ea; --proj-HOME:#ffd4c4; --proj-WORK:#d4c5f9; --proj-ADMIN:#c5e8d5;
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+    --shadow-lg:0 12px 40px rgba(0,0,0,.12);
+    --rk:8px; --row-h:40px;
+  }
+  body[data-theme="things"]{
+    background:#ffffff;
+    color:var(--t1);
+  }
+  body[data-theme="things"] .app{
+    background:#ffffff;
+  }
+  body[data-theme="things"] .body{ background:#ffffff }
+
+  /* Topbar */
+  body[data-theme="things"] .topbar{
+    background:#f7f8fa;
+    border-bottom:1px solid var(--border);
+    height:48px; padding:0 16px;
+  }
+  body[data-theme="things"] .tb-logo{color:var(--t1)}
+  body[data-theme="things"] .tb-icon{
+    background:linear-gradient(135deg,#2c7be5,#5ba0f2);
+    color:#fff; border-radius:7px; width:24px; height:24px;
+  }
+  body[data-theme="things"] .tb-sep{background:var(--border)}
+  body[data-theme="things"] .tb-crumb{color:var(--t3)}
+  body[data-theme="things"] .tb-crumb-active{color:var(--t1)}
+  body[data-theme="things"] .tb-btn{
+    background:#ffffff;
+    border:1px solid var(--border-s);
+    color:var(--t2);
+    border-radius:8px; height:30px;
+  }
+  body[data-theme="things"] .tb-btn:hover{background:#f3f4f7;color:var(--t1)}
+  body[data-theme="things"] .tb-btn.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+  body[data-theme="things"] .tb-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  body[data-theme="things"] .tb-btn.primary:hover{background:#1a6ad8}
+  body[data-theme="things"] .tb-btn-group{background:#fff;border:1px solid var(--border-s);border-radius:8px;padding:3px}
+  body[data-theme="things"] .tb-btn-group .tb-btn{border-radius:6px;border:none;background:transparent;color:var(--t3);height:24px}
+  body[data-theme="things"] .tb-btn-group .tb-btn:hover{color:var(--t1);background:rgba(0,0,0,.04)}
+  body[data-theme="things"] .tb-btn-group .tb-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  body[data-theme="things"] .zoom-pill{background:#fff;border:1px solid var(--border-s);border-radius:8px;height:30px;overflow:hidden}
+  body[data-theme="things"] .zoom-pill button{color:var(--t3)}
+  body[data-theme="things"] .zoom-pill button:hover{background:#f3f4f7;color:var(--t1)}
+  body[data-theme="things"] .zoom-pill .label{color:var(--t3);border-color:var(--border)}
+
+  /* Sidebar (project panel) */
+  body[data-theme="things"] .proj-panel{
+    background:#f7f8fa;
+    border-right:1px solid var(--border);
+  }
+  body[data-theme="things"] .proj-panel-hdr{height:52px;border-bottom:1px solid var(--border);padding:0 12px 0 16px}
+  body[data-theme="things"] .proj-panel-title{color:var(--t3);letter-spacing:.06em;font-size:10.5px}
+  body[data-theme="things"] .proj-panel-toggle{
+    background:#fff;border:1px solid var(--border-s);color:var(--t3);border-radius:6px;
+  }
+  body[data-theme="things"] .proj-panel-toggle:hover{background:#f3f4f7;color:var(--t1)}
+  body[data-theme="things"] .proj-item{
+    margin:1px 8px; height:34px; padding:0 12px;
+    border-radius:8px; border-left:none; color:var(--t1);
+    font-size:13px;
+  }
+  body[data-theme="things"] .proj-item:hover{background:rgba(0,0,0,.04)}
+  body[data-theme="things"] .proj-item.active{
+    background:var(--accent-dim); color:var(--accent);
+    border-left:none; font-weight:600;
+  }
+  body[data-theme="things"] .proj-item.active .proj-item-cnt{color:var(--accent)}
+  body[data-theme="things"] .proj-item-dot{border-radius:50%;width:10px;height:10px}
+  body[data-theme="things"] .proj-item-cnt{color:var(--t4)}
+  body[data-theme="things"] .proj-rename-input{
+    background:#fff;border:1px solid var(--accent);color:var(--t1);border-radius:4px;
+  }
+  body[data-theme="things"] .proj-add-btn{
+    border:1px dashed var(--border-s);color:var(--t3);border-radius:8px;height:34px;
+  }
+  body[data-theme="things"] .proj-add-btn:hover{
+    border-color:var(--accent-border);color:var(--accent);background:var(--accent-dim);
+  }
+  body[data-theme="things"] .proj-empty{color:var(--t4)}
+
+  /* Left task pane */
+  body[data-theme="things"] .lpane{
+    background:#fafbfc;
+    border-right:1px solid var(--border);
+  }
+  body[data-theme="things"] .lpane-hdr{
+    height:52px; border-bottom:1px solid var(--border); padding:0 16px;
+  }
+  body[data-theme="things"] .lpane-hdr h2{color:var(--t3);letter-spacing:.06em;font-size:10.5px}
+  body[data-theme="things"] .lpane-hdr .pill{
+    background:#fff; border:1px solid var(--border-s); color:var(--t3);
+    border-radius:99px; padding:2px 9px; font-size:10.5px;
+  }
+
+  /* Task rows */
+  body[data-theme="things"] .task-row{
+    height:40px; border-bottom:1px solid transparent; color:var(--t1);
+    font-size:13px; font-weight:400;
+    margin:1px 8px; padding:0 12px 0 30px; border-radius:8px;
+  }
+  body[data-theme="things"] .task-row::before,
+  body[data-theme="things"] .task-row::after{background:rgba(0,0,0,.08) !important}
+  body[data-theme="things"] .task-row:hover,
+  body[data-theme="things"] .task-row.hover{background:rgba(0,0,0,.04)}
+  body[data-theme="things"] .task-row.selected{
+    background:var(--accent-dim) !important; box-shadow:none !important;
+  }
+  body[data-theme="things"] .task-row.selected .ttl{color:var(--accent);font-weight:600}
+  body[data-theme="things"] .task-row .chk{
+    width:16px; height:16px;
+    border:1.5px solid #c4c8d0; border-radius:50%;
+  }
+  body[data-theme="things"] .task-row .chk.done{background:var(--accent);border-color:var(--accent)}
+  body[data-theme="things"] .task-row .chk.done::after{border-color:#fff}
+  body[data-theme="things"] .task-row.done .ttl{color:var(--t3);text-decoration:line-through}
+  body[data-theme="things"] .task-row.is-project{font-weight:600;color:var(--t1)}
+  body[data-theme="things"] .task-row .est{color:var(--t4)}
+  body[data-theme="things"] .task-row .pri-bar{background:var(--t4)}
+  body[data-theme="things"] .task-row .wbs{
+    background:#f3f4f7;border:1px solid var(--border-s);color:var(--t3);border-radius:4px;
+  }
+  body[data-theme="things"] .task-row.selected .wbs{
+    background:#fff;border-color:var(--accent-border);color:var(--accent);
+  }
+
+  /* Group rows */
+  body[data-theme="things"] .group-row{
+    background:#fafbfc; border-bottom:1px solid var(--border);
+    height:40px; padding:0 16px 0 12px;
+  }
+  body[data-theme="things"] .group-row:hover{background:rgba(0,0,0,.03)}
+  body[data-theme="things"] .group-chv{color:var(--t3)}
+  body[data-theme="things"] .group-name{
+    color:var(--t1); font-size:13px; font-weight:600; letter-spacing:0;
+  }
+  body[data-theme="things"] .group-dot{border-radius:50%;width:10px;height:10px}
+  body[data-theme="things"] .group-cnt{color:var(--t4)}
+
+  /* Right pane / timeline header */
+  body[data-theme="things"] .rpane{background:#fff}
+  body[data-theme="things"] .timeline-hdr{
+    background:#fafbfc; border-bottom:1px solid var(--border); height:54px;
+  }
+  body[data-theme="things"] .hdr-month{
+    background:#fafbfc; color:var(--t2);
+    border-right:1px solid var(--border);
+    font-weight:600; text-transform:none; letter-spacing:0; font-size:12px;
+  }
+  body[data-theme="things"] .hdr-month .yr{color:var(--t4)}
+  body[data-theme="things"] .hdr-day{
+    border-right:1px solid rgba(0,0,0,.04); color:var(--t3);
+  }
+  body[data-theme="things"] .hdr-day .dow{color:var(--t4);text-transform:uppercase;font-weight:600}
+  body[data-theme="things"] .hdr-day .dom{color:var(--t1);font-weight:500}
+  body[data-theme="things"] .hdr-day.weekend{background:#f3f4f7}
+  body[data-theme="things"] .hdr-day.weekend .dom{color:var(--t4)}
+  body[data-theme="things"] .hdr-day.today{background:var(--accent-dim)}
+  body[data-theme="things"] .hdr-day.today .dow{color:var(--accent);font-weight:700}
+  body[data-theme="things"] .hdr-day.today .dom{color:var(--accent);font-weight:700}
+  body[data-theme="things"] .hdr-day.month-start{border-left:1px solid var(--border)}
+
+  /* Grid */
+  body[data-theme="things"] .grid-scroll{background:#fff}
+  body[data-theme="things"] .grid-col{border-right:1px solid rgba(0,0,0,.025)}
+  body[data-theme="things"] .grid-col.weekend{background:#f7f8fa}
+  body[data-theme="things"] .grid-col.month-start{border-left:1px solid var(--border)}
+  body[data-theme="things"] .row-line{border-bottom:1px solid rgba(0,0,0,.03)}
+  body[data-theme="things"] .row-line.group{background:#fafbfc;border-bottom-color:var(--border)}
+  body[data-theme="things"] .row-line.hover{background:rgba(0,0,0,.025)}
+  body[data-theme="things"] .row-line.selected-row{background:var(--accent-dim)}
+
+  /* Today line */
+  body[data-theme="things"] .today-line{
+    background:var(--accent) !important;
+    box-shadow:0 0 8px rgba(44,123,229,.45) !important;
+    width:2px !important;
+  }
+  body[data-theme="things"] .today-line::after{
+    background:var(--accent); color:#fff;
+    border-radius:99px; padding:2px 9px; font-weight:700;
+  }
+
+  /* Bars — soft pastel pills */
+  body[data-theme="things"] .bar:not(.project):not(.milestone){
+    background:#a8d8ea !important;
+    border:none !important;
+    border-radius:999px !important;
+    color:#1a3a52 !important;
+    height:24px !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.06) !important;
+    text-shadow:none !important;
+    font-weight:600 !important;
+    padding:0 12px 0 14px !important;
+    font-size:11.5px !important;
+  }
+  body[data-theme="things"] .bar:not(.project):not(.milestone):nth-child(5n)  {background:#a8d8ea !important;color:#1a3a52 !important}
+  body[data-theme="things"] .bar:not(.project):not(.milestone):nth-child(5n+1){background:#ffd4c4 !important;color:#5a2614 !important}
+  body[data-theme="things"] .bar:not(.project):not(.milestone):nth-child(5n+2){background:#c5e8d5 !important;color:#1a4a2e !important}
+  body[data-theme="things"] .bar:not(.project):not(.milestone):nth-child(5n+3){background:#d4c5f9 !important;color:#2e1a5a !important}
+  body[data-theme="things"] .bar:not(.project):not(.milestone):nth-child(5n+4){background:#fce4a8 !important;color:#5a4014 !important}
+  body[data-theme="things"] .bar:hover{
+    filter:brightness(1.03);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 3px 10px rgba(0,0,0,.10) !important;
+  }
+  body[data-theme="things"] .bar.selected{outline:2px solid var(--accent);outline-offset:2px}
+  body[data-theme="things"] .bar.done{opacity:.55;filter:saturate(.5)}
+  body[data-theme="things"] .bar-prog{
+    background:rgba(0,0,0,.08) !important;
+    border-radius:999px 0 0 999px !important;
+  }
+  body[data-theme="things"] .bar:not(.project):not(.milestone)::before,
+  body[data-theme="things"] .bar:not(.project):not(.milestone)::after{background:rgba(0,0,0,.35)}
+  body[data-theme="things"] .bar:hover::before,
+  body[data-theme="things"] .bar:hover::after{background:rgba(0,0,0,.55)}
+  body[data-theme="things"] .bar-meta{color:rgba(0,0,0,.45)}
+
+  /* Dep knob */
+  body[data-theme="things"] .dep-knob{
+    background:var(--accent); border:2px solid #fff;
+  }
+  body[data-theme="things"] .dep-knob:hover{box-shadow:0 0 0 5px rgba(44,123,229,.18)}
+
+  /* Project parent bar */
+  body[data-theme="things"] .bar.project::before{
+    background:linear-gradient(90deg,#2c7be5,#5ba0f2) !important;
+    height:5px; border:none; border-radius:99px;
+  }
+  body[data-theme="things"] .bar.project::after,
+  body[data-theme="things"] .bar.project .proj-cap{border-top-color:#2c7be5}
+  body[data-theme="things"] .bar.project .bar-ttl{
+    color:var(--t3); text-transform:none; letter-spacing:.02em;
+    font-size:10.5px; font-weight:700;
+  }
+
+  /* Milestone */
+  body[data-theme="things"] .bar.milestone .diamond{
+    background:linear-gradient(135deg,#2c7be5,#5ba0f2) !important;
+    border-radius:50%; transform:rotate(0) !important;
+    box-shadow:0 2px 6px rgba(44,123,229,.4),inset 0 1px 0 rgba(255,255,255,.4),0 0 0 2px #fff !important;
+  }
+  body[data-theme="things"] .bar.milestone .bar-ttl{color:var(--t1);font-weight:600}
+
+  /* Inspector */
+  body[data-theme="things"] .inspector{
+    background:#fff; border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:0 16px 50px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.04);
+    color:var(--t1);
+  }
+  body[data-theme="things"] .inspector::before{
+    background:#fff;
+    border-right-color:var(--border);
+    border-bottom-color:var(--border);
+  }
+  body[data-theme="things"] .ins-title{color:var(--t1)}
+  body[data-theme="things"] .ins-close{color:var(--t3)}
+  body[data-theme="things"] .ins-close:hover{background:#f3f4f7;color:var(--t1);border-color:var(--border)}
+  body[data-theme="things"] .ins-row .lbl{color:var(--t3)}
+  body[data-theme="things"] .ins-row .val{color:var(--t1)}
+  body[data-theme="things"] .ins-row .dur-pill{
+    background:var(--accent-dim); color:var(--accent);
+    border:none; border-radius:99px; font-weight:600;
+  }
+  body[data-theme="things"] .ins-acts{border-top:1px solid var(--border)}
+  body[data-theme="things"] .ins-btn{
+    background:#f3f4f7; border:1px solid var(--border-s);
+    color:var(--t1); border-radius:6px;
+  }
+  body[data-theme="things"] .ins-btn:hover{background:#e9ebf0;color:var(--t1);border-color:var(--border-s)}
+  body[data-theme="things"] .ins-btn.link-btn{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+  body[data-theme="things"] .ins-btn.link-btn:hover{background:rgba(44,123,229,.18);color:var(--accent)}
+  body[data-theme="things"] .ins-input,
+  body[data-theme="things"] .ins-textarea,
+  body[data-theme="things"] .ins-date,
+  body[data-theme="things"] .ins-select,
+  body[data-theme="things"] .ins-num{
+    background:#f7f8fa; border:1px solid var(--border-s);
+    color:var(--t1); border-radius:6px; padding:6px 8px;
+  }
+  body[data-theme="things"] .ins-input:focus,
+  body[data-theme="things"] .ins-textarea:focus,
+  body[data-theme="things"] .ins-date:focus,
+  body[data-theme="things"] .ins-select:focus,
+  body[data-theme="things"] .ins-num:focus{
+    border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);
+  }
+  body[data-theme="things"] .ins-seg{background:#f3f4f7;border:1px solid var(--border-s);border-radius:8px}
+  body[data-theme="things"] .ins-seg button{color:var(--t3);border-radius:6px}
+  body[data-theme="things"] .ins-seg button:hover{color:var(--t1);background:rgba(0,0,0,.04)}
+  body[data-theme="things"] .ins-seg button.active{background:#fff;color:var(--accent);border:1px solid var(--accent-border)}
+  body[data-theme="things"] .ins-field-lbl{color:var(--t3)}
+  body[data-theme="things"] .ins-dep-chip{
+    background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:6px;
+  }
+  body[data-theme="things"] .ins-add-btn{
+    border:1px dashed var(--border-s); color:var(--t3); border-radius:6px;
+  }
+  body[data-theme="things"] .ins-add-btn:hover{
+    border-color:var(--accent-border); color:var(--accent); background:var(--accent-dim);
+  }
+
+  /* Status footer */
+  body[data-theme="things"] .sbar{
+    background:#f7f8fa; border-top:1px solid var(--border);
+    color:var(--t3); height:28px;
+  }
+  body[data-theme="things"] .sbar kbd{
+    background:#fff; border:1px solid var(--border-s); color:var(--t2); border-radius:4px;
+  }
+  body[data-theme="things"] .sbar .dot{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.5)}
+
+  /* Dependency arrows */
+  body[data-theme="things"] .dep-path{stroke:#c4c8d0;opacity:.7}
+  body[data-theme="things"] .dep-path:hover{stroke:var(--accent);opacity:1}
+  body[data-theme="things"] .dep-svg .row-divider{stroke:rgba(0,0,0,.025)}
+
+  /* Scrollbars */
+  body[data-theme="things"] ::-webkit-scrollbar{width:10px;height:10px}
+  body[data-theme="things"] ::-webkit-scrollbar-thumb{
+    background:rgba(0,0,0,.12); border:2px solid transparent;
+    border-radius:99px; background-clip:padding-box;
+  }
+  body[data-theme="things"] ::-webkit-scrollbar-thumb:hover{
+    background:rgba(0,0,0,.2); background-clip:padding-box;
+  }
+
+  /* Sprint bands */
+  body[data-theme="things"]{
+    --sprint-even-bg:rgba(0,0,0,.015);
+    --sprint-bound:rgba(0,0,0,.05);
+    --sprint-release:rgba(44,123,229,.25);
+    --sprint-label:rgba(44,123,229,.5);
+  }
+
+  /* Context menu */
+  body[data-theme="things"] .ctx-menu{
+    background:#fff; border:1px solid var(--border); border-radius:10px;
+    box-shadow:0 12px 40px rgba(0,0,0,.15); padding:6px;
+  }
+  body[data-theme="things"] .ctx-item{
+    border-radius:6px; color:var(--t1); padding:8px 12px;
+  }
+  body[data-theme="things"] .ctx-item:hover{background:var(--accent-dim);color:var(--accent)}
+  body[data-theme="things"] .ctx-item:hover .ico{color:var(--accent)}
+  body[data-theme="things"] .ctx-item .ico{color:var(--t3)}
+  body[data-theme="things"] .ctx-item .kbd{
+    background:#f3f4f7;color:var(--t3);border:1px solid var(--border-s);border-radius:4px;
+  }
+  body[data-theme="things"] .ctx-sep{background:var(--border)}
+  body[data-theme="things"] .ctx-hdr{color:var(--t3)}
+
+  /* File / Views menu */
+  body[data-theme="things"] .file-menu-drop,
+  body[data-theme="things"] .views-menu-drop{
+    background:#fff; border:1px solid var(--border); border-radius:10px;
+    box-shadow:0 12px 40px rgba(0,0,0,.15); padding:6px; color:var(--t1);
+  }
+  body[data-theme="things"] .file-menu-item,
+  body[data-theme="things"] .views-menu-drop .vm-item{
+    border-radius:6px; padding:8px 12px; color:var(--t1);
+  }
+  body[data-theme="things"] .file-menu-item:hover,
+  body[data-theme="things"] .views-menu-drop .vm-item:hover{
+    background:var(--accent-dim); color:var(--accent);
+  }
+  body[data-theme="things"] .file-menu-item .kbd{
+    background:#f3f4f7; color:var(--t3); border:1px solid var(--border-s); border-radius:4px;
+  }
+  body[data-theme="things"] .file-menu-sep,
+  body[data-theme="things"] .views-menu-drop .vm-sep{background:var(--border)}
+  body[data-theme="things"] .views-menu-btn{
+    background:#fff; border:1px solid var(--border-s); color:var(--t2);
+    border-radius:8px; height:30px;
+  }
+  body[data-theme="things"] .views-menu-btn:hover{background:#f3f4f7;color:var(--t1)}
+  body[data-theme="things"] .views-menu-btn.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+  body[data-theme="things"] .views-menu-drop .vm-save{color:var(--accent)}
+  body[data-theme="things"] .views-menu-drop .vm-save:hover{background:var(--accent-dim)}
+
+  /* Drag tooltip */
+  body[data-theme="things"] .drag-tooltip{
+    background:#fff; border:1px solid var(--accent-border); color:var(--t1);
+    border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.12);
+  }
+  body[data-theme="things"] .drag-tooltip .dt-dates{color:var(--accent)}
+  body[data-theme="things"] .drag-tooltip .dt-meta{color:var(--t3)}
+
+  /* Loading */
+  body[data-theme="things"] .loading{color:var(--t3)}
+
+  /* Custom modal */
+  body[data-theme="things"] .cmod-overlay{background:rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+  body[data-theme="things"] .cmod{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:18px;box-shadow:0 28px 70px rgba(0,0,0,.18);width:380px}
+  body[data-theme="things"] .cmod-head{padding:26px 26px 0}
+  body[data-theme="things"] .cmod-icon{width:46px;height:46px;border-radius:13px}
+  body[data-theme="things"] .cmod-icon--confirm{background:rgba(245,196,61,.15);color:#d9a000}
+  body[data-theme="things"] .cmod-icon--confirm.cmod-icon--danger{background:rgba(255,59,48,.1);color:#ff3b30}
+  body[data-theme="things"] .cmod-icon--alert{background:rgba(44,123,229,.1);color:#2c7be5}
+  body[data-theme="things"] .cmod-icon--prompt{background:rgba(44,123,229,.08);color:#2c7be5}
+  body[data-theme="things"] .cmod-title{font-size:15px;color:#1a1a1a}
+  body[data-theme="things"] .cmod-body{padding:10px 26px 0;font-size:13px;color:#6b7280}
+  body[data-theme="things"] .cmod-input{background:#f7f8fa;border:1px solid rgba(0,0,0,.09);border-radius:9px;padding:9px 12px;font:13px var(--font);color:#1a1a1a;margin-top:12px}
+  body[data-theme="things"] .cmod-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(44,123,229,.15)}
+  body[data-theme="things"] .cmod-foot{padding:20px 26px 26px;gap:10px}
+  body[data-theme="things"] .cmod-btn{height:38px;border-radius:9px;font:13px var(--font);background:#f0f1f4;border:1px solid rgba(0,0,0,.06);color:#1a1a1a;padding:0 20px}
+  body[data-theme="things"] .cmod-btn:hover{background:#e5e7ec}
+  body[data-theme="things"] .cmod-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  body[data-theme="things"] .cmod-btn.primary:hover{background:#1a6ad8}
+  body[data-theme="things"] .cmod-btn.primary.danger{background:#ff3b30;border-color:#ff3b30;color:#fff}
+  body[data-theme="things"] .cmod-btn.primary.danger:hover{background:#e02d21}
+
+  /* Now-curtain (subtle) */
+  body[data-theme="things"] .now-curtain{
+    background:linear-gradient(to right,rgba(247,248,250,.7) 0%,rgba(247,248,250,.22) 78%,transparent 100%);
+  }
+
+  /* Phantom bar (drag-to-create) */
+  body[data-theme="things"] .phantom-bar{
+    background:linear-gradient(180deg,#5ba0f2,var(--accent));
+    border:1.5px dashed #fff; color:#fff;
+    border-radius:999px;
+    box-shadow:0 0 0 4px rgba(44,123,229,.16);
+  }
+
+  /* Dirty indicator */
+  body[data-theme="things"] .dirty-dot{background:var(--p2);box-shadow:0 0 5px rgba(245,196,61,.6)}
+
+  /* ─── Welcome screen ─── */
+  body[data-theme="things"] .welcome-overlay{
+    background:linear-gradient(180deg,#fafbfc 0%,#f3f4f7 100%);
+  }
+  body[data-theme="things"] .welcome-card{
+    background:#ffffff;
+    border:1px solid rgba(0,0,0,.05);
+    border-radius:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.04);
+    padding:48px 56px;
+    backdrop-filter:none;
+  }
+  body[data-theme="things"] .welcome-logo{
+    background:linear-gradient(135deg,#2c7be5,#5ba0f2);
+    color:#ffffff;
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(44,123,229,.30),inset 0 1px 0 rgba(255,255,255,.25);
+    font-weight:700;
+  }
+  body[data-theme="things"] .welcome-title{color:var(--t1);font-weight:600;letter-spacing:-.4px}
+  body[data-theme="things"] .welcome-subtitle{color:var(--t3)}
+  body[data-theme="things"] .welcome-btn{
+    height:44px;
+    border-radius:10px;
+    border:1px solid var(--border-s);
+    background:#ffffff;
+    color:var(--t1);
+    font-weight:500;
+  }
+  body[data-theme="things"] .welcome-btn:hover{
+    background:#f3f4f7;
+    border-color:var(--border-s);
+  }
+  body[data-theme="things"] .welcome-btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#ffffff;
+    font-weight:600;
+  }
+  body[data-theme="things"] .welcome-btn.primary:hover{background:#1a6ad8;border-color:#1a6ad8}
+  body[data-theme="things"] .welcome-btn svg{opacity:.85}
+  body[data-theme="things"] .welcome-hint{color:var(--t4)}
+
+  /* ─── List view ─── */
+  body[data-theme="things"] .list-view{background:#ffffff}
+  body[data-theme="things"] .list-view thead th{
+    background:#fafbfc;
+    color:var(--t3);
+    border-bottom:1px solid var(--border);
+    font-weight:600;
+    letter-spacing:.04em;
+    padding:12px 14px;
+    font-size:10.5px;
+  }
+  body[data-theme="things"] .list-view thead th:hover{color:var(--t1)}
+  body[data-theme="things"] .list-view thead th.sortable .sort-arr{color:var(--accent)}
+  body[data-theme="things"] .list-view tbody tr{border-bottom:1px solid var(--border)}
+  body[data-theme="things"] .list-view tbody tr:hover{background:rgba(0,0,0,.03)}
+  body[data-theme="things"] .list-view tbody tr.selected{
+    background:var(--accent-dim);
+    box-shadow:inset 3px 0 0 var(--accent);
+  }
+  body[data-theme="things"] .list-view tbody tr.done td{color:var(--t3);opacity:.7}
+  body[data-theme="things"] .list-view tbody td{padding:10px 14px;font-size:13px;color:var(--t1)}
+  body[data-theme="things"] .list-view tbody td.numeric{color:var(--t3)}
+  body[data-theme="things"] .list-view tbody td.lv-wbs{color:var(--t4)}
+  body[data-theme="things"] .list-view tbody td.lv-title-cell{font-weight:500;color:var(--t1)}
+  body[data-theme="things"] .list-view tbody td.lv-title-cell .lv-color-dot{
+    border-radius:50%;width:10px;height:10px;margin-right:10px;
+  }
+  body[data-theme="things"] .list-view tbody td.lv-title-cell .lv-rename{
+    background:#f7f8fa;border:1px solid var(--accent);color:var(--t1);border-radius:6px;padding:3px 6px;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-input{
+    background:#f7f8fa;border:1px solid var(--border-s);color:var(--t1);border-radius:6px;padding:4px 6px;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  body[data-theme="things"] .list-view tbody td .lv-inline-seg{
+    background:#f3f4f7;border:1px solid var(--border-s);border-radius:8px;padding:2px;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-seg button{
+    color:var(--t3);border-radius:6px;height:20px;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-seg button:hover{
+    background:rgba(0,0,0,.04);color:var(--t1);
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-seg button.active.p1{
+    background:rgba(255,59,48,.14);color:#d23029;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-seg button.active.p2{
+    background:rgba(245,196,61,.20);color:#a07700;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-inline-seg button.active.p3{
+    background:rgba(0,0,0,.06);color:var(--t1);
+  }
+  body[data-theme="things"] .list-view tbody td .lv-status-pill{
+    background:#f3f4f7;color:var(--t3);
+    border:1px solid var(--border-s);border-radius:99px;
+    padding:2px 10px;font-size:10px;font-weight:600;letter-spacing:.02em;
+    text-transform:none;
+  }
+  body[data-theme="things"] .list-view tbody td .lv-status-pill.done{
+    background:rgba(34,197,94,.14);color:#1a7a3a;border-color:rgba(34,197,94,.28);
+  }
+  body[data-theme="things"] .list-view tbody td .lv-status-pill.overdue{
+    background:rgba(255,59,48,.12);color:#d23029;border-color:rgba(255,59,48,.30);
+  }
+  body[data-theme="things"] .list-view tbody td .lv-status-pill.atrisk{
+    background:rgba(245,196,61,.20);color:#a07700;border-color:rgba(245,196,61,.40);
+  }
+  body[data-theme="things"] .list-view tbody td .lv-status-pill.active{
+    background:#e9ebf0;color:var(--t2);
+  }
+  body[data-theme="things"] .list-view-empty{color:var(--t3)}
+  body[data-theme="things"] .list-view-empty h3{color:var(--t2)}
+
+  /* ─── Calendar view ─── */
+  body[data-theme="things"] .calendar-view{background:#ffffff}
+  body[data-theme="things"] .calendar-view-hdr{
+    background:#fafbfc;
+    border-bottom:1px solid var(--border);
+    height:54px;
+    padding:0 18px;
+  }
+  body[data-theme="things"] .calendar-view-hdr .cv-nav-btn{
+    background:#ffffff;border:1px solid var(--border-s);color:var(--t2);
+    border-radius:8px;width:32px;height:32px;
+  }
+  body[data-theme="things"] .calendar-view-hdr .cv-nav-btn:hover{
+    background:#f3f4f7;color:var(--t1);border-color:var(--border-s);
+  }
+  body[data-theme="things"] .calendar-view-hdr .cv-title{
+    color:var(--t1);font-size:15px;font-weight:600;letter-spacing:-.2px;
+  }
+  body[data-theme="things"] .calendar-view-hdr .cv-today-btn{
+    background:#ffffff;border:1px solid var(--border-s);color:var(--t2);
+    border-radius:8px;height:32px;font-weight:500;
+  }
+  body[data-theme="things"] .calendar-view-hdr .cv-today-btn:hover{
+    background:#f3f4f7;color:var(--t1);border-color:var(--border-s);
+  }
+  body[data-theme="things"] .calendar-view-hdr .cv-meta{color:var(--t4)}
+  body[data-theme="things"] .calendar-dow-row{
+    background:#fafbfc;border-bottom:1px solid var(--border);
+  }
+  body[data-theme="things"] .calendar-dow-row .cv-dow{
+    color:var(--t3);border-right:1px solid var(--border);
+    padding:10px 8px;font-weight:600;
+  }
+  body[data-theme="things"] .calendar-dow-row .cv-dow.weekend{color:var(--t4)}
+  body[data-theme="things"] .calendar-week{
+    border-bottom:1px solid var(--border);min-height:108px;
+  }
+  body[data-theme="things"] .calendar-cell{
+    border-right:1px solid var(--border);
+    background:#ffffff;padding:8px 10px 4px;
+  }
+  body[data-theme="things"] .calendar-cell.weekend{background:#fafbfc}
+  body[data-theme="things"] .calendar-cell.other-month{
+    background:#f7f8fa;opacity:1;
+  }
+  body[data-theme="things"] .calendar-cell.other-month .cv-date-num{
+    color:var(--t4);opacity:.55;
+  }
+  body[data-theme="things"] .calendar-cell.today{
+    background:#ffffff;
+  }
+  body[data-theme="things"] .calendar-cell.today .cv-date-num{
+    color:#ffffff !important;
+    background:var(--accent);
+    width:24px;height:24px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;letter-spacing:0;
+    box-shadow:0 2px 6px rgba(44,123,229,.35);
+    margin-bottom:4px;
+  }
+  body[data-theme="things"] .cv-date-num{
+    color:var(--t2);font:11.5px var(--font);font-weight:500;
+    margin-bottom:6px;letter-spacing:0;
+  }
+  body[data-theme="things"] .calendar-cell.weekend .cv-date-num{color:var(--t3)}
+  body[data-theme="things"] .calendar-cell.holiday::before{
+    background:var(--p1);box-shadow:none;opacity:.85;
+  }
+  body[data-theme="things"] .calendar-strip{
+    height:18px;border-radius:99px;padding:0 9px;
+    color:#1a3a52 !important;
+    font-size:10.5px;font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 1px rgba(0,0,0,.04);
+    text-shadow:none;
+  }
+  body[data-theme="things"] .calendar-strip:hover{
+    filter:brightness(1.03);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 5px rgba(0,0,0,.08);
+  }
+  body[data-theme="things"] .calendar-strip.selected{
+    outline:1.5px solid var(--accent);outline-offset:1px;
+  }
+  body[data-theme="things"] .calendar-strip.done{
+    filter:saturate(.5) brightness(1);opacity:.65;
+  }
+  body[data-theme="things"] .calendar-strip.milestone{
+    background:var(--accent) !important;
+    color:#ffffff !important;
+    font-weight:700;
+  }
+  body[data-theme="things"] .calendar-strip.continues-left{border-top-left-radius:0;border-bottom-left-radius:0}
+  body[data-theme="things"] .calendar-strip.continues-right{border-top-right-radius:0;border-bottom-right-radius:0}
+  body[data-theme="things"] .cv-strip-more{
+    color:var(--t3);font-size:10px;font-weight:500;
+  }
+  body[data-theme="things"] .calendar-empty{color:var(--t3)}
+  body[data-theme="things"] .calendar-empty h3{color:var(--t2)}
+
+  /* Things 3 — List view */
+  body[data-theme="things"] .list-view tbody tr{border-bottom:1px solid var(--border)}
+  body[data-theme="things"] .list-view tbody tr:hover{background:rgba(0,0,0,.03)}
+  body[data-theme="things"] .list-view tbody tr.selected{background:var(--accent-dim);box-shadow:inset 2px 0 0 var(--accent)}
+  body[data-theme="things"] .lv-inline-seg button.active.p1{background:rgba(239,68,68,.12);color:#dc2626}
+  body[data-theme="things"] .lv-inline-seg button.active.p2{background:rgba(245,158,11,.12);color:#d97706}
+  body[data-theme="things"] .lv-inline-seg button.active.p3{background:rgba(113,113,122,.10);color:#52525b}
+  body[data-theme="things"] .lv-status-pill{border-radius:99px}
+  body[data-theme="things"] .lv-status-pill.done{background:rgba(34,197,94,.12);color:#16a34a}
+  body[data-theme="things"] .lv-status-pill.overdue{background:rgba(239,68,68,.12);color:#dc2626}
+  body[data-theme="things"] .lv-status-pill.atrisk{background:rgba(245,158,11,.12);color:#d97706}
+
+  /* Things 3 — Calendar view */
+  body[data-theme="things"] .cv-dow{border-color:var(--border)}
+  body[data-theme="things"] .calendar-cell{border-color:var(--border)}
+  body[data-theme="things"] .calendar-cell.weekend{background:#fafbfc}
+  body[data-theme="things"] .calendar-cell.today .cv-date-num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;margin:-1px 0 3px -1px;line-height:1}
+  body[data-theme="things"] .calendar-strip{background:var(--accent-dim);color:var(--t1);border-radius:99px;text-shadow:none;box-shadow:none}
+  body[data-theme="things"] .calendar-strip.milestone{background:var(--accent);color:#fff}
+
+  /* Things 3 — Welcome screen */
+  body[data-theme="things"] .welcome-overlay{background:#f0f0f0}
+  body[data-theme="things"] .welcome-card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 2px 24px rgba(0,0,0,.07);backdrop-filter:none}
+  body[data-theme="things"] .welcome-logo{background:linear-gradient(135deg,#2c7be5,#1a6ad8);color:#fff;border-radius:12px}
+  body[data-theme="things"] .welcome-btn{background:#fff;border:1px solid var(--border-s);border-radius:10px}
+  body[data-theme="things"] .welcome-btn:hover{background:#f3f4f7;border-color:var(--accent-border)}
+  body[data-theme="things"] .welcome-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  body[data-theme="things"] .welcome-btn.primary:hover{background:#1a6ad8}
+
+  /* Custom modal (prompt / confirm / alert) */
+  .cmod-overlay{position:fixed;inset:0;background:rgba(2,12,10,.75);z-index:1400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);animation:cmod-fade .15s ease}
+  @keyframes cmod-fade{from{opacity:0}to{opacity:1}}
+  @keyframes cmod-slide{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+  .cmod{background:var(--surface);border:1px solid var(--border-s);border-radius:12px;box-shadow:var(--shadow-lg);width:380px;max-width:92vw;font:12px var(--font);color:var(--t1);animation:cmod-slide .18s cubic-bezier(.34,1.2,.64,1)}
+  .cmod-head{padding:22px 22px 0;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .cmod-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .cmod-icon--confirm{background:rgba(245,158,11,.15);color:#f59e0b}
+  .cmod-icon--confirm.cmod-icon--danger{background:rgba(239,68,68,.15);color:var(--p1)}
+  .cmod-icon--alert{background:var(--accent-dim);color:var(--accent-2)}
+  .cmod-icon--prompt{background:rgba(20,184,166,.12);color:var(--accent-2)}
+  .cmod-title{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.2px;line-height:1.3}
+  .cmod-body{padding:10px 22px 0;font-size:12.5px;color:var(--t3);line-height:1.6;text-align:center}
+  .cmod-input{display:block;width:100%;box-sizing:border-box;margin-top:10px;background:var(--bg);border:1px solid var(--border-s);border-radius:6px;color:var(--t1);font:12px var(--font);padding:7px 10px;outline:none;text-align:left}
+  .cmod-input:focus{border-color:var(--accent-2);box-shadow:0 0 0 2px var(--accent-dim)}
+  .cmod-foot{padding:18px 22px 22px;display:flex;justify-content:center;gap:8px}
+  .cmod-btn{font:12px var(--font);padding:0 20px;height:34px;border-radius:6px;cursor:pointer;border:1px solid var(--border-s);background:var(--surface-2);color:var(--t1);transition:background .12s,color .12s}
+  .cmod-btn:hover{background:var(--surface-3);color:var(--t1)}
+  .cmod-btn.primary{background:var(--accent);border-color:var(--accent-2);color:#021412;font-weight:600}
+  .cmod-btn.primary:hover{background:var(--accent-2)}
+  .cmod-btn.primary.danger{background:var(--p1);border-color:var(--p1);color:#fff}
+  .cmod-btn.primary.danger:hover{opacity:.88}
+
 </style>
 </head>
-<body data-bar-style="capsule" data-screen-label="Timeline">
+<body data-theme="things" data-bar-style="things" data-screen-label="Timeline">
+<script>document.body.dataset.theme='things';document.body.dataset.barStyle='things';</script>
 <div id="root"><div class="loading">Loading Timeline…</div></div>
 
 <script>
@@ -715,7 +1517,9 @@
     "showNowCurtain": false,
     "showOwners": true,
     "showConflicts": true,
-    "showMinimap": true
+    "showMinimap": true,
+    "autosaveEnabled": true,
+    "labelPos": "auto"
   };
   window.__TWEAK_DEFAULTS = TWEAK_DEFAULTS;
 </script>
@@ -774,6 +1578,13 @@ const __TWEAKS_STYLE = `
   .twk-btn{appearance:none;height:26px;padding:0 12px;border:1px solid rgba(34,64,58,.8);border-radius:4px;
     background:rgba(8,20,18,.7);color:#e6fffb;font:inherit;font-weight:500;cursor:pointer}
   .twk-btn:hover{background:rgba(20,184,166,.18);border-color:rgba(20,184,166,.5)}
+  .twk-seg{display:flex;border:1px solid rgba(34,64,58,.8);border-radius:4px;overflow:hidden;flex-shrink:0}
+  .twk-seg button{flex:1;height:22px;border:0;border-right:1px solid rgba(34,64,58,.8);
+    background:rgba(8,20,18,.7);color:rgba(230,255,251,.55);font:inherit;font-size:10.5px;
+    cursor:pointer;transition:background .12s,color .12s;padding:0 6px;white-space:nowrap}
+  .twk-seg button:last-child{border-right:0}
+  .twk-seg button[data-on="1"]{background:#14b8a6;color:#fff;font-weight:600}
+  .twk-seg button:hover:not([data-on="1"]){background:rgba(20,184,166,.15);color:#e6fffb}
 `;
 
 const TIMELINE_TWK_KEY = 'timeline-tweaks-v1';
@@ -945,6 +1756,11 @@ function isWeekend(s){ const d=parseYmd(s).getDay(); return d===0||d===6; }
 const todayStr = ymd(TODAY);
 const DOW    = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CLOCK_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function fmtClock(d){
+  const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
+  return `${hh}:${mm} · ${CLOCK_DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
 
 // ── Working calendar helpers ──
 const DEFAULT_CALENDAR = { workingDays: [1,2,3,4,5], holidays: [] };
@@ -1043,26 +1859,59 @@ function genId(prefix){ return (prefix||'p') + Date.now().toString(36) + Math.ra
 
 function newProject(name){
   const palette = ['#7c3aed','#14b8a6','#f472b6','#a5b4fc','#fcd34d','#86efac','#f59e0b','#5eead4'];
-  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [], owners: [], calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade' };
+  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [], owners: [], calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade', tagRegistry: [], savedViews: [] };
 }
 
 function sampleWorkspace(){
+  // Per-resource availability (Phase A5) — owners now carry calendar/pto/allocationPct.
+  // `calendar:null` means inherit the project calendar; override per-owner as needed.
   const owners = [
-    { name: 'Alex',   hourlyRate: 110, color: '#a5b4fc' },
-    { name: 'Sam',    hourlyRate: 95,  color: '#fcd34d' },
-    { name: 'Jordan', hourlyRate: 85,  color: '#86efac' },
-    { name: 'Chris',  hourlyRate: 120, color: '#f472b6' },
+    { name: 'Alex',   hourlyRate: 110, color: '#a5b4fc', calendar: null, pto: [], allocationPct: 100 },
+    { name: 'Sam',    hourlyRate: 95,  color: '#fcd34d', calendar: null, pto: [], allocationPct: 100 },
+    { name: 'Jordan', hourlyRate: 85,  color: '#86efac', calendar: null, pto: [], allocationPct: 100 },
+    { name: 'Chris',  hourlyRate: 120, color: '#f472b6', calendar: null, pto: [], allocationPct: 100 },
   ];
-  // Convert demo task deps to v3 shape (already FS, lag 0) so the sample mirrors current saved format.
-  const demoTasks = DEMO_TASKS.map(t => ({
-    ...t,
-    deps: (t.deps || []).map(d => typeof d === 'string' ? {id:d, type:'FS', lag:0} : d),
-  }));
-  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: demoTasks, owners, calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade' };
-  return { version: 3, projects: [p], activeProjectId: p.id };
+  // Convert demo task deps to v3 shape and add v4 fields (status/tags/comments).
+  const demoTasks = DEMO_TASKS.map(t => {
+    const status = t.done ? 'done' : 'todo';
+    return {
+      ...t,
+      status,
+      done: status === 'done',
+      tags: [],
+      comments: [],
+      deps: (t.deps || []).map(d => typeof d === 'string' ? {id:d, type:'FS', lag:0} : d),
+    };
+  });
+  const p = { id: genId('proj-'), name: 'Sample workspace', color: '#14b8a6', created: todayStr, baseline: null, tasks: demoTasks, owners, calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade', tagRegistry: [] };
+  return { version: CURRENT_VERSION, projects: [p], activeProjectId: p.id };
 }
 
-const CURRENT_VERSION = 3;
+// ── Status enum (Phase A2) ──
+// Single source of truth for task status. `done` boolean is kept as a
+// derived/synced field for back-compat with existing renderers — see syncDoneFromStatus
+// and syncStatusFromDone helpers below.
+const STATUSES = ['backlog', 'todo', 'inprogress', 'review', 'done', 'blocked', 'onhold'];
+const STATUS_META = {
+  backlog:    { label: 'Backlog',     color: '#64748b' },
+  todo:       { label: 'To do',       color: '#94a3b8' },
+  inprogress: { label: 'In progress', color: '#a5b4fc' },
+  review:     { label: 'In review',   color: '#fcd34d' },
+  done:       { label: 'Done',        color: '#86efac' },
+  blocked:    { label: 'Blocked',     color: '#ef4444' },
+  onhold:     { label: 'On hold',     color: '#cbd5e1' },
+};
+function normalizeStatus(s, doneFallback){
+  if (typeof s === 'string' && STATUSES.includes(s)) return s;
+  return doneFallback ? 'done' : 'todo';
+}
+function syncDoneFromStatus(t){
+  // Mutates and returns t with done aligned to status.
+  t.done = t.status === 'done';
+  return t;
+}
+
+const CURRENT_VERSION = 4;
 const MIGRATIONS = [
   { from: 1, to: 2, migrate(data){
     data.projects = (data.projects || []).map(p => ({...p, owners: p.owners || []}));
@@ -1088,6 +1937,38 @@ const MIGRATIONS = [
       }),
     }));
     data.version = 3;
+    return data;
+  } },
+  // v3 → v4 (Phase A): adds status enum, tags, comments, project tagRegistry,
+  // per-resource availability calendar (workingDays / holidays / PTO / allocationPct).
+  // All new fields default to back-compat-safe values so old workspaces load identically.
+  { from: 3, to: 4, migrate(data){
+    data.projects = (data.projects || []).map(p => ({
+      ...p,
+      tagRegistry: Array.isArray(p.tagRegistry) ? p.tagRegistry : [],
+      owners: (p.owners || []).map(o => ({
+        ...o,
+        // null calendar => owner falls back to project calendar.
+        calendar: o.calendar || null,
+        // [{start,end,note}] for PTO blocks (working-day skips).
+        pto: Array.isArray(o.pto) ? o.pto : [],
+        // 100 = full availability; <100 lets the scheduler stretch durations later.
+        allocationPct: typeof o.allocationPct === 'number' ? o.allocationPct : 100,
+      })),
+      tasks: (p.tasks || []).map(t => {
+        const status = normalizeStatus(t.status, t.done);
+        const next = {
+          ...t,
+          status,
+          // Keep `done` synced so existing renderers (30+ sites) keep working.
+          done: status === 'done',
+          tags: Array.isArray(t.tags) ? t.tags : [],
+          comments: Array.isArray(t.comments) ? t.comments : [],
+        };
+        return next;
+      }),
+    }));
+    data.version = 4;
     return data;
   } },
 ];
@@ -1133,16 +2014,39 @@ function parseWorkspace(json){
       name: p.name || 'Untitled',
       color: p.color || '#7c3aed',
       created: p.created || todayStr,
-      tasks: Array.isArray(p.tasks) ? p.tasks : [],
+      // Defensive normalization of Phase A fields — keeps invariants even if a file
+      // came in pre-migrated or hand-edited.
+      tasks: (Array.isArray(p.tasks) ? p.tasks : []).map(t => {
+        const status = normalizeStatus(t.status, t.done);
+        return {
+          ...t,
+          status,
+          done: status === 'done',
+          tags: Array.isArray(t.tags) ? t.tags : [],
+          comments: Array.isArray(t.comments) ? t.comments : [],
+        };
+      }),
       baseline: p.baseline ? new Map(Object.entries(p.baseline)) : null,
-      owners: Array.isArray(p.owners) ? p.owners : [],
+      owners: (Array.isArray(p.owners) ? p.owners : []).map(o => ({
+        ...o,
+        calendar: o.calendar || null,
+        pto: Array.isArray(o.pto) ? o.pto : [],
+        allocationPct: typeof o.allocationPct === 'number' ? o.allocationPct : 100,
+      })),
       calendar: p.calendar || {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]},
       autoSchedule: p.autoSchedule || 'cascade',
+      tagRegistry: Array.isArray(p.tagRegistry) ? p.tagRegistry : [],
+      // Phase B2: saved views are additive — no migration step, just defensive default.
+      savedViews: Array.isArray(p.savedViews) ? p.savedViews : [],
     }))
   };
 }
 
 // ── Row building ──
+// Per-depth indent in the left-pane task list. Used both by the row renderer
+// (padding-left = 22 + depth*INDENT_PX) and the drag-to-indent math.
+const INDENT_PX = 16;
+
 function buildRows(tasks, collapsed, groupBy){
   return groupBy === 'owner'
     ? buildRowsByOwner(tasks, collapsed)
@@ -1157,12 +2061,22 @@ function buildRowsByProject(tasks, collapsed){
     if (!byParent.has(k)) byParent.set(k,[]);
     byParent.get(k).push(t);
   }
+  // Phase A1 — recursive walk so arbitrarily deep subtask trees render.
+  // Each level increments depth; collapse at any level hides that subtree.
+  const walk = (parentId, depth) => {
+    const kids = byParent.get(parentId) || [];
+    for (const k of kids){
+      // Flag rows whose own children are present so renderers can show a
+      // summary marker / disclosure later. `isSummary` is derived, never stored.
+      const isSummary = (byParent.get(k.id) || []).length > 0;
+      out.push({...k, depth, isSummary});
+      if (isSummary && !collapsed.has(k.id)) walk(k.id, depth + 1);
+    }
+  };
   const projects = (byParent.get('__root')||[]).filter(t=>t.kind==='project');
   for (const p of projects){
     out.push({...p, depth:0, isProject:true});
-    if (!collapsed.has(p.id)){
-      for (const k of (byParent.get(p.id)||[])) out.push({...k, depth:1});
-    }
+    if (!collapsed.has(p.id)) walk(p.id, 1);
   }
   // Orphans (tasks without a project parent) — show under "Loose tasks"
   const orphans = (byParent.get('__root')||[]).filter(t=>t.kind!=='project');
@@ -1172,7 +2086,11 @@ function buildRowsByProject(tasks, collapsed){
     const le = orphans.reduce((m,t)=>t.end>m?t.end:m,   orphans[0].end);
     out.push({id:lid, title:'Loose tasks', isProject:true, depth:0, kind:'project', start:ls, end:le, project:'WORK'});
     if (!collapsed.has(lid)){
-      for (const t of orphans) out.push({...t, depth:1});
+      for (const t of orphans){
+        const isSummary = (byParent.get(t.id) || []).length > 0;
+        out.push({...t, depth:1, isSummary});
+        if (isSummary && !collapsed.has(t.id)) walk(t.id, 2);
+      }
     }
   }
   return out;
@@ -1200,6 +2118,90 @@ function buildRowsByOwner(tasks, collapsed){
     }
   }
   return out;
+}
+
+// ── Subtask helpers (Phase A1) ──
+// All derived — no stored summary flag. A task is a "summary" iff some other
+// task names it as parent. Roll-ups aggregate descendant leaves so renderers and
+// inspectors can show summary start/end/progress/cost without mutating data.
+function taskChildren(tasks, parentId){
+  const out = [];
+  for (const t of tasks) if (t.parent === parentId) out.push(t);
+  return out;
+}
+function taskHasChildren(tasks, parentId){
+  for (const t of tasks) if (t.parent === parentId) return true;
+  return false;
+}
+function taskDescendants(tasks, rootId){
+  const byParent = new Map();
+  for (const t of tasks){
+    const k = t.parent || '__root';
+    if (!byParent.has(k)) byParent.set(k, []);
+    byParent.get(k).push(t);
+  }
+  const out = [];
+  const walk = (id) => {
+    const kids = byParent.get(id) || [];
+    for (const k of kids){ out.push(k); walk(k.id); }
+  };
+  walk(rootId);
+  return out;
+}
+// Compute roll-ups for every task that has descendants. Returns Map<id, {start,end,progress}>.
+// Leaves are not included. Caller decides whether to display rolled-up or stored values.
+function computeSubtaskRollup(tasks){
+  const byParent = new Map();
+  for (const t of tasks){
+    const k = t.parent || '__root';
+    if (!byParent.has(k)) byParent.set(k, []);
+    byParent.get(k).push(t);
+  }
+  const out = new Map();
+  const visit = (id) => {
+    const kids = byParent.get(id) || [];
+    if (!kids.length) return null; // leaf
+    let minS = null, maxE = null, wSum = 0, wDur = 0;
+    for (const k of kids){
+      // Recurse first so deep summaries roll all the way up.
+      const child = visit(k.id);
+      const s = child ? child.start : k.start;
+      const e = child ? child.end   : k.end;
+      const p = child ? child.progress : (typeof k.progress === 'number' ? k.progress : 0);
+      if (minS === null || s < minS) minS = s;
+      if (maxE === null || e > maxE) maxE = e;
+      // Duration-weighted progress so a 10-day child counts 10× a 1-day child.
+      const dur = Math.max(1, diffDays(s, e) + 1);
+      wDur += dur; wSum += p * dur;
+    }
+    const roll = { start: minS, end: maxE, progress: wDur > 0 ? wSum / wDur : 0 };
+    out.set(id, roll);
+    return roll;
+  };
+  for (const t of tasks) visit(t.id);
+  return out;
+}
+
+// ── Per-resource availability helpers (Phase A5) ──
+// Resolve the effective working calendar for an owner: if owner.calendar is null,
+// fall back to the project's calendar. PTO blocks act as extra holidays.
+function getEffectiveCalendarForOwner(owner, projectCalendar){
+  const base = (owner && owner.calendar) || projectCalendar || DEFAULT_CALENDAR;
+  if (!owner || !Array.isArray(owner.pto) || owner.pto.length === 0){
+    // No PTO — just return the base calendar.
+    return base;
+  }
+  // Expand PTO ranges into per-day holidays merged with base.holidays.
+  const extraHolidays = new Set(Array.isArray(base.holidays) ? base.holidays : []);
+  for (const block of owner.pto){
+    if (!block || !block.start || !block.end) continue;
+    let cur = block.start;
+    while (cur <= block.end){
+      extraHolidays.add(cur);
+      cur = addDays(cur, 1);
+    }
+  }
+  return { ...base, holidays: Array.from(extraHolidays) };
 }
 
 // ── Dep helpers (v3 shape: [{id, type, lag}]) ──
@@ -1803,6 +2805,9 @@ Object.assign(window,{
   buildArrowPath,shade,
   genId, newProject, sampleWorkspace, serializeWorkspace, parseWorkspace,
   CURRENT_VERSION, MIGRATIONS, migrateWorkspace,
+  STATUSES, STATUS_META, normalizeStatus, syncDoneFromStatus,
+  taskChildren, taskHasChildren, taskDescendants, computeSubtaskRollup,
+  getEffectiveCalendarForOwner,
   computeWbsMap, computeTaskCost, computeCostRollup, formatCost,
   addMonths, expandRecurring,
   loadTemplates, saveTemplates, sanitizeForTemplate, instantiateTemplate,
@@ -1922,6 +2927,17 @@ function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject }){
         <TweakToggle label="Minimap strip"          value={tw.showMinimap!==false}    onChange={v=>setTweak('showMinimap',v)}/>
         <TweakToggle label="Owner badges"           value={tw.showOwners!==false}     onChange={v=>setTweak('showOwners',v)}/>
         <TweakToggle label="Conflict highlights"    value={tw.showConflicts!==false}  onChange={v=>setTweak('showConflicts',v)}/>
+        <div className="twk-row twk-row-h">
+          <div className="twk-lbl"><span>Label position</span></div>
+          <div className="twk-seg">
+            {[['auto','Auto'],['inside','Inside'],['outside','Next to'],['both','Both']].map(([v,l])=>(
+              <button key={v} type="button" data-on={(tw.labelPos||'auto')===v?'1':'0'}
+                onClick={()=>setTweak('labelPos',v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <TweakToggle label="Clock"                  value={tw.showClock!==false}      onChange={v=>setTweak('showClock',v)}/>
+        <TweakToggle label="Today-line tracks time" value={tw.todayLineLive!==false}  onChange={v=>setTweak('todayLineLive',v)}/>
       </TweakSection>
       <TweakSection title="Grid">
         <TweakToggle label="Weekend shading"   value={tw.showWeekends!==false}  onChange={v=>setTweak('showWeekends',v)}/>
@@ -2551,6 +3567,11 @@ const {
   addMonths, expandRecurring,
   loadTemplates, saveTemplates, sanitizeForTemplate, instantiateTemplate,
   SearchFilterBar, ListView, CalendarView, classifyStatus,
+  // Phase A exports — surfaced into block 5 so future UI (palette commands,
+  // saved views, inspector additions, list/calendar group-by) can read them.
+  STATUSES, STATUS_META, normalizeStatus,
+  taskChildren, taskHasChildren, taskDescendants, computeSubtaskRollup,
+  getEffectiveCalendarForOwner,
 } = window;
 
 const DEP_TYPES = ['FS','SS','FF','SF'];
@@ -2672,6 +3693,116 @@ function HelpModal({ onClose, fsaAvailable }){
   );
 }
 
+// ── Phase B1: Command palette ──
+// Generic palette over an action registry. Each command: {id,label,group,shortcut?,keywords?,run}.
+// Filters by case-insensitive substring against label + group + keywords. Arrow keys / Enter / Esc.
+// Mouse + keyboard share the active index so hover and arrow nav agree.
+function CommandPalette({ commands, onClose }){
+  const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+  useEffect(()=>{ inputRef.current?.focus(); }, []);
+
+  const filtered = useMemo(()=>{
+    const q = query.trim().toLowerCase();
+    if (!q) return commands;
+    return commands.filter(c => {
+      const hay = `${c.label} ${c.group||''} ${(c.keywords||[]).join(' ')}`.toLowerCase();
+      // Split query so "save proj" matches "Save project as".
+      return q.split(/\s+/).every(term => hay.includes(term));
+    });
+  }, [commands, query]);
+
+  // Clamp active when filter shrinks the list.
+  useEffect(()=>{ setActive(a => Math.min(a, Math.max(0, filtered.length - 1))); }, [filtered.length]);
+  useEffect(()=>{
+    const el = listRef.current?.querySelector(`[data-idx="${active}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest' });
+  }, [active]);
+
+  const run = useCallback((cmd)=>{
+    if (!cmd) return;
+    onClose();
+    // Defer so the palette unmounts before the action fires (avoids focus jitter).
+    setTimeout(() => { try { cmd.run(); } catch(e){ console.error('Command failed:', cmd.id, e); } }, 0);
+  }, [onClose]);
+
+  const onKey = useCallback((e) => {
+    if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(a => Math.min(a + 1, filtered.length - 1)); return; }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); setActive(a => Math.max(a - 1, 0)); return; }
+    if (e.key === 'Enter')     { e.preventDefault(); run(filtered[active]); return; }
+  }, [filtered, active, run, onClose]);
+
+  // Group rows by group while preserving filter order.
+  const rows = useMemo(()=>{
+    const out = [];
+    let lastGroup = null;
+    filtered.forEach((c, i) => {
+      if (c.group && c.group !== lastGroup){ out.push({type:'group', label:c.group}); lastGroup = c.group; }
+      else if (!c.group && lastGroup !== ''){ lastGroup = ''; }
+      out.push({type:'item', cmd:c, idx:i});
+    });
+    return out;
+  }, [filtered]);
+
+  return (
+    <div className="palette-overlay" onMouseDown={onClose}>
+      <div className="palette" onMouseDown={e=>e.stopPropagation()}>
+        <div className="p-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input ref={inputRef} className="p-input" placeholder="Type a command…" value={query}
+            onChange={e=>setQuery(e.target.value)} onKeyDown={onKey}/>
+          <span className="p-input-hint">{filtered.length}</span>
+        </div>
+        <div className="p-list" ref={listRef} role="listbox">
+          {filtered.length === 0 ? (
+            <div className="p-empty">No commands match "{query}"</div>
+          ) : rows.map((r, i) => r.type === 'group' ? (
+            <div key={'g'+i} className="p-group-title">{r.label}</div>
+          ) : (
+            <div key={r.cmd.id} className={`p-item${r.idx===active?' active':''}`} data-idx={r.idx}
+              role="option" aria-selected={r.idx===active}
+              onMouseEnter={()=>setActive(r.idx)} onClick={()=>run(r.cmd)}>
+              <span className="p-label">{r.cmd.label}</span>
+              {r.cmd.shortcut && <span className="p-shortcut">{r.cmd.shortcut}</span>}
+            </div>
+          ))}
+        </div>
+        <div className="p-foot">
+          <span><span className="p-key">↑↓</span>navigate</span>
+          <span><span className="p-key">↵</span>run</span>
+          <span><span className="p-key">Esc</span>close</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── IndexedDB helpers for persisting FileSystemFileHandle across sessions ──
+const IDB_DB = 'timeline-files', IDB_STORE = 'handles';
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(IDB_DB, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = () => res(req.result);
+    req.onerror   = () => rej(req.error);
+  });
+}
+async function idbPut(id, val) {
+  const db = await idbOpen();
+  return new Promise((r,j) => { const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(val,id); tx.oncomplete=r; tx.onerror=()=>j(tx.error); });
+}
+async function idbGet(id) {
+  const db = await idbOpen();
+  return new Promise((r,j) => { const tx=db.transaction(IDB_STORE,'readonly'); const rq=tx.objectStore(IDB_STORE).get(id); rq.onsuccess=()=>r(rq.result); rq.onerror=()=>j(rq.error); });
+}
+async function idbDel(id) {
+  const db = await idbOpen();
+  return new Promise((r,j) => { const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).delete(id); tx.oncomplete=r; tx.onerror=()=>j(tx.error); });
+}
+
 function App(){
   const tweakRes = window.useTweaks ? window.useTweaks(window.__TWEAK_DEFAULTS) : [window.__TWEAK_DEFAULTS,()=>{}];
   const tw = tweakRes[0], setTweak = tweakRes[1];
@@ -2716,6 +3847,18 @@ function App(){
     const id = setTimeout(() => setDebouncedQ(filter.q), 150);
     return () => clearTimeout(id);
   }, [filter.q]);
+
+  // Live clock + today-line tick — fires at each minute boundary
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const align = 60000 - (Date.now() % 60000);
+    let interval;
+    const timeout = setTimeout(() => {
+      setNow(new Date());
+      interval = setInterval(() => setNow(new Date()), 60000);
+    }, align);
+    return () => { clearTimeout(timeout); if (interval) clearInterval(interval); };
+  }, []);
   // View mode persisted in tweaks
   const viewMode = tw.viewMode === 'list' || tw.viewMode === 'calendar' ? tw.viewMode : 'gantt';
   const setViewMode = useCallback((mode) => { setTweak('viewMode', mode); }, [setTweak]);
@@ -2724,12 +3867,65 @@ function App(){
   const [recurEditor, setRecurEditor] = useState(null);
   // ── Batch 5: keyboard help overlay
   const [helpOpen, setHelpOpen] = useState(false);
+  // ── Phase B1: command palette (Cmd/Ctrl+K)
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  // ── Phase B2: saved views dropdown open/closed
+  const [viewsMenuOpen, setViewsMenuOpen] = useState(false);
   // ── Templates ──
   const [templates,   setTemplates]   = useState(() => loadTemplates());
   // ── Template modal: 'pick' | 'manage' | {kind:'instantiate', template} | null
   const [tmplModal,   setTmplModal]   = useState(null);
   // ── File menu Templates submenu
   const [fileTmplSubOpen, setFileTmplSubOpen] = useState(false);
+  const [fileRecentSubOpen, setFileRecentSubOpen] = useState(false);
+
+  // ── Recent files ──
+  const RECENTS_KEY = 'timeline-recents-v1';
+  const RECENTS_MAX = 8;
+  const [recents, setRecents] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(RECENTS_KEY)) || []; } catch(_) { return []; }
+  });
+  const persistRecents = useCallback((next) => {
+    setRecents(next);
+    try { localStorage.setItem(RECENTS_KEY, JSON.stringify(next)); } catch(_) {}
+  }, []);
+  const pushRecent = useCallback(async (name, handle) => {
+    const id = crypto.randomUUID();
+    const entry = { id, name, savedAt: Date.now(), hasHandle: !!handle };
+    const prev = recents.filter(e => e.name !== name);
+    const next = [entry, ...prev].slice(0, RECENTS_MAX);
+    // Drop IDB handles for evicted entries
+    const evicted = prev.slice(RECENTS_MAX - 1);
+    for (const ev of evicted) { if (ev.hasHandle) idbDel(ev.id); }
+    if (handle) { try { await idbPut(id, handle); } catch(_) {} }
+    persistRecents(next);
+  }, [recents, persistRecents]);
+  const removeRecent = useCallback(async (id) => {
+    const entry = recents.find(e => e.id === id);
+    if (entry && entry.hasHandle) { try { await idbDel(id); } catch(_) {} }
+    persistRecents(recents.filter(e => e.id !== id));
+  }, [recents, persistRecents]);
+
+  const [modal, setModal] = useState(null); // {type,title,body,defaultValue,destructive,okLabel,cancelLabel}
+  const modalResolverRef = useRef(null);
+  const modalInputRef = useRef(null);
+
+  const closeModal = useCallback((value) => {
+    if(modalResolverRef.current){ modalResolverRef.current(value); modalResolverRef.current=null; }
+    setModal(null);
+  },[]);
+  const customPrompt = useCallback((title, defaultValue='', body='') => new Promise(resolve=>{
+    modalResolverRef.current=resolve;
+    setModal({type:'prompt',title,body,defaultValue,okLabel:'OK',cancelLabel:'Cancel'});
+  }),[]);
+  const customConfirm = useCallback((title, body='', {destructive=false,okLabel='OK',cancelLabel='Cancel'}={}) => new Promise(resolve=>{
+    modalResolverRef.current=resolve;
+    setModal({type:'confirm',title,body,destructive,okLabel,cancelLabel});
+  }),[]);
+  const customAlert = useCallback((title, body='') => new Promise(resolve=>{
+    modalResolverRef.current=resolve;
+    setModal({type:'alert',title,body,okLabel:'OK'});
+  }),[]);
 
   const refreshTemplates = useCallback(() => {
     setTemplates(loadTemplates());
@@ -2770,6 +3966,7 @@ function App(){
   const showOwners     = tw.showOwners     !== false;
   const showConflicts  = tw.showConflicts  !== false;
   const showMinimap    = tw.showMinimap    !== false;
+  const labelPos       = tw.labelPos      || 'auto';
 
   // ── CSS vars ──
   useLayoutEffect(()=>{
@@ -2830,6 +4027,295 @@ function App(){
     commitMutation('edit tasks', ps => ps.map(p => p.id === activeProjectId ? {...p, tasks: fn(p.tasks)} : p));
   }, [activeProjectId, commitMutation]);
 
+  // ── Drag-and-drop reorder (SortableJS) ──
+  // Mutates the cross-project flat tasks array so reordering a task affects
+  // only the items visible in the current project lane. Reparenting via
+  // horizontal drag (or Tab/Shift+Tab) updates the dropped task's `parent`.
+  const tasksRef = useRef(null); tasksRef.current = tasks;
+  const projectIdRef = useRef(null); projectIdRef.current = activeProjectId;
+
+  const isDescendantOf = useCallback((ts, candidateAncestorId, taskId) => {
+    // True if taskId is `candidateAncestorId` itself or a descendant.
+    if (taskId === candidateAncestorId) return true;
+    const byParent = new Map();
+    for (const t of ts){ const k = t.parent || '__root'; if (!byParent.has(k)) byParent.set(k,[]); byParent.get(k).push(t); }
+    const stack = [candidateAncestorId];
+    while (stack.length){
+      const id = stack.pop();
+      if (id === taskId) return true;
+      for (const c of (byParent.get(id) || [])) stack.push(c.id);
+    }
+    return false;
+  }, []);
+
+  const handleDragStart = useCallback((evt) => {
+    const id = evt.item.dataset.taskId;
+    const depth = parseInt(evt.item.dataset.depth, 10) || 1;
+    const startX = (evt.originalEvent && evt.originalEvent.clientX) || 0;
+    // Floating tooltip near cursor — tells the user where this row will land
+    const tip = document.createElement('div');
+    tip.className = 'drag-tooltip';
+    tip.textContent = '';
+    document.body.appendChild(tip);
+    dragStateRef.current = {
+      taskId: id, startX, startDepth: depth, currentDepth: depth, currentDepthDelta: 0,
+      tooltipEl: tip, newParent: null, blocked: false,
+    };
+  }, []);
+
+  const handleDragMove = useCallback((evt, originalEvent) => {
+    const st = dragStateRef.current;
+    if (!st) return true;
+    const clientX = (originalEvent && originalEvent.clientX) || 0;
+    const clientY = (originalEvent && originalEvent.clientY) || 0;
+    // Asymmetric thresholds: outdent is more sensitive than indent so it's easy
+    // to escape a deep nest. Indent at 16px/level, outdent at 10px/level.
+    const dx = clientX - st.startX;
+    const OUTDENT_PX = 10;
+    const rawDelta = dx >= 0
+      ? Math.round(dx / INDENT_PX)
+      : Math.round(dx / OUTDENT_PX);
+    // Snap-to-root when cursor drifts off the left edge of the lpane
+    const lpane = lpaneBodyRef.current;
+    const lpaneRect = lpane ? lpane.getBoundingClientRect() : null;
+    const snapToRoot = lpaneRect && clientX < lpaneRect.left + 8;
+    // Compute preceding-row depth + task for max bound and tooltip
+    const dragged = evt.dragged || evt.item;
+    let prev = dragged && dragged.previousElementSibling;
+    let maxDepth = 1;
+    let prevKind = null; // 'task' | 'project' | 'owner' | null
+    let prevTaskId = null;
+    let prevDepth = 0;
+    let prevProjectId = null;
+    while (prev){
+      if (prev.classList && prev.classList.contains('task-row') && prev.classList.contains('is-child')){
+        prevKind = 'task';
+        prevTaskId = prev.dataset.taskId;
+        prevDepth = parseInt(prev.dataset.depth, 10) || 1;
+        maxDepth = prevDepth + 1;
+        break;
+      }
+      if (prev.classList && prev.classList.contains('group-row')){
+        prevKind = 'project';
+        prevProjectId = prev.getAttribute('data-pid');
+        maxDepth = 1;
+        break;
+      }
+      if (prev.classList && prev.classList.contains('owner-group-row')){
+        prevKind = 'owner';
+        maxDepth = 1;
+        break;
+      }
+      prev = prev.previousElementSibling;
+    }
+    let target;
+    if (snapToRoot){
+      target = 1;
+    } else {
+      target = Math.max(1, Math.min(maxDepth, st.startDepth + rawDelta));
+    }
+    st.currentDepth = target;
+    st.currentDepthDelta = target - st.startDepth;
+    // Live visual
+    if (dragged){
+      dragged.style.setProperty('--drag-pad', (22 + target * INDENT_PX) + 'px');
+      dragged.classList.add('drag-indent-preview');
+    }
+    // Resolve preview parent + tooltip text
+    let parentText = '';
+    let blocked = false;
+    let resolvedParent = null;
+    const ts = tasksRef.current || [];
+    if (prevKind === 'owner'){
+      blocked = true;
+      parentText = 'Cannot drop in owner-group view';
+    } else if (prevKind === 'project'){
+      const projTask = ts.find(t => t.kind === 'project' && t.project === prevProjectId);
+      resolvedParent = projTask ? projTask.id : null;
+      parentText = '→ Top of ' + (projTask ? projTask.title : (prevProjectId || 'project'));
+    } else if (prevKind === 'task'){
+      const prevTask = ts.find(t => t.id === prevTaskId);
+      if (target > prevDepth){
+        resolvedParent = prevTaskId;
+        parentText = '→ Child of ' + (prevTask ? prevTask.title : prevTaskId);
+      } else if (target === prevDepth){
+        resolvedParent = prevTask ? (prevTask.parent || null) : null;
+        parentText = '→ After ' + (prevTask ? prevTask.title : prevTaskId);
+      } else {
+        // walk up to find ancestor at target depth
+        let cursor = prev.previousElementSibling;
+        let ancestor = null;
+        while (cursor){
+          if (cursor.classList && cursor.classList.contains('task-row') && cursor.classList.contains('is-child')){
+            const d = parseInt(cursor.dataset.depth, 10) || 1;
+            if (d === target){ ancestor = ts.find(x => x.id === cursor.dataset.taskId); break; }
+            if (d < target){ ancestor = ts.find(x => x.id === cursor.dataset.taskId); break; }
+          }
+          if (cursor.classList && cursor.classList.contains('group-row')){
+            const pid = cursor.getAttribute('data-pid');
+            const pTask = ts.find(t => t.kind === 'project' && t.project === pid);
+            if (pTask){ resolvedParent = pTask.id; parentText = '→ Top of ' + pTask.title; }
+            break;
+          }
+          cursor = cursor.previousElementSibling;
+        }
+        if (ancestor){
+          resolvedParent = ancestor.parent || null;
+          const pp = resolvedParent ? ts.find(x => x.id === resolvedParent) : null;
+          if (pp && pp.kind !== 'project') parentText = '→ Child of ' + pp.title;
+          else if (pp && pp.kind === 'project') parentText = '→ Top of ' + pp.title;
+          else parentText = '→ Root level';
+        }
+      }
+    }
+    // Loop guard preview
+    if (resolvedParent && isDescendantOf(ts, st.taskId, resolvedParent)){
+      blocked = true;
+      parentText = 'Loop blocked — drop here would create a cycle';
+    }
+    st.newParent = resolvedParent;
+    st.blocked = blocked;
+    // Update tooltip
+    const tip = st.tooltipEl;
+    if (tip){
+      tip.textContent = parentText;
+      tip.classList.toggle('is-blocked', blocked);
+      tip.style.transform = 'translate(' + (clientX + 14) + 'px, ' + (clientY + 14) + 'px)';
+    }
+    return true;
+  }, [isDescendantOf]);
+
+  const handleDragEnd = useCallback((evt) => {
+    const st = dragStateRef.current;
+    dragStateRef.current = null;
+    const dragged = evt.item;
+    if (dragged){ dragged.classList.remove('drag-indent-preview'); dragged.style.removeProperty('--drag-pad'); }
+    if (st && st.tooltipEl){ try { st.tooltipEl.remove(); } catch(e){} }
+    if (!st) return;
+    if (st.blocked) return; // owner-group abort or loop guard
+    const draggedId = st.taskId;
+    const container = lpaneBodyRef.current;
+    if (!container) return;
+
+    // Resolve new parent from preceding sibling + target depth
+    const targetDepth = st.currentDepth;
+    let prev = dragged.previousElementSibling;
+    let newParent = null;
+    while (prev){
+      if (prev.classList && prev.classList.contains('group-row')){
+        // Project header — root of that project (or null for __loose)
+        const pid = prev.getAttribute('data-pid');
+        newParent = (prev.getAttribute('key') === '__loose') ? null : null;
+        // Project header rows have key=projectId via React; data-pid is the project field
+        // We need the actual parent task-id = the project task's id. Find it via the
+        // preceding sibling's task-id, but headers don't have one. So instead look up
+        // the project task whose `project` field matches `data-pid` and kind==='project'.
+        const projTask = tasksRef.current.find(t => t.kind === 'project' && t.project === pid);
+        newParent = projTask ? projTask.id : null;
+        break;
+      }
+      if (prev.classList && prev.classList.contains('owner-group-row')){
+        // Owner group — can't reparent into an owner; abort
+        newParent = undefined; break;
+      }
+      if (prev.classList && prev.classList.contains('task-row') && prev.classList.contains('is-child')){
+        const prevId = prev.dataset.taskId;
+        const prevDepth = parseInt(prev.dataset.depth, 10) || 1;
+        if (targetDepth > prevDepth){
+          newParent = prevId; // becomes child of prev
+        } else if (targetDepth === prevDepth){
+          // Sibling of prev — same parent as prev
+          const prevTask = tasksRef.current.find(t => t.id === prevId);
+          newParent = prevTask ? (prevTask.parent || null) : null;
+        } else {
+          // targetDepth < prevDepth — walk up looking for ancestor at depth targetDepth-1
+          let cursor = prev.previousElementSibling;
+          let found = false;
+          while (cursor){
+            if (cursor.classList && cursor.classList.contains('task-row') && cursor.classList.contains('is-child')){
+              const d = parseInt(cursor.dataset.depth, 10) || 1;
+              if (d === targetDepth){
+                const cursorTask = tasksRef.current.find(t => t.id === cursor.dataset.taskId);
+                newParent = cursorTask ? (cursorTask.parent || null) : null;
+                found = true; break;
+              }
+              if (d < targetDepth){
+                // We've gone up past the desired depth — sibling of cursor
+                const cursorTask = tasksRef.current.find(t => t.id === cursor.dataset.taskId);
+                newParent = cursorTask ? cursorTask.id : null;
+                found = true; break;
+              }
+            }
+            if (cursor.classList && cursor.classList.contains('group-row')){
+              const pid = cursor.getAttribute('data-pid');
+              const projTask = tasksRef.current.find(t => t.kind === 'project' && t.project === pid);
+              newParent = projTask ? projTask.id : null;
+              found = true; break;
+            }
+            cursor = cursor.previousElementSibling;
+          }
+          if (!found) newParent = null;
+        }
+        break;
+      }
+      prev = prev.previousElementSibling;
+    }
+    if (newParent === undefined) return; // owner-group abort
+
+    // Loop guard
+    if (newParent && isDescendantOf(tasksRef.current, draggedId, newParent)){
+      return;
+    }
+
+    // Read new flat order of visible draggable task-rows in this container
+    const rowEls = Array.from(container.querySelectorAll('.task-row.is-child[data-task-id]'));
+    const newVisibleOrder = rowEls.map(el => el.dataset.taskId);
+
+    updateTasks(ts => {
+      const visibleSet = new Set(newVisibleOrder);
+      // Update parent on the dragged task
+      const next = ts.map(t => t.id === draggedId ? {...t, parent: newParent} : t);
+      // Reorder: walk through `next` left-to-right and rebuild by replacing
+      // each visible-task slot with the next id from newVisibleOrder.
+      const newOrder = [...newVisibleOrder];
+      const result = [];
+      for (const t of next){
+        if (visibleSet.has(t.id)){
+          const nextId = newOrder.shift();
+          const nextTask = next.find(x => x.id === nextId);
+          if (nextTask) result.push(nextTask);
+        } else {
+          result.push(t);
+        }
+      }
+      return result;
+    });
+  }, [updateTasks, isDescendantOf]);
+
+  // Wire Sortable to the lpane-body. Re-init on project switch or groupBy change.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.Sortable) return;
+    if (!lpaneBodyRef.current) return;
+    if (!activeProjectId) return;
+    if ((tw.groupBy || 'project') === 'owner') return;
+    const sortable = window.Sortable.create(lpaneBodyRef.current, {
+      // Whole row is the drag affordance — no grip handle.
+      // `filter` excludes interactive children so clicks on them behave normally.
+      draggable: '.task-row.is-child',
+      filter: '.chk, .task-chv, .row-rename, .wbs, .group-row, .owner-group-row, .task-row-add',
+      preventOnFilter: false, // let onClick on filtered elements proceed
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      animation: 150,
+      fallbackOnBody: true,
+      onStart: handleDragStart,
+      onMove: (evt, originalEvent) => handleDragMove(evt, originalEvent),
+      onEnd: handleDragEnd,
+    });
+    return () => { try { sortable.destroy(); } catch(e){} };
+  }, [activeProjectId, tw.groupBy, handleDragStart, handleDragMove, handleDragEnd]);
+
   const updateActiveProject = useCallback((updates) => {
     commitMutation('edit project', ps => ps.map(p => p.id === activeProjectId ? {...p, ...updates} : p));
   }, [activeProjectId, commitMutation]);
@@ -2837,6 +4323,47 @@ function App(){
   const updateProjectById = useCallback((id, updates) => {
     commitMutation('edit project', ps => ps.map(p => p.id === id ? {...p, ...updates} : p));
   }, [commitMutation]);
+
+  // ── Phase B2: Saved views ──
+  // A view captures viewMode + groupBy + filter (q/owners/priorities/status).
+  // Sets are converted to arrays for JSON serialization and back on apply.
+  const snapshotCurrentView = useCallback(() => ({
+    viewMode: tw.viewMode === 'list' || tw.viewMode === 'calendar' ? tw.viewMode : 'gantt',
+    groupBy: tw.groupBy || 'project',
+    filter: {
+      q: filter.q || '',
+      owners: Array.from(filter.owners || []),
+      priorities: Array.from(filter.priorities || []),
+      status: filter.status || 'all',
+    },
+  }), [tw.viewMode, tw.groupBy, filter]);
+
+  const saveCurrentView = useCallback(async (nameArg) => {
+    const name = nameArg ?? await customPrompt('Save View', 'My view');
+    if (!name) return;
+    const snap = snapshotCurrentView();
+    const view = { id: genId('view-'), name, ...snap };
+    updateActiveProject({ savedViews: [...(activeProject?.savedViews || []), view] });
+  }, [customPrompt, snapshotCurrentView, activeProject, updateActiveProject]);
+
+  const applyView = useCallback((view) => {
+    if (!view) return;
+    if (view.viewMode) setTweak('viewMode', view.viewMode);
+    if (view.groupBy)  setTweak('groupBy',  view.groupBy);
+    if (view.filter){
+      setFilter({
+        q: view.filter.q || '',
+        owners: new Set(view.filter.owners || []),
+        priorities: new Set(view.filter.priorities || []),
+        status: view.filter.status || 'all',
+      });
+    }
+  }, [setTweak]);
+
+  const deleteSavedView = useCallback((id) => {
+    if (!activeProject) return;
+    updateActiveProject({ savedViews: (activeProject.savedViews || []).filter(v => v.id !== id) });
+  }, [activeProject, updateActiveProject]);
 
   // ── Workspace actions ──
   // Batch 5: load error modal — surfaces parse/migration errors to the user.
@@ -2883,7 +4410,7 @@ function App(){
   }, [resetUndoHistory]);
 
   const openWorkspace = useCallback(async () => {
-    if (dirty && projects.length > 0 && !window.confirm('Discard unsaved changes and open a different workspace?')) return;
+    if (dirty && projects.length > 0 && !await customConfirm('Discard Changes?', 'Your unsaved changes will be lost.', {okLabel:'Discard'})) return;
     // Non-FSA browsers: trigger hidden <input type=file>. The change handler
     // will read the file and call hydrateFromWorkspace / setLoadError.
     if (!FSA_AVAILABLE) {
@@ -2902,12 +4429,13 @@ function App(){
       try { ws = parseWorkspace(await file.text()); }
       catch(parseErr) { setLoadError(classifyLoadError(parseErr)); return; }
       hydrateFromWorkspace(ws, handle);
+      await pushRecent(handle.name, handle);
     } catch(e) {
       if (e?.name !== 'AbortError') {
         setLoadError(classifyLoadError(e));
       }
     }
-  }, [dirty, projects.length, classifyLoadError, hydrateFromWorkspace]);
+  }, [dirty, projects.length, classifyLoadError, hydrateFromWorkspace, pushRecent]);
 
   // Handler wired to <input type=file>. Reads via FileReader so it works
   // in every modern browser (Firefox/Safari/Chrome).
@@ -2921,16 +4449,17 @@ function App(){
       try {
         const ws = parseWorkspace(String(reader.result || ''));
         hydrateFromWorkspace(ws, null);
+        pushRecent(file.name, null);
       } catch(err) {
         setLoadError(classifyLoadError(err));
       }
     };
     reader.readAsText(file);
-  }, [classifyLoadError, hydrateFromWorkspace]);
+  }, [classifyLoadError, hydrateFromWorkspace, pushRecent]);
 
   const saveWorkspaceRef = useRef(null);
   const saveWorkspace = useCallback(async (forceAs = false) => {
-    if (projects.length === 0) { alert('Nothing to save — create a project first.'); return; }
+    if (projects.length === 0) { await customAlert('Nothing to Save', 'Create a project first.'); return; }
     // Non-FSA browsers: trigger a download via Blob + <a download>. There is no
     // in-place handle in this mode, so every save downloads a fresh copy.
     if (!FSA_AVAILABLE) {
@@ -2947,8 +4476,9 @@ function App(){
         setTimeout(() => URL.revokeObjectURL(url), 0);
         setDirty(false);
         try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
+        pushRecent(activeProject?.name ? (activeProject.name + '.json') : 'workspace.json', null);
       } catch(e) {
-        alert('Download failed: ' + (e?.message || e));
+        await customAlert('Download Failed', e?.message || String(e));
       }
       return;
     }
@@ -2960,6 +4490,7 @@ function App(){
           types: [{ description: 'Timeline Workspace', accept: { 'application/json': ['.json'] } }]
         });
         setFileHandle(handle);
+        await pushRecent(handle.name, handle);
       } catch(e) { return; }
     }
     try {
@@ -2969,13 +4500,46 @@ function App(){
       setDirty(false);
       try { localStorage.removeItem('timeline-autosave-v1'); } catch(_){}
     } catch(e) {
-      alert('Save failed: ' + (e?.message || e));
+      await customAlert('Save Failed', e?.message || String(e));
     }
-  }, [fileHandle, projects, activeProjectId, activeProject]);
+  }, [fileHandle, projects, activeProjectId, activeProject, pushRecent]);
   saveWorkspaceRef.current = saveWorkspace;
 
-  const createNewProject = useCallback((nameArg) => {
-    const name = nameArg ?? window.prompt('Project name:', 'New project');
+  const openRecent = useCallback(async (id) => {
+    if (dirty && projects.length > 0 && !await customConfirm('Discard Changes?', 'Your unsaved changes will be lost.', {okLabel:'Discard'})) return;
+    const entry = recents.find(e => e.id === id);
+    if (!entry) return;
+    if (!entry.hasHandle) {
+      // Name-only entry (non-FSA browser): fall back to normal picker
+      openWorkspace();
+      return;
+    }
+    let handle;
+    try { handle = await idbGet(id); } catch(_) {}
+    if (!handle) { await removeRecent(id); openWorkspace(); return; }
+    // Re-acquire read permission — Chromium drops perms across sessions
+    let perm;
+    try { perm = await handle.queryPermission({ mode: 'read' }); } catch(_) { perm = 'prompt'; }
+    if (perm !== 'granted') {
+      try { perm = await handle.requestPermission({ mode: 'read' }); } catch(_) { perm = 'denied'; }
+    }
+    if (perm !== 'granted') {
+      setLoadError({ title: 'Permission denied', message: "Couldn't open this file — permission was denied." });
+      return;
+    }
+    try {
+      const file = await handle.getFile();
+      const ws = parseWorkspace(await file.text());
+      hydrateFromWorkspace(ws, handle);
+      await pushRecent(handle.name, handle); // bump to MRU top
+    } catch (e) {
+      await removeRecent(id); // file was moved or deleted
+      setLoadError(classifyLoadError(e));
+    }
+  }, [dirty, projects.length, recents, openWorkspace, hydrateFromWorkspace, pushRecent, removeRecent, classifyLoadError]);
+
+  const createNewProject = useCallback(async (nameArg) => {
+    const name = nameArg ?? await customPrompt('New Project', 'New project');
     if (!name) return;
     const p = newProject(name);
     commitMutation('new project', ps => [...ps, p]);
@@ -3009,10 +4573,10 @@ function App(){
     setActiveProjectId(np.id);
   }, [projects, commitMutation]);
 
-  const deleteProject = useCallback((id) => {
+  const deleteProject = useCallback(async (id) => {
     const p = projects.find(x => x.id === id);
     if (!p) return;
-    if (!window.confirm(`Delete project "${p.name}" and all its tasks?`)) return;
+    if (!await customConfirm('Delete Project?', `"${p.name}" and all its tasks will be permanently removed.`, {destructive:true,okLabel:'Delete'})) return;
     let nextActive = activeProjectId;
     commitMutation('delete project', ps => {
       const next = ps.filter(x => x.id !== id);
@@ -3046,9 +4610,9 @@ function App(){
   }, [resetUndoHistory]);
 
   // ── Templates ──
-  const saveActiveProjectAsTemplate = useCallback(() => {
-    if (!activeProject) { alert('Open or select a project first.'); return; }
-    const name = window.prompt('Template name:', activeProject.name || 'Template');
+  const saveActiveProjectAsTemplate = useCallback(async () => {
+    if (!activeProject) { await customAlert('No Project Open', 'Open or select a project before saving as template.'); return; }
+    const name = await customPrompt('Save Template', activeProject.name || 'Template');
     if (!name || !name.trim()) return;
     const sanitized = sanitizeForTemplate(activeProject);
     if (!sanitized) return;
@@ -3073,10 +4637,10 @@ function App(){
     setShowWelcome(false);
   }, [commitMutation]);
 
-  const deleteTemplate = useCallback((id) => {
+  const deleteTemplate = useCallback(async (id) => {
     const t = templates.find(x => x.id === id);
     if (!t) return;
-    if (!window.confirm(`Delete template "${t.name}"?`)) return;
+    if (!await customConfirm('Delete Template?', `"${t.name}" will be permanently removed.`, {destructive:true,okLabel:'Delete'})) return;
     persistTemplates(templates.filter(x => x.id !== id));
   }, [templates, persistTemplates]);
 
@@ -3216,10 +4780,17 @@ function App(){
     setAutosaveOffer(null);
   }, []);
 
+  const toggleAutosave = useCallback(() => {
+    const next = !tw.autosaveEnabled;
+    setTweak('autosaveEnabled', next);
+    if (!next) { try { localStorage.removeItem(AUTOSAVE_KEY); } catch(_){} }
+  }, [tw.autosaveEnabled, setTweak]);
+
   useEffect(() => {
     if (showWelcome) return;
     if (!dirty) return;
     if (!projects || projects.length === 0) return;
+    if (!tw.autosaveEnabled) return;
     // Variable debounce: 500ms when we're starting fresh (last write >5s ago),
     // 1500ms during sustained editing to reduce serialization cost.
     const now = Date.now();
@@ -3237,7 +4808,7 @@ function App(){
       } catch(_){}
     }, delay);
     return () => clearTimeout(tid);
-  }, [projects, activeProjectId, showWelcome, fileHandle, dirty]);
+  }, [projects, activeProjectId, showWelcome, fileHandle, dirty, tw.autosaveEnabled]);
 
   const formatAgo = (ts) => {
     const d = Math.max(0, Date.now() - ts);
@@ -3286,6 +4857,13 @@ function App(){
         if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target?.isContentEditable) return;
         e.preventDefault();
         setHelpOpen(o => !o);
+        return;
+      }
+      // Phase B1: Cmd/Ctrl+K opens the command palette (works inside inputs too —
+      // it's the universal "do anything" shortcut).
+      if (mod && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setPaletteOpen(o => !o);
         return;
       }
     };
@@ -3420,6 +4998,7 @@ function App(){
   const gridScrollRef  = useRef(null);
   const lpaneBodyRef   = useRef(null);
   const syncingRef     = useRef(false);
+  const dragStateRef   = useRef(null); // SortableJS drag state (taskId, startX, currentDepth, etc.)
 
   const onGridScroll = e=>{
     if(hdrScrollRef.current) hdrScrollRef.current.scrollLeft=e.target.scrollLeft;
@@ -3529,26 +5108,39 @@ function App(){
         currentClientX:e.clientX,currentClientY:e.clientY});
       return;
     }
-    const rowIdx=Math.floor(ly/rowH);
+    e.preventDefault();
+    grid.classList.add('panning');
+    setSelected(null); setSelectedSet(new Set());
+    setDrag({kind:'pan',startClientX:e.clientX,startClientY:e.clientY,
+      startScrollLeft:sl,startScrollTop:st});
+  },[]);
+
+  const onGridDblClick = useCallback(e=>{
+    if(e.target.closest('[data-bar-id],.bar-handle,.dep-knob')) return;
+    const grid=gridScrollRef.current; if(!grid) return;
+    const rect=grid.getBoundingClientRect();
+    const lx=e.clientX-rect.left+grid.scrollLeft;
+    const ly=e.clientY-rect.top+grid.scrollTop;
+    const dayIdx=Math.max(0,Math.min(axis.days.length-1,Math.floor(lx/dayW)));
+    const rowIdx=Math.max(0,Math.min(rows.length-1,Math.floor(ly/rowH)));
     const row=rows[rowIdx];
     if(!row||row.isProject||row.isOwnerGroup) return;
-    const dayIdx=Math.max(0,Math.min(axis.days.length-1,Math.floor(lx/dayW)));
-    const startDay=axis.days[dayIdx];
-    let projForCreate = row.project || null;
-    if (projForCreate == null) {
-      for (let i = tasks.length - 1; i >= 0; i--) {
-        const tt = tasks[i];
-        if (tt.kind !== 'project' && tt.project) { projForCreate = tt.project; break; }
+    const clickDay=axis.days[dayIdx];
+    const s=isWorkingDay(clickDay,calendar)?clickDay:addWorkingDays(clickDay,0,calendar);
+    const en=addWorkingDays(s,2,calendar);
+    let proj=row.project||null;
+    if(proj==null){
+      for(let i=tasks.length-1;i>=0;i--){
+        const tt=tasks[i];
+        if(tt.kind!=='project'&&tt.project){proj=tt.project;break;}
       }
     }
-    e.preventDefault();
-    setDrag({kind:'create',startClientX:e.clientX,startClientY:e.clientY,
-      gridLeft:rect.left,gridScrollLeft:sl,
-      rowIdx,startDay,endDay:startDay,
-      parentId:row.parent||null,project:projForCreate,
-      currentClientX:e.clientX,currentClientY:e.clientY});
-    setSelected(null); setSelectedSet(new Set());
-  },[rows,axis.days,dayW,rowH,tasks]);
+    const nid='task-'+Date.now().toString(36);
+    const nt={id:nid,parent:row.parent||null,project:proj,title:'New task',
+      start:s,end:en,priority:'p3',progress:0,color:'#a5b4fc'};
+    updateTasks(ts=>[...ts,nt]);
+    setSelected(nid); setRenaming({id:nid,value:nt.title});
+  },[rows,axis.days,dayW,rowH,tasks,calendar]);
 
   // ── Main drag effect ──
   useEffect(()=>{
@@ -3558,6 +5150,15 @@ function App(){
       const rect=grid.getBoundingClientRect();
       const lx=e.clientX-rect.left+grid.scrollLeft, ly=e.clientY-rect.top+grid.scrollTop;
 
+      if(drag.kind==='pan'){
+        const dx=e.clientX-drag.startClientX;
+        const dy=e.clientY-drag.startClientY;
+        if(Math.abs(dx)>5||Math.abs(dy)>5){
+          grid.scrollLeft=drag.startScrollLeft-dx;
+          grid.scrollTop=drag.startScrollTop-dy;
+        }
+        return;
+      }
       if(drag.kind==='prog'){
         const p=Math.max(0,Math.min(1,(lx-drag.barX)/drag.barW));
         setDrag(d=>d&&({...d,liveProgress:p,currentClientX:e.clientX,currentClientY:e.clientY})); return;
@@ -3609,6 +5210,8 @@ function App(){
 
     const onUp=e=>{
       setSnapInfo(null);
+      gridScrollRef.current?.classList.remove('panning');
+      if(drag.kind==='pan'){ setDrag(null); return; }
       const dx=e.clientX-drag.startClientX;
       const days=Math.round(dx/dayW);
 
@@ -3754,6 +5357,33 @@ function App(){
     });
   },[updateTasks]);
 
+  const inferParentForNewTask=useCallback(()=>{
+    if(!selected) return null;
+    const t=tasks.find(x=>x.id===selected);
+    if(!t) return null;
+    if(t.kind==='project') return t.id;
+    return t.parent||null;
+  },[selected,tasks]);
+
+  const addTask=useCallback((parentId)=>{
+    const pid=parentId===undefined?null:parentId;
+    const newId='t-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    const newTask={id:newId,parent:pid,title:'New task',start:todayStr,end:addDays(todayStr,2),priority:'p2',progress:0,done:false,status:'todo',deps:[],tags:[],comments:[]};
+    updateTasks(ts=>{
+      if(!pid) return [...ts,newTask];
+      let lastIdx=-1;
+      ts.forEach((t,i)=>{ if(t.parent===pid) lastIdx=i; });
+      if(lastIdx<0){
+        const pIdx=ts.findIndex(t=>t.id===pid);
+        const out=[...ts]; out.splice(pIdx>=0?pIdx+1:ts.length,0,newTask); return out;
+      }
+      const out=[...ts]; out.splice(lastIdx+1,0,newTask); return out;
+    });
+    setSelected(newId);
+    setSelectedSet(new Set([newId]));
+    setRenaming({id:newId,value:'New task'});
+  },[updateTasks,setSelected,setSelectedSet,setRenaming]);
+
   const focusDepSubtree=useCallback(id=>{
     setFocusChain(prev=>{ const c=getDepChain(tasks,id); return(prev&&prev.size===c.size&&[...c].every(x=>prev.has(x)))?null:c; });
   },[tasks]);
@@ -3822,10 +5452,38 @@ function App(){
   useEffect(()=>{
     const onKey=e=>{
       if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);setRecurEditor(null);setTmplModal(null);setHelpOpen(false);setLoadError(null);return; }
+      if(e.key==='Escape'){ setFocusChain(null);setCtxMenu(null);setRenaming(null);setDurationBuf('');setSelected(null);setSelectedSet(new Set());setFileMenuOpen(false);setProjCtxMenu(null);setBulkPicker(null);setRecurEditor(null);setTmplModal(null);setHelpOpen(false);setLoadError(null);return; }
       if(!selected)return;
       // If selected is a recurring instance (no source-task match), ignore keyboard ops.
       const t=tasks.find(x=>x.id===selected); if(!t)return;
+      // Tab / Shift+Tab — indent / outdent selected task (keyboard equivalent of drag-to-indent)
+      if(e.key==='Tab'){
+        e.preventDefault();
+        if(t.kind==='project'||t.recurrenceParent)return;
+        if(e.shiftKey){
+          // Outdent: set parent = current parent's parent (or null if at root)
+          const curParent = t.parent ? tasks.find(x=>x.id===t.parent) : null;
+          if(!curParent || curParent.kind==='project')return; // already a top-level child
+          const newParent = curParent.parent || null;
+          updateTasks(ts=>ts.map(tt=>tt.id===selected?{...tt,parent:newParent}:tt));
+        } else {
+          // Indent: set parent = previous sibling (must exist with same parent)
+          const sameParentSiblings = tasks.filter(x=>(x.parent||null)===(t.parent||null) && x.id!==selected && x.kind!=='project');
+          if(!sameParentSiblings.length)return;
+          // Find prev sibling = the sibling immediately before `t` in the tasks array
+          const tIdx = tasks.findIndex(x=>x.id===selected);
+          let prev=null;
+          for(let i=tIdx-1;i>=0;i--){
+            const x=tasks[i];
+            if((x.parent||null)===(t.parent||null) && x.kind!=='project' && x.id!==selected){ prev=x; break; }
+          }
+          if(!prev)return;
+          updateTasks(ts=>ts.map(tt=>tt.id===selected?{...tt,parent:prev.id}:tt));
+          // Auto-expand the new parent so the moved task stays visible
+          setCollapsed(c=>{ if(!c.has(prev.id))return c; const n=new Set(c); n.delete(prev.id); return n; });
+        }
+        return;
+      }
       const mod=e.metaKey||e.ctrlKey;
       if(mod&&(e.key==='s'||e.key==='S')) return; // handled by global effect
       if(mod&&(e.key==='d'||e.key==='D')){e.preventDefault();duplicateTask(selected);return;}
@@ -3868,12 +5526,23 @@ function App(){
     return ()=>window.removeEventListener('keydown',onKey);
   },[selected,selectedSet,tasks,durationBuf,duplicateTask,focusDepSubtree,updateTasks,applySchedule]);
 
+  // Escape key to dismiss custom modal
+  useEffect(()=>{
+    if(!modal)return;
+    const onKey=e=>{ if(e.key==='Escape') closeModal(modal.type==='confirm'?false:null); };
+    window.addEventListener('keydown',onKey);
+    return()=>window.removeEventListener('keydown',onKey);
+  },[modal,closeModal]);
+
   // Click-away for ctx menus and file menu and bulk picker
   useEffect(()=>{
     if(!ctxMenu&&!projCtxMenu&&!fileMenuOpen&&!bulkPicker)return;
-    const fn=()=>{setCtxMenu(null);setProjCtxMenu(null);setFileMenuOpen(false);setBulkPicker(null);};
-    window.addEventListener('mousedown',fn); window.addEventListener('scroll',fn,true);
-    return ()=>{ window.removeEventListener('mousedown',fn); window.removeEventListener('scroll',fn,true); };
+    const fn=(e)=>{
+      if(e.target?.closest('.ctx-menu,.bulk-picker,.file-menu-drop'))return;
+      setCtxMenu(null);setProjCtxMenu(null);setFileMenuOpen(false);setBulkPicker(null);
+    };
+    window.addEventListener('pointerdown',fn,true); window.addEventListener('scroll',fn,true);
+    return ()=>{ window.removeEventListener('pointerdown',fn,true); window.removeEventListener('scroll',fn,true); };
   },[ctxMenu,projCtxMenu,fileMenuOpen,bulkPicker]);
 
   // ── Render ──
@@ -3900,6 +5569,23 @@ function App(){
                 </div>
                 <button className="welcome-btn" style={{padding:'6px 12px',fontSize:11}} onClick={restoreAutosave}>Restore</button>
                 <button className="welcome-btn" style={{padding:'6px 12px',fontSize:11}} onClick={discardAutosave}>Discard</button>
+              </div>
+            )}
+            {recents.length > 0 && (
+              <div style={{width:'100%',marginBottom:14}}>
+                <div style={{fontSize:11,color:'var(--t4)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:6,paddingLeft:2}}>Recent</div>
+                <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                  {recents.slice(0,4).map(r => (
+                    <button key={r.id} className="welcome-btn"
+                            style={{justifyContent:'flex-start',padding:'0 14px',fontSize:12}}
+                            title={r.name + ' · ' + formatAgo(r.savedAt)}
+                            onClick={()=>openRecent(r.id)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{width:14,height:14,opacity:.7,flexShrink:0}}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                      <span style={{flex:1,textAlign:'left',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</span>
+                      <span style={{fontSize:10,color:'var(--t4)',marginLeft:8,flexShrink:0}}>{formatAgo(r.savedAt)}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             <div className="welcome-actions">
@@ -3951,6 +5637,35 @@ function App(){
             </div>
           </div>
         )}
+        {modal && (
+          <div className="cmod-overlay" onMouseDown={()=>closeModal(modal.type==='confirm'?false:null)}>
+            <div className="cmod" onMouseDown={e=>e.stopPropagation()}>
+              <div className="cmod-head">
+                <div className={`cmod-icon cmod-icon--${modal.type}${modal.destructive?' cmod-icon--danger':''}`}>
+                  {modal.type==='confirm'&&!modal.destructive&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>}
+                  {modal.type==='confirm'&&modal.destructive&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>}
+                  {modal.type==='alert'&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+                  {modal.type==='prompt'&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>}
+                </div>
+                <div className="cmod-title">{modal.title}</div>
+              </div>
+              {(modal.body||modal.type==='prompt')&&(
+                <div className="cmod-body">
+                  {modal.body}
+                  {modal.type==='prompt'&&(
+                    <input ref={modalInputRef} className="cmod-input" defaultValue={modal.defaultValue} autoFocus
+                      onKeyDown={e=>{ if(e.key==='Enter') closeModal(modalInputRef.current?.value??null); if(e.key==='Escape') closeModal(null); }}/>
+                  )}
+                </div>
+              )}
+              <div className="cmod-foot">
+                {modal.type!=='alert'&&<button className="cmod-btn" onClick={()=>closeModal(modal.type==='confirm'?false:null)}>{modal.cancelLabel||'Cancel'}</button>}
+                <button className={`cmod-btn primary${modal.destructive?' danger':''}`} autoFocus={modal.type!=='prompt'}
+                  onClick={()=>closeModal(modal.type==='prompt'?(modalInputRef.current?.value??null):modal.type==='confirm'?true:undefined)}>{modal.okLabel||'OK'}</button>
+              </div>
+            </div>
+          </div>
+        )}
         <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject}/>
       </Fragment>
     );
@@ -3988,6 +5703,26 @@ function App(){
               )}
               <div className="file-menu-sep"/>
               <div className="file-menu-item has-sub"
+                onMouseEnter={()=>setFileRecentSubOpen(true)}
+                onMouseLeave={()=>setFileRecentSubOpen(false)}>
+                Recent files
+                {fileRecentSubOpen && (
+                  <div className="file-menu-sub" onMouseDown={e=>e.stopPropagation()}>
+                    {recents.length === 0
+                      ? <div className="file-menu-item" style={{opacity:.4,pointerEvents:'none'}}>No recent files</div>
+                      : recents.map(r => (
+                          <div key={r.id} className="file-menu-item"
+                               title={r.name + ' · ' + formatAgo(r.savedAt)}
+                               onClick={()=>{openRecent(r.id);setFileMenuOpen(false);setFileRecentSubOpen(false);}}>
+                            <span style={{flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{r.name}</span>
+                            <span style={{marginLeft:12,fontSize:10,color:'var(--t4)',flexShrink:0}}>{formatAgo(r.savedAt)}</span>
+                          </div>
+                        ))
+                    }
+                  </div>
+                )}
+              </div>
+              <div className="file-menu-item has-sub"
                 onMouseEnter={()=>setFileTmplSubOpen(true)}
                 onMouseLeave={()=>setFileTmplSubOpen(false)}>
                 Templates
@@ -4024,6 +5759,11 @@ function App(){
               </div>
               <div className="file-menu-sep"/>
               <div className="file-menu-item" onClick={()=>{setShowWelcome(true);setFileMenuOpen(false);}}>Home screen</div>
+              <div className="file-menu-sep"/>
+              <div className="file-menu-item" onClick={()=>{toggleAutosave();setFileMenuOpen(false);}}>
+                <span style={{width:14,display:'inline-block',flexShrink:0}}>{tw.autosaveEnabled ? '✓' : ''}</span>
+                Auto-save
+              </div>
             </div>
           )}
         </div>
@@ -4066,6 +5806,34 @@ function App(){
           </button>
         </div>
 
+        {/* Phase B2: Saved views dropdown — sits right of the view switcher. */}
+        <div className="views-menu-wrap">
+          <button className={`views-menu-btn${(activeProject?.savedViews?.length)?' active':''}`}
+            title="Saved views — capture filter + grouping + view type"
+            onClick={()=>setViewsMenuOpen(o=>!o)}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            Views{(activeProject?.savedViews?.length)?` (${activeProject.savedViews.length})`:''}
+          </button>
+          {viewsMenuOpen && (
+            <>
+              <div style={{position:'fixed',inset:0,zIndex:499}} onClick={()=>setViewsMenuOpen(false)}/>
+              <div className="views-menu-drop">
+                {(activeProject?.savedViews || []).length === 0 ? (
+                  <div className="vm-empty">No saved views yet.</div>
+                ) : (activeProject.savedViews.map(v => (
+                  <div key={v.id} className="vm-item" onClick={()=>{ applyView(v); setViewsMenuOpen(false); }}>
+                    <span className="vm-name" title={`Switch to "${v.name}" (${v.viewMode} · group by ${v.groupBy})`}>{v.name}</span>
+                    <button className="vm-del" title="Delete view"
+                      onClick={e=>{ e.stopPropagation(); deleteSavedView(v.id); }}>×</button>
+                  </div>
+                )))}
+                <div className="vm-sep"/>
+                <div className="vm-save" onClick={()=>{ setViewsMenuOpen(false); saveCurrentView(); }}>+ Save current view as…</div>
+              </div>
+            </>
+          )}
+        </div>
+
         <button className="tb-btn" onClick={()=>{ const el=gridScrollRef.current; const idx=diffDays(axis.start,todayStr); el?.scrollTo({left:Math.max(0,idx*dayW-el.clientWidth/3),behavior:'smooth'}); }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg> Today
         </button>
@@ -4090,6 +5858,11 @@ function App(){
             onClick={()=>updateTasks(ts=>autoStagger(ts))}>
             ⚡ Stagger
           </button>
+        )}
+
+        {/* Live clock */}
+        {tw.showClock!==false&&(
+          <div className="topbar-clock" title="Local time">{fmtClock(now)}</div>
         )}
 
         {/* Keyboard help (Batch 5) */}
@@ -4178,6 +5951,7 @@ function App(){
         <div className="lpane">
           <div className="lpane-hdr">
             <h2>Tasks</h2>
+            <button className="lpane-add-btn" title="New task" disabled={!activeProject} onClick={()=>addTask(inferParentForNewTask())}>+</button>
             <span className="pill">{tasks.filter(t=>!t.kind).length} items</span>
           </div>
           <div className="lpane-body" ref={lpaneBodyRef} onScroll={onLpaneScroll} style={{minWidth:0}}>
@@ -4220,7 +5994,8 @@ function App(){
               const isRecurInst = !!r.recurrenceParent;
               return (
                 <div className={`task-row is-child${r.done?' done':''}${sel?' selected':''}${selectedSet.has(r.id)&&selectedSet.size>1?' multi-sel':''}${hoverRow===r.id?' hover':''}`} key={r.id}
-                  style={isRecurInst?{opacity:.6}:null}
+                  data-task-id={r.id} data-depth={r.depth||1}
+                  style={{paddingLeft: 22 + ((r.depth||1) * INDENT_PX), ...(isRecurInst?{opacity:.6}:null)}}
                   onMouseEnter={()=>setHoverRow(r.id)} onMouseLeave={()=>setHoverRow(null)}
                   onClick={(e)=>{
                     if(e.shiftKey){
@@ -4242,6 +6017,14 @@ function App(){
                   }}
                   onDoubleClick={()=>{ if(isRecurInst) return; setRenaming({id:r.id,value:r.title}); }}
                   onContextMenu={e=>{e.preventDefault();if(isRecurInst)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                  {r.isSummary && (
+                    <span className={`task-chv${collapsed.has(r.id)?'':' open'}`}
+                          title={collapsed.has(r.id)?'Expand':'Collapse'}
+                          style={{left: (22 + ((r.depth||1)-1)*INDENT_PX - 2) + 'px'}}
+                          onClick={e=>{e.stopPropagation();setCollapsed(c=>{const n=new Set(c);n.has(r.id)?n.delete(r.id):n.add(r.id);return n;});}}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                  )}
                   <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();if(isRecurInst)return;updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
                   {wbsCode && <span className="wbs" title={`WBS ${wbsCode}`}>{wbsCode}</span>}
                   {isRen
@@ -4256,6 +6039,12 @@ function App(){
                 </div>
               );
             })}
+            {activeProject && (
+              <div className="task-row-add" onClick={()=>addTask(inferParentForNewTask())}>
+                <span className="task-row-add-plus">+</span>
+                <span>New task</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -4313,7 +6102,7 @@ function App(){
           </div>)}
 
           {/* Grid */}
-          {viewMode === 'gantt' && (<div className="grid-scroll" ref={gridScrollRef} onScroll={onGridScroll} onPointerDown={onGridPointerDown}>
+          {viewMode === 'gantt' && (<div className="grid-scroll" ref={gridScrollRef} onScroll={onGridScroll} onPointerDown={onGridPointerDown} onDoubleClick={onGridDblClick}>
             <div className="grid-track" style={{width:totalW+'px',height:Math.max(200, rows.length*rowH)+'px'}}>
 
               {!activeProject && (
@@ -4335,7 +6124,7 @@ function App(){
                   const we=isWeekend(d)&&tw.showWeekends!==false, ms=parseYmd(d).getDate()===1;
                   return <div key={d} className={`grid-col${we?' weekend':''}${ms?' month-start':''}`} style={{left:i*dayW+'px',width:dayW+'px'}}/>;
                 })}
-                <div className="today-line" style={{left:xForDay(todayStr)+dayW/2+'px'}}/>
+                <div className="today-line" style={{left:xForDay(todayStr)+dayW*(tw.todayLineLive!==false?(now.getHours()*3600+now.getMinutes()*60)/86400:0.5)+'px'}}/>
                 {sprintBands.map(band=>(
                   <Fragment key={'sb'+band.dayIdx}>
                     {band.isEven&&<div className="sprint-band even" style={{left:band.dayIdx*dayW+'px',width:Math.min(7,axis.days.length-band.dayIdx)*dayW+'px'}}/>}
@@ -4494,17 +6283,47 @@ function App(){
                   const durLabel = formatDuration(start, end, calendar);
                   const isRecurInstance = !!r.recurrenceParent;
                   const isRecurSource = !!r.recurrence;
+                  const isShort = w < 30;
+                  const showInsideLabel = labelPos==='inside' || labelPos==='both' || (labelPos==='auto' && (w-20)>=r.title.length*6.2);
                   return (
-                    <div key={r.id}
-                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}${isRecurInstance?' recur-instance':''}`}
+                    <React.Fragment key={r.id}>
+                    <div
+                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}${isRecurInstance?' recur-instance':''}${isShort?' short':''}`}
                       data-bar-id={r.id}
                       style={{left:x+'px',top:top+'px',width:w+'px',background:`linear-gradient(180deg,${bg},${shade(bg,-.18)})`,border:`1px solid ${shade(bg,-.35)}`,'--bar-c':bg,'--bar-c-d':shade(bg,-.35),'--bar-c-l':shade(bg,.32)}}
-                      onPointerDown={e=>{if(isRenaming)return;beginBarDrag(e,r,'move');}}
+                      onPointerDown={e=>{
+                        if(isRenaming)return;
+                        const rect=e.currentTarget.getBoundingClientRect();
+                        const ox=e.clientX-rect.left, bw=rect.width;
+                        const coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
+                        const edge=Math.min(coarse?18:12, bw*0.25);
+                        let kind='move';
+                        if(!isRecurInstance && !isShort){
+                          if(ox<edge) kind='l';
+                          else if(ox>bw-edge) kind='r';
+                        }
+                        beginBarDrag(e,r,kind);
+                      }}
+                      onPointerMove={e=>{
+                        if(drag||isRenaming||isRecurInstance||isShort) return;
+                        const rect=e.currentTarget.getBoundingClientRect();
+                        const ox=e.clientX-rect.left, bw=rect.width;
+                        const coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
+                        const edge=Math.min(coarse?18:12, bw*0.25);
+                        let zone='';
+                        if(ox<edge) zone='l';
+                        else if(ox>bw-edge) zone='r';
+                        if(e.currentTarget.dataset.zone!==zone){
+                          if(zone) e.currentTarget.dataset.zone=zone;
+                          else delete e.currentTarget.dataset.zone;
+                        }
+                      }}
+                      onPointerLeave={e=>{ if(e.currentTarget.dataset.zone) delete e.currentTarget.dataset.zone; }}
                       onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
                       onClick={e=>{e.stopPropagation();setSelected(r.id);}}
                       onDoubleClick={e=>{if(isRecurInstance)return;e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
                       onContextMenu={e=>{e.preventDefault();if(isRecurInstance)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
-                      title={isRenaming?'':(isRecurInstance?`${r.title} · recurring instance — edit the source task to change`:`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${durLabel}${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}${isRecurSource?' · ↻ recurring source':''}`)}>
+                      title={isRenaming?'':(isRecurInstance?`${r.title} · recurring instance — edit the source task to change`:`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${durLabel}${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}${isRecurSource?' · ↻ recurring source':''}${isShort?' · short bar — right-click or use the • dot for resize':''}`)}>
                       {liveProgress>0&&<div className="bar-prog" style={{width:(liveProgress*100)+'%',background:`${shade(bg,-.45)}66`}}/>}
                       {!r.done&&liveProgress>0&&liveProgress<.99&&!isRecurInstance&&(
                         <div className="bar-prog-handle" style={{left:`calc(${Math.max(6,Math.min(94,liveProgress*100))}% - 1px)`}}
@@ -4514,17 +6333,27 @@ function App(){
                       {isRenaming
                         ?<input className="bar-rename" value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
                             onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
-                        :<div className="bar-ttl">{r.title}</div>
+                        :<div className="bar-ttl">{showInsideLabel?r.title:''}</div>
                       }
                       {w>90&&!isRenaming&&<div className="bar-meta">{durLabel}</div>}
                       {showOwners&&r.owner&&w>70&&!isRenaming&&<div className="bar-owner">{r.owner.slice(0,2)}</div>}
                       {health&&!isRenaming&&<div className={`health-pip ${health}`} title={`Health: ${health}`}/>}
                       {atRisk.has(r.id)&&!r.done&&<div className="bar-risk-edge"/>}
                       {isConflict&&showConflicts&&<div className="conflict-dot" title="Owner double-booked">!</div>}
-                      {!isRecurInstance && <div className="bar-handle l" onPointerDown={e=>beginBarDrag(e,r,'l')}/>}
-                      {!isRecurInstance && <div className="bar-handle r" onPointerDown={e=>beginBarDrag(e,r,'r')}/>}
+                      {isShort && !isRecurInstance && (
+                        <div className="bar-short-dot" title="Resize / link options"
+                          onPointerDown={e=>{e.stopPropagation();}}
+                          onClick={e=>{e.stopPropagation();
+                            if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}
+                            setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});
+                          }}>•••</div>
+                      )}
                       {!isRecurInstance && <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)} title="Drag to link →"/>}
                     </div>
+                    {!isRenaming&&(labelPos==='both'||!showInsideLabel)&&(
+                      <div className="bar-ttl-ext" style={{left:(x+w+4)+'px',top:top+'px'}}>{r.title}</div>
+                    )}
+                    </React.Fragment>
                   );
                 })}
               </div>
@@ -4585,22 +6414,9 @@ function App(){
       const dur=diffDays(start,end)+1, isCrit=critical.nodes.has(r.id);
       const insDurLabel = formatDuration(start, end, calendar);
 
-      // Position: anchored to bar in Gantt, else to top-right of rpane area.
-      let insTop, insLeft;
-      if (viewMode === 'gantt'){
-        const i = rows.findIndex(x=>x.id===selected);
-        const grid=gridScrollRef.current;
-        if (i<0 || !grid) return null;
-        const gRect=grid.getBoundingClientRect();
-        const vx=gRect.left+xForDay(start)-grid.scrollLeft;
-        const vy=gRect.top+i*rowH+(rowH-22)/2-grid.scrollTop;
-        insTop=Math.max(gRect.top+6,vy-100);
-        insLeft=Math.max(gRect.left+6,Math.min(vx-6,gRect.right-360));
-      } else {
-        // For List/Calendar views, anchor to top-right of window.
-        insLeft = Math.max(12, window.innerWidth - 360);
-        insTop = 110;
-      }
+      // Position: fixed top-right corner across all views.
+      const insLeft = Math.max(12, window.innerWidth - 360);
+      const insTop = 110;
       const ownersByName=new Map(owners.map(o=>[o.name,o]));
       const computedCost=computeTaskCost(taskLive, ownersByName);
       const hasExplicitCost=typeof taskLive.cost==='number' && !isNaN(taskLive.cost);
@@ -4633,7 +6449,11 @@ function App(){
 
       return (
         <div className="inspector" style={{position:'fixed',left:insLeft+'px',top:insTop+'px'}} onPointerDown={e=>e.stopPropagation()}>
-          <div className="ins-title">{taskLive.title}{isCrit&&<span className="ins-crit">CRITICAL</span>}</div>
+          <div className="ins-title">
+            <span className="ins-title-text">{taskLive.title}</span>
+            {isCrit&&<span className="ins-crit">CRITICAL</span>}
+            <button className="ins-close" title="Close (Esc)" aria-label="Close inspector" onClick={()=>setSelected(null)}>×</button>
+          </div>
           <div className="ins-row"><span className="lbl">Dates</span><span className="val">{fmtShort(start)} → {fmtShort(end)}</span><span className="dur-pill" style={{marginLeft:'auto'}}>{r.milestone?'◆':insDurLabel}</span></div>
           <div className="ins-row ins-deps-row"><span className="lbl">Deps</span>
             {!(taskLive.deps?.length)?<span className="ins-dep-empty">none</span>:depList(taskLive).map((dep,depIdx)=>{
@@ -4648,7 +6468,7 @@ function App(){
                 <span key={dep.id} className="ins-dep-chip" title={`Jump to ${dt?.title||dep.id}`} onClick={()=>setSelected(dep.id)}>
                   <span className="ins-dep-chip-ttl">{(dt?.title||dep.id).slice(0,16)}</span>
                   <button className="ins-dep-type" title="Cycle FS → SS → FF → SF" onClick={e=>{ e.stopPropagation(); updateDep({type: nextDepType(dep.type)}); }}>{dep.type||'FS'}</button>
-                  <button className="ins-dep-lag" title="Set lag (days, negative=lead)" onClick={e=>{ e.stopPropagation(); const v=window.prompt('Lag days (negative = lead):', String(dep.lag||0)); if(v!==null){ const n=parseInt(v,10); if(!isNaN(n)) updateDep({lag:n}); }}}>{(dep.lag||0)===0?'+lag':`${dep.lag>0?'+':''}${dep.lag}d`}</button>
+                  <button className="ins-dep-lag" title="Set lag (days, negative=lead)" onClick={async e=>{ e.stopPropagation(); const v=await customPrompt('Set Lag', String(dep.lag||0), 'Days offset. Negative = lead time.'); if(v!==null){ const n=parseInt(v,10); if(!isNaN(n)) updateDep({lag:n}); }}}>{(dep.lag||0)===0?'+lag':`${dep.lag>0?'+':''}${dep.lag}d`}</button>
                 </span>
               );
             })}
@@ -4782,10 +6602,10 @@ function App(){
                       </span>
                     ))}
                   </div>
-                  <button className="ins-add-btn" onClick={()=>{
-                    const url=window.prompt('Link URL:','https://');
+                  <button className="ins-add-btn" onClick={async ()=>{
+                    const url=await customPrompt('Add Link','https://');
                     if(!url||!url.trim()) return;
-                    const lbl=window.prompt('Label (optional):','');
+                    const lbl=await customPrompt('Link Label','','Optional display text (leave blank to show URL)');
                     const next=[...links,{url:url.trim(), label:(lbl||'').trim()||undefined}];
                     updateLinks(next);
                   }}>+ add link</button>
@@ -4872,7 +6692,7 @@ function App(){
           {t.kind!=='project' && t.recurrence && (
             <div className="ctx-item" onClick={()=>{setRecurEditor({taskId:t.id,draft:{...t.recurrence}});setCtxMenu(null);}}>Edit recurrence…<span className="kbd">↻</span></div>
           )}
-          <div className="ctx-item" onClick={()=>{const cur = depList(t)[0]?.lag || 0; const v=window.prompt('Lag days for ALL incoming deps (negative = lead):',String(cur));if(v!==null){const n=parseInt(v,10);if(!isNaN(n))setLagOnIncoming(t.id,n);}setCtxMenu(null);}}>Set lag (all incoming)…<span className="kbd">{(()=>{const l=depList(t)[0]?.lag||0; return l?`${l>0?'+':''}${l}d`:'0d';})()}</span></div>
+          <div className="ctx-item" onClick={async ()=>{const cur = depList(t)[0]?.lag || 0; const v=await customPrompt('Set Lag — All Incoming',String(cur),'Applies to all incoming dependencies.');if(v!==null){const n=parseInt(v,10);if(!isNaN(n))setLagOnIncoming(t.id,n);}setCtxMenu(null);}}>Set lag (all incoming)…<span className="kbd">{(()=>{const l=depList(t)[0]?.lag||0; return l?`${l>0?'+':''}${l}d`:'0d';})()}</span></div>
           <div className="ctx-item" onClick={()=>{toggleBlocking(t.id);setCtxMenu(null);}}>{t.blocking?'Unmark blocking':'Mark blocking'}</div>
           <div className="ctx-sep"/>
           <div className="ctx-item" onClick={()=>{focusDepSubtree(t.id);setCtxMenu(null);}}>Focus dep chain<span className="kbd">Ctrl E</span></div>
@@ -5025,6 +6845,32 @@ function App(){
     {/* Batch 5: Keyboard help overlay */}
     {helpOpen && <HelpModal onClose={()=>setHelpOpen(false)} fsaAvailable={FSA_AVAILABLE}/>}
 
+    {/* Phase B1: Command palette (Cmd/Ctrl+K) — fuzzy-search every action. */}
+    {paletteOpen && (
+      <CommandPalette onClose={()=>setPaletteOpen(false)} commands={[
+        // File
+        { id:'file.new',  group:'File', label:'New project…',    shortcut:'',          keywords:['create','start'], run:()=>createNewProject() },
+        { id:'file.open', group:'File', label:'Open workspace…', shortcut:'',          keywords:['load','import'], run:()=>openWorkspace() },
+        { id:'file.save', group:'File', label:FSA_AVAILABLE?'Save':'Download', shortcut:'Ctrl+S',  keywords:['write','export'], run:()=>saveWorkspaceRef.current?.(false) },
+        ...(FSA_AVAILABLE ? [{ id:'file.saveas', group:'File', label:'Save as…', shortcut:'Ctrl+Shift+S', run:()=>saveWorkspaceRef.current?.(true) }] : []),
+        // Edit
+        { id:'edit.undo', group:'Edit', label:'Undo', shortcut:'Ctrl+Z',      run:()=>undoRef.current?.() },
+        { id:'edit.redo', group:'Edit', label:'Redo', shortcut:'Ctrl+Shift+Z', run:()=>redoRef.current?.() },
+        // View
+        { id:'view.gantt',    group:'View', label:'Switch to Gantt view',    keywords:['timeline','bars'],    run:()=>setViewMode('gantt') },
+        { id:'view.list',     group:'View', label:'Switch to List view',     keywords:['table','rows'],       run:()=>setViewMode('list') },
+        { id:'view.calendar', group:'View', label:'Switch to Calendar view', keywords:['month','dates'],      run:()=>setViewMode('calendar') },
+        // Saved views (Phase B2) — dynamic per project.
+        { id:'view.save',     group:'View', label:'Save current view as…',   keywords:['bookmark','snapshot'], run:()=>saveCurrentView() },
+        ...((activeProject?.savedViews) || []).map(v => ({
+          id:'view.apply.'+v.id, group:'View', label:`Switch to view "${v.name}"`,
+          keywords:['saved',v.viewMode,v.groupBy], run:()=>applyView(v)
+        })),
+        // Help
+        { id:'help.shortcuts', group:'Help', label:'Show keyboard shortcuts', shortcut:'?', run:()=>setHelpOpen(true) },
+      ]}/>
+    )}
+
     {/* Batch 5: Load error modal */}
     {loadError && (
       <div className="err-overlay" onMouseDown={()=>setLoadError(null)}>
@@ -5036,6 +6882,53 @@ function App(){
           <div className="e-body">{loadError.message}</div>
           <div className="e-foot">
             <button className="e-btn" autoFocus onClick={()=>setLoadError(null)}>OK</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Custom modal — replaces window.prompt / confirm / alert */}
+    {modal && (
+      <div className="cmod-overlay" onMouseDown={()=>closeModal(modal.type==='confirm'?false:null)}>
+        <div className="cmod" onMouseDown={e=>e.stopPropagation()}>
+          <div className="cmod-head">
+            <div className={`cmod-icon cmod-icon--${modal.type}${modal.destructive?' cmod-icon--danger':''}`}>
+              {modal.type==='confirm'&&!modal.destructive&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>}
+              {modal.type==='confirm'&&modal.destructive&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>}
+              {modal.type==='alert'&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+              {modal.type==='prompt'&&<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>}
+            </div>
+            <div className="cmod-title">{modal.title}</div>
+          </div>
+          {(modal.body||modal.type==='prompt')&&(
+            <div className="cmod-body">
+              {modal.body}
+              {modal.type==='prompt'&&(
+                <input
+                  ref={modalInputRef}
+                  className="cmod-input"
+                  defaultValue={modal.defaultValue}
+                  autoFocus
+                  onKeyDown={e=>{
+                    if(e.key==='Enter') closeModal(modalInputRef.current?.value??null);
+                    if(e.key==='Escape') closeModal(null);
+                  }}
+                />
+              )}
+            </div>
+          )}
+          <div className="cmod-foot">
+            {modal.type!=='alert'&&(
+              <button className="cmod-btn" onClick={()=>closeModal(modal.type==='confirm'?false:null)}>{modal.cancelLabel||'Cancel'}</button>
+            )}
+            <button
+              className={`cmod-btn primary${modal.destructive?' danger':''}`}
+              autoFocus={modal.type!=='prompt'}
+              onClick={()=>closeModal(
+                modal.type==='prompt' ? (modalInputRef.current?.value??null) :
+                modal.type==='confirm' ? true : undefined
+              )}
+            >{modal.okLabel||'OK'}</button>
           </div>
         </div>
       </div>
