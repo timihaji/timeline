@@ -120,7 +120,7 @@
   .task-row-add:hover .task-row-add-plus{border-color:var(--accent-2);border-style:solid}
   .lpane-body{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:120px}
 
-  .group-row{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px 0 10px;cursor:pointer;border-bottom:1px solid var(--border);background:var(--bg-side);position:sticky;z-index:1}
+  .group-row{display:flex;align-items:center;gap:8px;height:var(--row-h);padding:0 12px 0 10px;cursor:pointer;border-bottom:1px solid var(--border);background:var(--bg-side);position:sticky;z-index:1}
   .group-row:hover{background:var(--surface)}
   .group-chv{width:10px;height:10px;color:var(--t3);transition:transform .15s}
   .group-chv.open{transform:rotate(90deg)}
@@ -263,7 +263,7 @@
   /* Milestone diamond */
   .bar.milestone{background:transparent !important;box-shadow:none;padding:0;justify-content:center}
   .bar.milestone .diamond{width:18px;height:18px;background:var(--accent-2);transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.5),0 0 0 2px #021412}
-  .bar.milestone .bar-ttl{position:absolute;left:24px;color:var(--t1);text-shadow:none;font-weight:600}
+  .bar.milestone .bar-ttl{position:absolute;left:calc(50% + 14px);white-space:nowrap;color:var(--t1);text-shadow:none;font-weight:600}
 
   /* Dependencies SVG */
   .dep-svg{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:4}
@@ -544,7 +544,7 @@
   .tb-icon-btn.active{background:var(--accent-dim);color:var(--accent-2);border-color:var(--accent-border)}
 
   /* Owner swimlane */
-  .owner-group-row{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;background:var(--bg-side);border-bottom:1px solid var(--border);cursor:pointer;position:sticky;z-index:1}
+  .owner-group-row{display:flex;align-items:center;gap:8px;height:var(--row-h);padding:0 12px;background:var(--bg-side);border-bottom:1px solid var(--border);cursor:pointer;position:sticky;z-index:1}
   .owner-group-row:hover{background:var(--surface)}
   .owner-avatar{width:20px;height:20px;border-radius:50%;background:var(--surface-3);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font:8px var(--font);font-weight:700;color:var(--accent-2);flex-shrink:0}
 
@@ -4745,7 +4745,26 @@ function App(){
         try { localStorage.removeItem(AUTOSAVE_KEY); } catch(__){}
         return;
       }
-      setAutosaveOffer({ savedAt: obj.savedAt || Date.now(), fileName: obj.fileName || null, payload: obj.payload });
+      // Auto-restore last session — skip the welcome screen prompt
+      try {
+        const ws = parseWorkspace(obj.payload);
+        hydratedRef.current = true;
+        setProjects(ws.projects);
+        const aid = ws.activeProjectId && ws.projects.find(p => p.id === ws.activeProjectId)
+          ? ws.activeProjectId
+          : (ws.projects[0]?.id ?? null);
+        setActiveProjectId(aid);
+        setFileHandle(null);
+        setShowWelcome(false);
+        setDirty(true);
+        setCollapsed(new Set());
+        setSelected(null);
+        setSelectedSet(new Set());
+        resetUndoHistory();
+      } catch(e) {
+        console.warn('Discarding unrestorable autosave', e?.message || e);
+        try { localStorage.removeItem(AUTOSAVE_KEY); } catch(__){}
+      }
     } catch(_){}
   }, []);
 
