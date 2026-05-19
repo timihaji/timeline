@@ -1823,6 +1823,7 @@
     "snapToDay": true,
     "groupBy": "project",
     "showFloat": false,
+    "hideMilestoneLines": false,
     "showProbBars": true,
     "showNowCurtain": false,
     "showOwners": true,
@@ -3371,6 +3372,7 @@ function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject, customC
       </TweakSection>
 
       <TweakSection title="Overlays">
+        <TweakToggle label="Milestone lines"         value={!tw.hideMilestoneLines}    onChange={v=>setTweak('hideMilestoneLines',!v)}/>
         <TweakToggle label="Float / slack ghosts"   value={!!tw.showFloat}            onChange={v=>setTweak('showFloat',v)}/>
         <TweakToggle label="PERT probability tails" value={!!tw.showProbBars}         onChange={v=>setTweak('showProbBars',v)}/>
         <TweakToggle label="Now curtain"            value={tw.showNowCurtain!==false} onChange={v=>setTweak('showNowCurtain',v)}/>
@@ -4447,7 +4449,8 @@ function App(){
   const dayW           = tw.dayWidth  || 36;
   const rowH           = tw.rowHeight || 34;
   const groupBy        = tw.groupBy   || 'project';
-  const showFloat      = !!tw.showFloat;
+  const showFloat           = !!tw.showFloat;
+  const hideMilestoneLines  = !!tw.hideMilestoneLines;
   const showProbBars   = !!tw.showProbBars;
   const showNowCurtain = !!tw.showNowCurtain;
   const showOwners     = tw.showOwners     !== false;
@@ -7172,7 +7175,7 @@ function App(){
                     <div className={`sprint-bound${band.n%2===0?' release':''}`} data-label={band.label} style={{left:band.dayIdx*dayW+'px'}}/>
                   </Fragment>
                 ))}
-                {rows.filter(r=>r.milestone).map(ms=>(
+                {!hideMilestoneLines&&rows.filter(r=>r.milestone).map(ms=>(
                   <div key={'rib-'+ms.id} className={`milestone-ribbon${ms.done?' done-ribbon':''}`} data-label={ms.title}
                     style={{left:xForDay(ms.start)+dayW/2-1+'px','--ribbon-c':ms.color||'#96c6e8'}}/>
                 ))}
