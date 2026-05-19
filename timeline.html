@@ -215,8 +215,8 @@
   .bar[data-zone="l"],.bar[data-zone="r"]{cursor:ew-resize}
   .bar.dragging[data-zone]{cursor:grabbing}
   .bar.selected{outline:2px solid var(--accent-2);outline-offset:1px;z-index:6}
-  .bar.done{background:linear-gradient(180deg,#d8dade,#cdd0d5)!important;border-color:#bbbfc4!important;filter:none}
-  .bar.done .bar-ttl{text-decoration:line-through;opacity:.6}
+  .bar.done{border-color:#dddfe2!important;filter:none}
+  .bar.done .bar-ttl{text-decoration:line-through;opacity:.55}
   .bar-ttl{flex:1;text-overflow:ellipsis;overflow:hidden;text-shadow:0 1px 0 rgba(255,255,255,.12)}
   .bar-ttl-ext{position:absolute;font:500 11.5px/22px var(--font);color:var(--t1);white-space:nowrap;pointer-events:none;z-index:2;padding-left:2px;text-shadow:0 1px 1px rgba(0,0,0,.3)}
   .bar-prog{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.22);border-radius:3px 0 0 3px;pointer-events:none}
@@ -1316,7 +1316,7 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 3px 10px rgba(0,0,0,.10) !important;
   }
   body[data-theme="things"] .bar.selected{outline:2px solid var(--accent);outline-offset:2px}
-  body[data-theme="things"] .bar.done{background:linear-gradient(180deg,#d8dade,#cdd0d5)!important;border-color:#bbbfc4!important;opacity:1;filter:none}
+  body[data-theme="things"] .bar.done{border-color:#dddfe2!important;opacity:1;filter:none}
   body[data-theme="things"] .bar-prog{
     background:rgba(0,0,0,.08) !important;
     border-radius:999px 0 0 999px !important;
@@ -7336,7 +7336,7 @@ function App(){
                   const isRenaming=renaming?.id===r.id;
                   const health=getHealth(r,atRisk.has(r.id));
                   const liveProgress=(drag?.kind==='prog'&&drag.id===r.id)?(drag.liveProgress??0):(r.progress||0);
-                  const bg=r.done?'#1d342f':(r.color||'#96c6e8');
+                  const bg=r.done?'#ebebed':(r.color||'#96c6e8');
 
                   if(r.milestone){
                     return (
@@ -7348,7 +7348,7 @@ function App(){
                         onClick={e=>{e.stopPropagation();setSelected(r.id);}}
                         onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
                         onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
-                        <span className="diamond" style={{background:r.done?'#d8dade':(r.color||'#96c6e8')}}/>
+                        <span className="diamond" style={{background:r.done?'#ebebed':(r.color||'#96c6e8')}}/>
                         {isRenaming
                           ?<input className="row-rename bar-rename" style={{position:'absolute',left:'24px',width:'180px',background:'var(--surface-2)',color:'var(--t1)'}}
                               value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
