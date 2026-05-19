@@ -1,0 +1,5 @@
+verify-*.png
+server.log
+.claude/
+.playwright-mcp/
+yt studio.json

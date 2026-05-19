@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Style guide — Timeline / Gantt app</title>
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     CANONICAL THINGS TOKENS — copy this :root block as the starting
+     point for any new app, or merge into an existing :root.
+     ───────────────────────────────────────────────────────────── */
+  :root{
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono","Roboto Mono",monospace;
+
+    --bg:#ffffff;
+    --bg-side:#f7f8fa;
+    --bg-top:#f7f8fa;
+    --bg-grid:#fafbfc;
+
+    --surface:#ffffff;
+    --surface-2:#f3f4f7;
+    --surface-3:#e9ebf0;
+
+    --border:rgba(0,0,0,.06);
+    --border-s:rgba(0,0,0,.08);
+
+    --t1:#1a1a1a;
+    --t2:#3c4046;
+    --t3:#6b7280;
+    --t4:#9aa0a8;
+
+    --accent:#2c7be5;
+    --accent-2:#2c7be5;
+    --accent-dim:rgba(44,123,229,.10);
+    --accent-border:rgba(44,123,229,.30);
+
+    --p1:#ff3b30;
+    --p2:#f5c43d;
+    --p3:#9aa0a8;
+
+    --proj-LIFE:#a8d8ea;
+    --proj-HOME:#ffd4c4;
+    --proj-WORK:#d4c5f9;
+    --proj-ADMIN:#c5e8d5;
+    --proj-BUTTER:#fce4a8;
+
+    --shadow-sm:0 1px 2px rgba(0,0,0,.04),0 2px 6px rgba(0,0,0,.06);
+    --shadow:0 4px 12px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.04);
+    --shadow-lg:0 16px 50px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.04);
+  }
+
+  /* Page chrome (this guide itself uses Things tokens) */
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{font-family:var(--font);background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+  body{padding:48px 56px 80px;max-width:1080px;margin:0 auto;line-height:1.5}
+  h1{font-size:32px;font-weight:700;letter-spacing:-.6px;margin-bottom:8px}
+  h2{font-size:18px;font-weight:600;letter-spacing:-.2px;margin:48px 0 14px;padding-top:24px;border-top:1px solid var(--border)}
+  h3{font-size:13px;font-weight:600;color:var(--t2);margin:20px 0 10px}
+  p{color:var(--t2);font-size:14px;margin-bottom:12px}
+  p.lede{color:var(--t3);font-size:15px;margin-bottom:32px}
+  code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 6px;border-radius:4px;color:var(--t1)}
+  pre{font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:10px 0 16px;line-height:1.55;color:var(--t1)}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+
+  /* Layout helpers */
+  .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:12px 0}
+  .col{flex:1;min-width:0}
+  .stack{display:flex;flex-direction:column;gap:6px}
+  .demo{padding:20px;background:#ffffff;border:1px solid var(--border);border-radius:12px;margin:10px 0 6px;min-height:60px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .demo.column{flex-direction:column;align-items:stretch;gap:8px}
+  .demo.padded{padding:32px}
+  .demo.dark-context{background:var(--surface-2)}
+  .caption{font-size:11px;color:var(--t4);margin-top:-4px;margin-bottom:12px;letter-spacing:.02em}
+
+  /* Token swatches */
+  .swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:12px 0}
+  .swatch{background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px}
+  .swatch-chip{width:36px;height:36px;border-radius:8px;flex-shrink:0;border:1px solid var(--border)}
+  .swatch-meta{display:flex;flex-direction:column;min-width:0;font-family:var(--mono);font-size:10.5px;line-height:1.3}
+  .swatch-name{color:var(--t1);font-weight:600}
+  .swatch-val{color:var(--t3)}
+
+  /* Anti-pattern banner */
+  .anti{background:rgba(255,59,48,.05);border:1px solid rgba(255,59,48,.18);border-radius:10px;padding:14px 16px;margin:8px 0}
+  .anti strong{color:#d23029;font-weight:600}
+
+  /* ─────────────────────────────────────────────────────────────
+     COMPONENT EXAMPLES — these are the exact CSS rules used in
+     timeline.html (Things theme). Copy directly.
+     ───────────────────────────────────────────────────────────── */
+
+  /* Buttons */
+  .btn{
+    height:32px;padding:0 14px;
+    border-radius:8px;border:1px solid var(--border-s);
+    background:#ffffff;color:var(--t1);
+    font:13px var(--font);font-weight:500;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{background:var(--surface-2)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#ffffff;font-weight:600}
+  .btn.primary:hover{background:#1a6ad8;border-color:#1a6ad8}
+  .btn.ghost{border-color:transparent;background:transparent}
+  .btn.ghost:hover{background:var(--surface-2)}
+  .btn.danger{color:var(--p1)}
+  .btn.danger:hover{background:rgba(255,59,48,.08)}
+
+  /* Segmented control */
+  .seg{
+    display:inline-flex;background:var(--surface-2);
+    border:1px solid var(--border-s);border-radius:8px;padding:3px;gap:2px;
+  }
+  .seg button{
+    height:24px;padding:0 10px;
+    border:none;background:transparent;color:var(--t3);
+    font:11.5px var(--font);font-weight:500;cursor:pointer;border-radius:6px;
+  }
+  .seg button:hover{color:var(--t1);background:rgba(0,0,0,.04)}
+  .seg button.active{background:#ffffff;color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  /* Inputs */
+  .input{
+    background:#f7f8fa;border:1px solid var(--border-s);color:var(--t1);
+    font:13px var(--font);padding:8px 10px;border-radius:8px;outline:none;
+    width:100%;
+  }
+  .input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+
+  /* Status pills */
+  .pill{
+    display:inline-block;padding:2px 10px;border-radius:99px;
+    font:10.5px var(--font);font-weight:600;letter-spacing:.02em;
+    background:var(--surface-2);color:var(--t3);
+    border:1px solid var(--border-s);
+  }
+  .pill.done{background:rgba(34,197,94,.14);color:#1a7a3a;border-color:rgba(34,197,94,.28)}
+  .pill.overdue{background:rgba(255,59,48,.12);color:#d23029;border-color:rgba(255,59,48,.30)}
+  .pill.atrisk{background:rgba(245,196,61,.20);color:#a07700;border-color:rgba(245,196,61,.40)}
+  .pill.accent{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+
+  /* Rows */
+  .demo-row{
+    display:flex;align-items:center;gap:10px;
+    height:40px;padding:0 14px;border-radius:8px;
+    color:var(--t1);font-size:13px;cursor:default;
+  }
+  .demo-row:hover{background:rgba(0,0,0,.03)}
+  .demo-row.selected{background:var(--accent-dim);color:var(--accent);font-weight:600}
+  .demo-row .chk{
+    width:16px;height:16px;border-radius:50%;
+    border:1.5px solid #c4c8d0;flex-shrink:0;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .demo-row .chk.done{background:var(--accent);border-color:var(--accent)}
+  .demo-row .chk.done::after{
+    content:'';width:5px;height:2.5px;
+    border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;
+    transform:rotate(-45deg) translateY(-1px);
+  }
+  .demo-row.done{color:var(--t3)}
+  .demo-row.done .ttl{text-decoration:line-through}
+
+  /* Bars (project pastels) */
+  .demo-bar{
+    height:24px;border-radius:999px;padding:0 14px;
+    display:inline-flex;align-items:center;
+    font:11.5px var(--font);font-weight:600;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.06);
+  }
+  .demo-bar.sky    {background:var(--proj-LIFE);   color:#1a3a52}
+  .demo-bar.peach  {background:var(--proj-HOME);   color:#5a2614}
+  .demo-bar.lav    {background:var(--proj-WORK);   color:#2e1a5a}
+  .demo-bar.mint   {background:var(--proj-ADMIN);  color:#1a4a2e}
+  .demo-bar.butter {background:var(--proj-BUTTER); color:#5a4014}
+  .demo-bar.milestone{background:var(--accent);color:#ffffff;font-weight:700}
+
+  /* Cards / menus */
+  .demo-card{
+    background:#ffffff;border:1px solid var(--border);
+    border-radius:14px;padding:18px 20px;
+    box-shadow:var(--shadow-lg);
+    min-width:260px;
+  }
+  .demo-menu{
+    background:#ffffff;border:1px solid var(--border);
+    border-radius:10px;padding:6px;
+    box-shadow:0 12px 40px rgba(0,0,0,.15);
+    min-width:220px;
+  }
+  .demo-menu-item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 12px;border-radius:6px;
+    font-size:13px;color:var(--t1);cursor:pointer;
+  }
+  .demo-menu-item:hover{background:var(--accent-dim);color:var(--accent)}
+  .demo-menu-sep{height:1px;background:var(--border);margin:4px 2px}
+
+  /* Today indicator */
+  .demo-today{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--accent);color:#ffffff;
+    display:inline-flex;align-items:center;justify-content:center;
+    font:13px var(--font);font-weight:700;
+    box-shadow:0 2px 6px rgba(44,123,229,.35);
+  }
+
+  /* Typography demo */
+  .ty-13{font-size:13px;color:var(--t1)}
+  .ty-11{font-size:11px;color:var(--t3)}
+  .ty-10{font-size:10.5px;color:var(--t3);font-weight:600;letter-spacing:.04em;text-transform:none}
+
+  /* Radius demo */
+  .rad{display:inline-flex;align-items:center;justify-content:center;width:80px;height:48px;background:var(--accent-dim);color:var(--accent);font:11px var(--mono);font-weight:600}
+  .rad.r8{border-radius:8px}
+  .rad.r12{border-radius:12px}
+  .rad.r14{border-radius:14px}
+  .rad.r99{border-radius:999px}
+
+  /* Bad examples block */
+  .bad-demo{padding:18px;border:1px dashed rgba(255,59,48,.4);border-radius:10px;background:rgba(255,59,48,.03);margin:6px 0}
+  .bad-glow{display:inline-block;padding:6px 14px;background:#0a0a23;color:#5eead4;border-radius:2px;box-shadow:0 0 14px #5eead4;font-size:13px;font-weight:600}
+  .bad-sharp{display:inline-block;padding:6px 14px;background:#0c1c19;color:#fff;border-radius:2px;border:1px solid #1d342f;font-size:13px}
+  .bad-white-on-light{display:inline-block;padding:6px 14px;background:var(--accent-dim);color:#fff;border-radius:8px;font-size:13px;font-weight:700}
+
+</style>
+</head>
+<body>
+
+<h1>Style guide — Timeline / Gantt app</h1>
+<p class="lede">
+  Live reference for the <strong>Things 3</strong>-style theme. Use this when restyling this app or starting a new one in the same family. Copy the <code>:root</code> block from this file's <code>&lt;style&gt;</code>, then copy individual component rules below. Always consume <code>var(--…)</code> tokens — never hardcode hex.
+</p>
+
+<p>
+  See also <a href="STYLE.md">STYLE.md</a> for the short written rules &amp; anti-patterns.
+</p>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>1. Design tokens</h2>
+<p>Copy the entire <code>:root</code> block from this file. These are the only colours, fonts, radii, and shadows used by the app.</p>
+
+<h3>Colour</h3>
+<div class="swatch-grid">
+  <div class="swatch"><div class="swatch-chip" style="background:var(--bg)"></div>     <div class="swatch-meta"><span class="swatch-name">--bg</span><span class="swatch-val">#ffffff</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--bg-side)"></div><div class="swatch-meta"><span class="swatch-name">--bg-side</span><span class="swatch-val">#f7f8fa</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--bg-grid)"></div><div class="swatch-meta"><span class="swatch-name">--bg-grid</span><span class="swatch-val">#fafbfc</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--surface-2)"></div><div class="swatch-meta"><span class="swatch-name">--surface-2</span><span class="swatch-val">#f3f4f7</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--surface-3)"></div><div class="swatch-meta"><span class="swatch-name">--surface-3</span><span class="swatch-val">#e9ebf0</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--t1)"></div>     <div class="swatch-meta"><span class="swatch-name">--t1</span><span class="swatch-val">#1a1a1a</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--t2)"></div>     <div class="swatch-meta"><span class="swatch-name">--t2</span><span class="swatch-val">#3c4046</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--t3)"></div>     <div class="swatch-meta"><span class="swatch-name">--t3</span><span class="swatch-val">#6b7280</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--t4)"></div>     <div class="swatch-meta"><span class="swatch-name">--t4</span><span class="swatch-val">#9aa0a8</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--accent)"></div> <div class="swatch-meta"><span class="swatch-name">--accent</span><span class="swatch-val">#2c7be5</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--p1)"></div>     <div class="swatch-meta"><span class="swatch-name">--p1</span><span class="swatch-val">#ff3b30</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--p2)"></div>     <div class="swatch-meta"><span class="swatch-name">--p2</span><span class="swatch-val">#f5c43d</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--proj-LIFE)"></div>  <div class="swatch-meta"><span class="swatch-name">--proj-LIFE</span><span class="swatch-val">#a8d8ea sky</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--proj-HOME)"></div>  <div class="swatch-meta"><span class="swatch-name">--proj-HOME</span><span class="swatch-val">#ffd4c4 peach</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--proj-WORK)"></div>  <div class="swatch-meta"><span class="swatch-name">--proj-WORK</span><span class="swatch-val">#d4c5f9 lavender</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--proj-ADMIN)"></div> <div class="swatch-meta"><span class="swatch-name">--proj-ADMIN</span><span class="swatch-val">#c5e8d5 mint</span></div></div>
+  <div class="swatch"><div class="swatch-chip" style="background:var(--proj-BUTTER)"></div><div class="swatch-meta"><span class="swatch-name">--proj-BUTTER</span><span class="swatch-val">#fce4a8 butter</span></div></div>
+</div>
+
+<h3>Borders &amp; shadows</h3>
+<div class="row">
+  <div class="demo-card" style="min-width:200px"><strong>Card</strong><br><span style="color:var(--t3);font-size:12px">box-shadow: var(--shadow-lg)</span></div>
+  <div class="demo" style="min-width:200px;padding:14px"><div class="stack"><span><strong>Hairline</strong> <code>--border</code></span><span style="color:var(--t3);font-size:12px">rgba(0,0,0,.06)</span></div></div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>2. Shape language</h2>
+<p>Three radius scales. No 2–4px sharp corners anywhere.</p>
+
+<div class="demo">
+  <div class="rad r8">8px</div>
+  <div class="rad r12">12px</div>
+  <div class="rad r14">14px</div>
+  <div class="rad r99">999px</div>
+</div>
+<p style="font-size:12px;color:var(--t3)">
+  <code>8px</code> rows, buttons, inputs, segmented controls  ·
+  <code>12–14px</code> cards, modals, menus, dropdowns  ·
+  <code>999px</code> bars, pills, badges, status chips, circular indicators
+</p>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>3. Typography</h2>
+<div class="demo column">
+  <div class="ty-13">Body / row text — 13px, t1, 400 weight</div>
+  <div class="ty-11">Metadata / counts — 11px, t3</div>
+  <div class="ty-10">LABELS / CHIP TEXT — 10.5px, t3, 600, .04em letterspacing</div>
+</div>
+<pre>font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",
+            "Segoe UI",Roboto,sans-serif;</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>4. Buttons</h2>
+<div class="demo">
+  <button class="btn primary">+ New project</button>
+  <button class="btn">Open workspace</button>
+  <button class="btn ghost">Cancel</button>
+  <button class="btn danger">Delete</button>
+</div>
+<pre>.btn{height:32px;padding:0 14px;border-radius:8px;
+     border:1px solid var(--border-s);background:#ffffff;color:var(--t1);
+     font:13px var(--font);font-weight:500;cursor:pointer;
+     display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);
+             color:#ffffff;font-weight:600}
+.btn.primary:hover{background:#1a6ad8;border-color:#1a6ad8}</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>5. Segmented control</h2>
+<div class="demo">
+  <div class="seg">
+    <button class="active">Gantt</button>
+    <button>List</button>
+    <button>Cal</button>
+  </div>
+</div>
+<pre>.seg{display:inline-flex;background:var(--surface-2);
+     border:1px solid var(--border-s);border-radius:8px;padding:3px;gap:2px}
+.seg button{height:24px;padding:0 10px;border:none;background:transparent;
+            color:var(--t3);font:11.5px var(--font);font-weight:500;
+            cursor:pointer;border-radius:6px}
+.seg button.active{background:#ffffff;color:var(--accent);
+                   box-shadow:0 1px 3px rgba(0,0,0,.08)}</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>6. Inputs</h2>
+<div class="demo column" style="max-width:360px">
+  <input class="input" placeholder="Default" />
+  <input class="input" value="Focused — try clicking" autofocus />
+</div>
+<pre>.input{background:#f7f8fa;border:1px solid var(--border-s);color:var(--t1);
+       font:13px var(--font);padding:8px 10px;border-radius:8px;
+       outline:none;width:100%}
+.input:focus{border-color:var(--accent);
+             box-shadow:0 0 0 3px var(--accent-dim)}</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>7. Status pills</h2>
+<div class="demo">
+  <span class="pill">Active</span>
+  <span class="pill done">Done</span>
+  <span class="pill overdue">Overdue</span>
+  <span class="pill atrisk">At risk</span>
+  <span class="pill accent">7 items</span>
+</div>
+<pre>.pill{display:inline-block;padding:2px 10px;border-radius:99px;
+      font:10.5px var(--font);font-weight:600;letter-spacing:.02em;
+      background:var(--surface-2);color:var(--t3);
+      border:1px solid var(--border-s)}
+.pill.done   {background:rgba(34,197,94,.14); color:#1a7a3a;
+              border-color:rgba(34,197,94,.28)}
+.pill.overdue{background:rgba(255,59,48,.12); color:#d23029;
+              border-color:rgba(255,59,48,.30)}
+.pill.atrisk {background:rgba(245,196,61,.20);color:#a07700;
+              border-color:rgba(245,196,61,.40)}</pre>
+<p style="font-size:12px;color:var(--t3)">Recipe for status colours: <strong>background = hue at ~12–20% opacity, text = same hue darkened</strong>. Never use saturated red/green at full strength.</p>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>8. Rows (task / list / project)</h2>
+<div class="demo column" style="padding:8px">
+  <div class="demo-row">
+    <span class="chk"></span>
+    <span class="ttl">Default row — hover for state</span>
+  </div>
+  <div class="demo-row">
+    <span class="chk done"></span>
+    <span class="ttl" style="color:var(--t3);text-decoration:line-through">Completed task</span>
+  </div>
+  <div class="demo-row selected">
+    <span class="chk"></span>
+    <span class="ttl">Selected row</span>
+  </div>
+</div>
+<pre>.row{display:flex;align-items:center;gap:10px;
+     height:40px;padding:0 14px;border-radius:8px;
+     color:var(--t1);font-size:13px}
+.row:hover{background:rgba(0,0,0,.03)}
+.row.selected{background:var(--accent-dim);color:var(--accent);font-weight:600}
+
+.chk{width:16px;height:16px;border-radius:50%;
+     border:1.5px solid #c4c8d0;flex-shrink:0}
+.chk.done{background:var(--accent);border-color:var(--accent)}
+.chk.done::after{content:'';width:5px;height:2.5px;
+     border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;
+     transform:rotate(-45deg)}</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>9. Bars (Gantt / Calendar event pills)</h2>
+<div class="demo column" style="padding:14px">
+  <div><span class="demo-bar sky">Discovery call</span></div>
+  <div><span class="demo-bar peach">Approve hero image</span></div>
+  <div><span class="demo-bar mint">QA landing page</span></div>
+  <div><span class="demo-bar lav">Draft proposal</span></div>
+  <div><span class="demo-bar butter">Send Northwind invoice</span></div>
+  <div><span class="demo-bar milestone">◆ Launch day</span></div>
+</div>
+<pre>.bar{height:24px;border-radius:999px;padding:0 14px;
+     display:inline-flex;align-items:center;
+     font:11.5px var(--font);font-weight:600;
+     box-shadow:inset 0 1px 0 rgba(255,255,255,.5),
+                0 1px 2px rgba(0,0,0,.06)}
+.bar.sky    {background:var(--proj-LIFE);   color:#1a3a52}
+.bar.peach  {background:var(--proj-HOME);   color:#5a2614}
+.bar.lav    {background:var(--proj-WORK);   color:#2e1a5a}
+.bar.mint   {background:var(--proj-ADMIN);  color:#1a4a2e}
+.bar.butter {background:var(--proj-BUTTER); color:#5a4014}
+.bar.milestone{background:var(--accent);color:#ffffff;font-weight:700}</pre>
+<p style="font-size:12px;color:var(--t3)">Project bars cycle through the 5 pastels. Text colour is the same hue darkened to a readable contrast — never use white text on a pastel pill.</p>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>10. Today indicator</h2>
+<div class="demo">
+  <div class="demo-today">19</div>
+  <span style="color:var(--t3);font-size:13px">filled blue circle, white text — never bold text on a tinted cell</span>
+</div>
+<pre>.today{width:28px;height:28px;border-radius:50%;
+       background:var(--accent);color:#ffffff;
+       display:inline-flex;align-items:center;justify-content:center;
+       font:13px var(--font);font-weight:700;
+       box-shadow:0 2px 6px rgba(44,123,229,.35)}</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>11. Cards &amp; menus</h2>
+<div class="row">
+  <div class="demo-card">
+    <div style="font-weight:600;font-size:14px;margin-bottom:4px">Card</div>
+    <div style="color:var(--t3);font-size:13px">14px radius · soft shadow · no harsh border</div>
+  </div>
+  <div class="demo-menu">
+    <div class="demo-menu-item">Open</div>
+    <div class="demo-menu-item">Rename</div>
+    <div class="demo-menu-item">Duplicate</div>
+    <div class="demo-menu-sep"></div>
+    <div class="demo-menu-item" style="color:var(--p1)">Delete</div>
+  </div>
+</div>
+<pre>.card{background:#ffffff;border:1px solid var(--border);
+      border-radius:14px;padding:18px 20px;
+      box-shadow:0 16px 50px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.04)}
+
+.menu{background:#ffffff;border:1px solid var(--border);
+      border-radius:10px;padding:6px;
+      box-shadow:0 12px 40px rgba(0,0,0,.15)}
+.menu-item{padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+.menu-item:hover{background:var(--accent-dim);color:var(--accent)}</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>12. Interaction states (selection / hover / focus)</h2>
+<p style="font-size:12px;color:var(--t3)">Use these consistently. No <code>outline:2px solid</code>, no glow, no neon ring.</p>
+<pre>/* Selection on a row    */ background:var(--accent-dim); color:var(--accent);
+                            /* optional left bar: */ box-shadow:inset 3px 0 0 var(--accent);
+/* Hover on a row        */ background:rgba(0,0,0,.03);
+/* Focus on an input     */ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim);
+/* Active in segmented   */ background:#ffffff; color:var(--accent); box-shadow:0 1px 3px rgba(0,0,0,.08);</pre>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>13. Anti-patterns — do NOT do these</h2>
+
+<div class="anti"><strong>Hardcoded dark hexes</strong> — <code>#0c1c19</code>, <code>#021412</code>, <code>#05100e</code> survived from the old dark theme and looked broken on white. Always use <code>var(--…)</code>.</div>
+<div class="bad-demo"><span class="bad-sharp">Dark surface with 2px corners</span></div>
+
+<div class="anti"><strong>Glow / neon shadows</strong> — they belong to the Aurora backup theme, not Things.</div>
+<div class="bad-demo"><span class="bad-glow">Glowing button</span></div>
+
+<div class="anti"><strong>White text on a light background</strong> — the original <code>.calendar-cell.today .cv-date-num: color:#fff</code> bug. Always check contrast.</div>
+<div class="bad-demo"><span class="bad-white-on-light">19</span></div>
+
+<div class="anti"><strong>Saturated brand-style status pills</strong> — full-strength <code>#ef4444</code> red / <code>#22c55e</code> green look harsh. Use the 12–20% opacity recipe in section 7.</div>
+
+<div class="anti"><strong>Sharp 2–4px radii</strong> on anything. Pick from 8 / 12 / 14 / 999.</div>
+
+<div class="anti"><strong>Inline <code>style={{…}}</code> colour values in JSX</strong> — defeats the token system. Add a class and use <code>var(--…)</code>.</div>
+
+<!-- ─────────────────────────────────────────────────────────── -->
+<h2>14. Adding a new component — checklist</h2>
+<ol style="font-size:13px;color:var(--t1);padding-left:22px;line-height:1.7">
+  <li>Read <a href="STYLE.md">STYLE.md</a>. Skim this file's sections 1–3.</li>
+  <li>Use <code>var(--…)</code> tokens only. If you need a colour that doesn't exist, add a new token to the Things theme block in <code>timeline.html</code> first.</li>
+  <li>Match an existing component's <strong>radius</strong>, <strong>padding</strong>, and <strong>hover treatment</strong>. Find the closest analogue above and mirror it.</li>
+  <li>Scope theme overrides under <code>body[data-theme="things"]</code> in <code>timeline.html</code> so the Aurora backup and any future themes aren't polluted.</li>
+  <li>Verify visually. Load the preview, open the sample project, and confirm the new component looks at home next to the Welcome / List / Calendar / Gantt views.</li>
+</ol>
+
+</body>
+</html>
