@@ -1,5 +1,16 @@
 verify-*.png
+# Ad-hoc verification screenshots at repo root (Playwright baselines under
+# tests/baseline.spec.js-snapshots/ are NOT covered by this pattern).
+/*.png
 server.log
 .claude/
 .playwright-mcp/
 yt studio.json
+dist/
+.vercel/
+node_modules/
+.env
+.env.local
+# Test run artefacts (diffs, traces). Baselines stay in tests/baseline.spec.js-snapshots/.
+tests/output/
+test-results/

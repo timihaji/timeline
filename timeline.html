@@ -25,6 +25,7 @@
     --rk:8px;
     --row-h:34px;
     --col-w:36px;
+    --critical:#ef4444;
   }
   html,body,#root{height:100%}
   body{font-family:var(--font);background:var(--bg);color:var(--t1);overflow:hidden;-webkit-font-smoothing:antialiased}
@@ -86,7 +87,8 @@
   /* Layout */
   .app{display:flex;flex-direction:column;height:100%}
   .body{flex:1;display:flex;min-height:0;background:var(--bg)}
-  .work-area{flex:1;display:flex;flex-direction:column;min-width:0}
+  .work-area{flex:1;display:flex;flex-direction:column;min-width:0;transition:margin-right .18s cubic-bezier(.2,.7,.2,1)}
+  .work-area.inspector-docked{margin-right:400px}
   .work-row{flex:1;display:flex;min-height:0;min-width:0}
   .lpane-minimap-spacer{height:52px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--bg-side)}
 
@@ -115,9 +117,14 @@
   .lpane-hdr{height:54px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--border);gap:10px;flex-shrink:0}
   .lpane-hdr h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t4)}
   .lpane-hdr .pill{font:10px var(--mono);padding:2px 6px;border-radius:2px;background:var(--surface);color:var(--t3);border:1px solid var(--border-s)}
-  .lpane-add-btn{margin-left:auto;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-s);background:transparent;color:var(--t3);border-radius:3px;cursor:pointer;font-size:15px;line-height:1;padding:0;flex-shrink:0}
+  .lpane-add-btn{margin-left:auto;height:22px;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 8px;border:1px solid var(--border-s);background:transparent;color:var(--t3);border-radius:4px;cursor:pointer;font:11px var(--font);line-height:1;flex-shrink:0}
+  .lpane-add-btn svg{display:block}
   .lpane-add-btn:hover:not(:disabled){border-color:var(--accent-border);color:var(--accent-2);background:var(--accent-dim)}
   .lpane-add-btn:disabled{opacity:.35;cursor:not-allowed}
+  .grp-drag{display:inline-flex;align-items:center;justify-content:center;width:10px;height:14px;cursor:grab;user-select:none;color:var(--t4);font-size:9px;line-height:1;letter-spacing:-1px;opacity:0;transition:opacity .12s ease;flex-shrink:0;margin-right:-2px}
+  .group-row:hover .grp-drag{opacity:.55}
+  .grp-drag:hover{opacity:.95}
+  .grp-drag:active{cursor:grabbing}
   .task-row-add{display:flex;align-items:center;gap:8px;height:var(--row-h);padding:0 12px 0 26px;cursor:pointer;color:var(--t4);font-size:12px;border-bottom:1px solid #0c1c19;user-select:none}
   .task-row-add:hover{background:#0c1c19;color:var(--accent-2)}
   .task-row-add-plus{width:12px;height:12px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--border-s);border-radius:50%;font-size:10px;line-height:1;flex-shrink:0}
@@ -209,20 +216,35 @@
 
   /* Bars */
   .bar-layer{position:absolute;inset:0;cursor:inherit}
-  .bar{position:absolute;height:22px;border-radius:3px;display:flex;align-items:center;padding:0 8px 0 10px;font-size:11.5px;font-weight:500;color:#021412;cursor:grab;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);transition:box-shadow .12s,transform .12s,filter .12s;white-space:nowrap;overflow:visible;will-change:transform}
+  .bar{position:absolute;height:22px;border-radius:3px;display:flex;align-items:center;padding:0 8px 0 10px;font-size:11.5px;font-weight:500;color:#021412;cursor:grab;user-select:none;box-shadow:0 1px 2px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);transition:box-shadow .12s,transform .12s,filter .12s;white-space:nowrap;overflow:visible;will-change:transform;z-index:5}
   .bar:hover{box-shadow:0 2px 4px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.35);filter:brightness(1.06);z-index:5}
   .bar.dragging{cursor:grabbing;box-shadow:0 4px 8px rgba(0,0,0,.55),0 18px 40px rgba(0,0,0,.55);transform:translateY(-1px) scale(1.01);filter:brightness(1.1);z-index:50}
   .bar[data-zone="l"],.bar[data-zone="r"]{cursor:ew-resize}
+  .bar-grip{position:absolute;top:25%;bottom:25%;width:2px;background:rgba(0,0,0,.32);border-radius:1px;opacity:0;transition:opacity .12s ease,background .12s ease;pointer-events:none}
+  .bar-grip.bar-grip-l{left:2px}
+  .bar-grip.bar-grip-r{right:2px}
+  .bar:hover .bar-grip,.bar.selected .bar-grip{opacity:1}
+  .bar[data-zone="l"] .bar-grip-l,.bar[data-zone="r"] .bar-grip-r{background:rgba(0,0,0,.55);width:3px}
+  .bar.compact .bar-grip,.bar.short .bar-grip,.bar.recur-instance .bar-grip{display:none}
   .bar.dragging[data-zone]{cursor:grabbing}
   .bar.selected{outline:2px solid var(--accent-2);outline-offset:1px;z-index:6}
   .bar.done{border-color:#dddfe2!important;filter:none}
   .bar.done .bar-ttl{text-decoration:line-through;opacity:.55}
   .bar-ttl{flex:1;text-overflow:ellipsis;overflow:hidden;text-shadow:0 1px 0 rgba(255,255,255,.12)}
   .bar-ttl-ext{position:absolute;font:500 11.5px/22px var(--font);color:var(--t1);white-space:nowrap;pointer-events:none;z-index:2;padding-left:2px;text-shadow:0 1px 1px rgba(0,0,0,.3)}
+  .bar-owner-ext{position:absolute;font:700 8px/22px var(--mono);background:rgba(0,0,0,.09);color:var(--t2);border-radius:3px;padding:0 4px;pointer-events:none;z-index:2;letter-spacing:.04em;white-space:nowrap}
   .bar-prog{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.22);border-radius:3px 0 0 3px;pointer-events:none}
   .bar-meta{font:10px var(--mono);color:rgba(0,0,0,.55);margin-left:6px;flex-shrink:0}
   .bar.compact{padding:0 4px}
   .bar.compact .bar-ttl{font-size:10.5px}
+  .bar-ttl-ext.compact{font-size:10.5px}
+  .bar.pill{border-radius:999px;box-shadow:none;text-shadow:none;font-weight:600;padding:0 12px}
+  .bar.pill .bar-ttl{text-shadow:none;color:inherit}
+  .bar.pill .bar-prog{background:rgba(0,0,0,.08);border-radius:999px 0 0 999px}
+  .bar.pill .bar-meta{color:inherit;opacity:.6;background:transparent}
+  .bar.pill .bar-owner{color:inherit;opacity:.6;background:transparent}
+  .bar.pill.done{opacity:.65}
+  .bar.pill::before,.bar.pill::after{display:none}
 
   /* Edge resize stripes — visual affordance for the 12px hit zones (hit-test in JS) */
   .bar:not(.project):not(.milestone)::before,
@@ -249,8 +271,10 @@
   .bar-short-dot:hover{background:var(--surface);color:var(--t1);transform:none}
 
   /* Dep handle — overlaps the bar's right edge (larger target than the old off-bar knob) */
-  .dep-knob{position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:var(--accent-2);border:2px solid #021412;opacity:0;transition:opacity .12s,transform .12s;cursor:crosshair;z-index:9;box-shadow:0 0 0 0 var(--accent-2)}
+  .dep-knob{position:absolute;right:-18px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:50%;background:var(--accent-2);border:2px solid #021412;opacity:.45;transition:opacity .12s,transform .12s;cursor:crosshair;z-index:9;box-shadow:0 0 0 0 var(--accent-2);pointer-events:auto}
   .dep-knob::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:8px;height:2px;background:var(--accent-2);opacity:.6;pointer-events:none;border-radius:1px}
+  .dep-knob-l{right:auto;left:-18px}
+  .dep-knob-l::before{left:auto;right:-8px}
   .bar:hover .dep-knob,.bar.selected .dep-knob{opacity:1}
   .dep-knob:hover{transform:translateY(-50%) scale(1.2);box-shadow:0 0 0 6px rgba(20,184,166,.18)}
 
@@ -270,17 +294,22 @@
   @media (pointer:coarse){
     .bar:not(.project):not(.milestone)::before,
     .bar:not(.project):not(.milestone)::after{width:4px;height:16px;opacity:.5}
-    .dep-knob{width:22px;height:22px;right:-12px;opacity:.6}
+    .dep-knob{width:22px;height:22px;right:-22px;opacity:.6}
+    .dep-knob-l{right:auto;left:-22px}
     .dep-knob::before{left:-10px;width:10px;height:2px}
     .bar-short-dot{height:18px;padding:0 6px;top:-10px;right:-7px;opacity:.7}
   }
+
+  /* Lead time ghost bars */
+  .bar-lead{position:absolute;height:22px;border-radius:3px;opacity:.42;pointer-events:none;user-select:none;border:1.5px dashed rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .bar-lead-lbl{font:10px var(--mono);color:rgba(0,0,0,.65);pointer-events:none}
 
   /* Project (parent) bar */
   .bar.project{background:transparent !important;color:var(--t1);border:none;box-shadow:none;cursor:default;padding:0}
   .bar.project::before{content:'';position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:6px;background:linear-gradient(90deg,#1d342f,#26433d);border:1px solid var(--border-s);border-radius:1px}
   .bar.project::after{content:'';position:absolute;left:0;top:50%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--accent-2);transform:translate(-2px,3px)}
   .bar.project .proj-cap{position:absolute;right:0;top:50%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--accent-2);transform:translate(2px,3px)}
-  .bar.project .bar-ttl{position:absolute;left:0;top:-15px;color:var(--t2);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-shadow:none}
+  .bar.project .bar-ttl{position:absolute;left:0;top:-15px;color:var(--t2);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-shadow:none;overflow:visible;white-space:nowrap}
 
   /* Milestone diamond */
   .bar.milestone{background:transparent !important;box-shadow:none;padding:0;justify-content:center}
@@ -310,11 +339,11 @@
   .ins-dep-chip .ins-dep-del:hover{color:var(--p1);background:rgba(239,68,68,.12)}
   .ins-dep-add{font:10px var(--font);color:var(--accent-2);background:transparent;border:1px dashed var(--accent-border);border-radius:3px;padding:2px 7px;cursor:pointer;margin-top:4px;width:100%}
   .ins-dep-add:hover{background:var(--accent-dim)}
-  .pred-picker{position:fixed;z-index:400;background:var(--surface-2);border:1px solid var(--border-s);border-radius:5px;box-shadow:var(--shadow-lg);padding:6px;min-width:220px;max-height:260px;display:flex;flex-direction:column;gap:4px}
-  .pred-picker-input{font:11px var(--font);background:var(--bg-top);border:1px solid var(--border-s);border-radius:3px;color:var(--t1);padding:4px 7px;outline:none;width:100%}
+  .pred-picker{position:fixed;z-index:600;background:var(--surface);border:1px solid var(--border-s);border-radius:5px;box-shadow:var(--shadow-lg);padding:6px;width:280px;max-height:320px;display:flex;flex-direction:column;gap:4px;color:var(--t1)}
+  .pred-picker-input{font-family:var(--font);font-size:12.5px;line-height:18px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:3px;color:var(--t1);padding:5px 8px;outline:none;width:100%}
   .pred-picker-input:focus{border-color:var(--accent-border)}
-  .pred-picker-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:2px}
-  .pred-picker-item{font:11px var(--font);color:var(--t1);padding:4px 8px;border-radius:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pred-picker-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:1px}
+  .pred-picker-item{font-family:var(--font);font-size:12.5px;line-height:20px;color:var(--t1);padding:5px 8px;border-radius:3px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pred-picker-item:hover{background:var(--accent-dim);color:var(--accent-2)}
 
   /* Drop ghost / live label */
@@ -324,6 +353,8 @@
 
   /* Status footer */
   .sbar{height:26px;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--bg-top);border-top:1px solid var(--border);flex-shrink:0;font-size:11px;color:var(--t3)}
+  .sbar-conflict-btn{background:transparent;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+  .sbar-conflict-btn:hover{color:var(--p2,#f5a302)}
   .sbar kbd{font:10px var(--mono);padding:1px 5px;border:1px solid var(--border-s);border-radius:2px;background:var(--surface-2);color:var(--t2)}
   .sbar .right{margin-left:auto;display:flex;gap:14px;align-items:center}
   .sbar .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 8px var(--accent-2)}
@@ -344,15 +375,18 @@
   .snap-guide{position:absolute;top:0;bottom:0;width:1px;background:var(--accent-2);box-shadow:0 0 8px var(--accent-2);pointer-events:none;z-index:9;opacity:.7}
 
   /* Critical path */
-  .bar.critical{box-shadow:0 0 0 1.5px rgba(251,191,36,.85),0 0 16px rgba(251,191,36,.45),0 1px 2px rgba(0,0,0,.4)}
-  .bar.milestone.critical .diamond{box-shadow:0 0 0 2px #fbbf24,0 0 14px rgba(251,191,36,.5),0 1px 2px rgba(0,0,0,.5)}
-  .dep-path.critical{stroke:#fbbf24;opacity:.95;stroke-width:2}
+  .bar.critical{outline:2px solid var(--critical);outline-offset:1px}
+  .bar.milestone.critical .diamond{box-shadow:0 0 0 2.5px var(--critical),0 1px 2px rgba(0,0,0,.3)}
+  .dep-path.critical{stroke:var(--critical);opacity:1;stroke-width:2.5}
 
   /* Selection inspector — slide-in drawer from right edge, below 44px topbar */
   .inspector{position:fixed;top:44px;right:0;bottom:0;width:400px;background:var(--surface);border-left:1px solid var(--border);box-shadow:-4px 0 16px rgba(0,0,0,.06);padding:16px 18px 20px;z-index:550;overflow-y:auto;overflow-x:hidden;transform:translateX(100%);transition:transform .18s cubic-bezier(.2,.7,.2,1);pointer-events:none}
   .inspector.open{transform:translateX(0);pointer-events:auto}
   .ins-title{font-size:12.5px;font-weight:600;color:var(--t1);margin-bottom:6px;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:4px;width:100%}
   .ins-title-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ins-title-input{flex:1;min-width:0;background:transparent;border:1px solid transparent;color:var(--t1);font-family:var(--font);font-size:12.5px;font-weight:600;letter-spacing:-.1px;padding:2px 5px;margin:-3px -6px -3px -6px;border-radius:3px;outline:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text}
+  .ins-title-input:hover{background:var(--surface-2)}
+  .ins-title-input:focus{background:var(--surface-2);border-color:var(--accent-border)}
   .ins-pin,.ins-close{flex-shrink:0;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--t4);font:13px/1 var(--font);cursor:pointer;padding:0}
   .ins-pin{margin-left:auto}
   .ins-pin svg{width:13px;height:13px;display:block;transition:transform .15s ease}
@@ -430,7 +464,7 @@
   .bulk-picker .bp-title{font:10px var(--mono);color:var(--t4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
 
   /* Right-click context menu */
-  .ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;z-index:800;min-width:220px;font:11.5px var(--font);color:var(--t2);user-select:none}
+  .ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border-s);border-radius:3px;box-shadow:var(--shadow-lg);padding:4px;z-index:800;min-width:220px;font:11.5px var(--font);color:var(--t2);user-select:none;max-height:calc(100vh - 16px);overflow-y:auto}
   .ctx-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:2px;cursor:pointer}
   .ctx-item:hover{background:var(--surface-2);color:var(--t1)}
   .ctx-item.danger:hover{color:var(--p1)}
@@ -453,9 +487,10 @@
   .ctx-input:focus{border-color:var(--accent-border);box-shadow:0 0 0 3px var(--accent-dim)}
 
   /* Inline rename */
-  .bar-rename{flex:1;min-width:0;width:100%;background:rgba(0,0,0,.32);border:1px solid rgba(0,0,0,.55);color:#021412;font-family:var(--font);font-size:inherit;font-weight:500;padding:1px 4px;border-radius:2px;outline:none;text-shadow:none}
-  .bar-rename::selection{background:rgba(255,255,255,.3)}
-  .row-rename{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--accent-border);color:var(--t1);font-family:var(--font);font-size:11.5px;font-weight:600;padding:1px 5px;border-radius:2px;outline:none}
+  .bar-rename{flex:1;min-width:0;width:100%;background:transparent;border:none;color:inherit;font-family:var(--font);font-size:inherit;font-weight:inherit;padding:0;border-radius:0;outline:none;text-shadow:0 1px 0 rgba(255,255,255,.12);caret-color:#021412}
+  .bar-rename::selection{background:rgba(0,0,0,.22)}
+  .bar.pill .bar-rename{text-shadow:none}
+  .row-rename{flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--accent-border);color:var(--t1);font-family:var(--font);font-size:inherit;font-weight:inherit;padding:1px 5px;border-radius:2px;outline:none}
 
   /* Duration buffer toast */
   .dur-toast{position:absolute;font:11px var(--mono);font-weight:700;background:var(--accent-2);color:#021412;padding:4px 9px;border-radius:2px;letter-spacing:.04em;box-shadow:var(--shadow);z-index:60;pointer-events:none;white-space:nowrap}
@@ -546,7 +581,7 @@
   .now-curtain{position:absolute;top:0;bottom:0;left:0;pointer-events:none;z-index:3;background:linear-gradient(to right,rgba(2,10,8,.52) 0%,rgba(2,10,8,.18) 78%,transparent 100%)}
 
   /* Past bar */
-  .bar.past:not(.dragging):not(.done){filter:saturate(.55) brightness(.92)}
+  .bar.past:not(.dragging):not(.done){filter:saturate(0.08) brightness(1.08)}
 
   /* Alt-drag ghost */
   .alt-ghost{position:absolute;height:22px;border-radius:3px;pointer-events:none;z-index:8;opacity:.5;border:2px dashed rgba(255,255,255,.5)}
@@ -585,6 +620,28 @@
   /* Owner swimlane */
   .owner-group-row{display:flex;align-items:center;gap:8px;height:var(--row-h);padding:0 12px;background:var(--bg-side);border-bottom:1px solid var(--border);cursor:pointer;position:sticky;z-index:1}
   .owner-group-row:hover{background:var(--surface)}
+
+  /* ── Lane rows (swimlanes) ── */
+  .lane-row{display:flex;align-items:center;gap:6px;height:var(--row-h);padding:0 12px 0 28px;background:transparent;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+  .lane-row:hover{background:rgba(0,0,0,.02)}
+  .lane-chv{flex-shrink:0;width:12px;height:12px;opacity:.5;transition:transform .15s}
+  .lane-chv.open{transform:rotate(90deg)}
+  .lane-dot{flex-shrink:0;width:8px;height:8px;border-radius:50%}
+  .lane-ttl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row-line.lane{background:rgba(0,0,0,.03);height:var(--row-h)!important}
+
+  /* Stage / manual lane editor in Tweaks panel */
+  .lane-stage-editor{padding:6px 0 2px;display:flex;flex-direction:column;gap:4px}
+  .lse-title{font:10px var(--font);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t4);margin-bottom:2px}
+  .lse-row{display:flex;align-items:center;gap:6px}
+  .lse-handle{color:var(--t4);font-size:11px;cursor:grab;flex-shrink:0}
+  .lse-color{width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;flex-shrink:0}
+  .lse-input{flex:1;height:26px;padding:0 7px;font:12px var(--font);color:var(--t1);background:var(--surface);border:1px solid var(--border);border-radius:5px;outline:none}
+  .lse-input:focus{border-color:var(--accent-border)}
+  .lse-del{width:20px;height:20px;border:none;background:transparent;color:var(--t4);cursor:pointer;font-size:14px;line-height:1;padding:0;flex-shrink:0}
+  .lse-del:hover{color:var(--p1)}
+  .lse-add{margin-top:2px;height:26px;padding:0 10px;font:11px var(--font);color:var(--accent);background:transparent;border:1px dashed var(--accent-border);border-radius:5px;cursor:pointer;text-align:left}
+  .lse-add:hover{background:var(--accent-dim)}
   .owner-avatar{width:20px;height:20px;border-radius:50%;background:var(--surface-3);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font:8px var(--font);font-weight:700;color:var(--accent-2);flex-shrink:0}
 
   /* Tiny header columns */
@@ -597,6 +654,13 @@
   .empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--t4);font-size:13px;gap:12px;pointer-events:none}
   .empty-state h3{font-size:14px;font-weight:600;color:var(--t2);letter-spacing:.02em}
 
+  /* Onboarding hint overlay card */
+  .onboard-hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:18px 36px 18px 22px;box-shadow:0 8px 24px rgba(0,0,0,.12);color:var(--t1);font-size:13px;max-width:380px;text-align:center;z-index:30;pointer-events:auto}
+  .onboard-hint h3{font-size:14px;font-weight:600;color:var(--t1);margin:0 0 8px 0}
+  .onboard-hint p{margin:0;color:var(--t3);line-height:1.5}
+  .onboard-hint .onboard-close{position:absolute;top:6px;right:8px;width:22px;height:22px;border:none;background:transparent;color:var(--t4);font-size:18px;line-height:1;cursor:pointer;border-radius:4px}
+  .onboard-hint .onboard-close:hover{background:var(--surface-2);color:var(--t1)}
+
   /* Recurring task instance icon */
   .recur-icon{position:absolute;top:1px;right:1px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.85);background:rgba(0,0,0,.32);border-radius:50%;pointer-events:none;z-index:5;font-weight:700;line-height:1}
   .bar.recur-instance{cursor:help}
@@ -605,6 +669,44 @@
   .ins-recur-row{display:flex;align-items:center;gap:6px;font:10.5px var(--font);color:var(--t3);background:var(--surface-2);border:1px solid var(--border-s);border-radius:2px;padding:5px 8px;margin-top:4px}
   .ins-recur-row .recur-label{color:var(--t1)}
   .ins-recur-row .recur-edit{margin-left:auto;background:transparent;border:1px solid var(--border-s);color:var(--accent-2);font:10px var(--font);padding:1px 7px;border-radius:2px;cursor:pointer}
+  /* Progress slider in inspector */
+  .ins-prog-wrap{display:flex;align-items:center;gap:8px;margin-top:4px}
+  .ins-slider{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:999px;outline:none;cursor:pointer;border:none;padding:0}
+  .ins-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid var(--surface);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .ins-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent-2);border:2px solid var(--surface);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .ins-prog-num{width:44px;flex-shrink:0;text-align:right}
+  .ins-mark-done{display:flex;align-items:center;gap:6px;margin-top:6px;padding:4px 8px;background:var(--surface-2);border:1px solid var(--border-s);border-radius:6px;font-size:11px;color:var(--t2)}
+  .ins-mark-done .ins-mark-done-btn{border:none;background:transparent;font:600 11px var(--font);cursor:pointer;padding:2px 8px;border-radius:4px}
+  .ins-mark-done .ins-mark-done-btn.yes{background:var(--accent-dim);color:var(--accent-2)}
+  .ins-mark-done .ins-mark-done-btn.yes:hover{background:var(--accent-border)}
+  .ins-mark-done .ins-mark-done-btn.no{color:var(--t3)}
+  .ins-mark-done .ins-mark-done-btn.no:hover{background:var(--surface-3);color:var(--t1)}
+
+  /* Custom DateField */
+  .datefield-wrap{position:relative;display:inline-flex;align-items:center;width:100%}
+  .datefield-input{flex:1;min-width:0;padding-right:24px !important}
+  .datefield-icon{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--t3);cursor:pointer;padding:2px;display:flex;align-items:center;border-radius:3px}
+  .datefield-icon:hover{color:var(--accent-2);background:var(--surface-2)}
+  .datefield-wrap.shake .datefield-input{animation:datefield-shake .25s ease}
+  @keyframes datefield-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .datefield-cal{position:absolute;top:calc(100% + 4px);left:0;background:var(--surface-1);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.18);padding:8px;z-index:650;width:220px}
+  .datefield-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--t1)}
+  .datefield-nav{border:none;background:transparent;cursor:pointer;color:var(--t2);font-size:16px;padding:0 6px;border-radius:3px}
+  .datefield-nav:hover{background:var(--surface-2);color:var(--t1)}
+  .datefield-month{flex:1;text-align:center}
+  .datefield-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .datefield-dow{font-size:10px;font-weight:600;color:var(--t4);text-align:center;padding:2px 0}
+  .datefield-day{border:none;background:transparent;color:var(--t1);font:11px var(--font);padding:4px 0;border-radius:3px;cursor:pointer}
+  .datefield-day.outside{color:var(--t4)}
+  .datefield-day:hover{background:var(--surface-2)}
+  .datefield-day.focused{outline:1px solid var(--accent-border)}
+  .datefield-day.selected{background:var(--accent-2);color:#fff}
+
+  /* Sort toast */
+  .sort-toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:var(--surface-1);border:1px solid var(--border);box-shadow:0 6px 24px rgba(0,0,0,.18);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--t1);z-index:1200;animation:sort-toast-in .25s ease}
+  .sort-toast-undo{border:none;background:transparent;color:var(--accent-2);font:600 13px var(--font);cursor:pointer;padding:2px 6px;border-radius:4px}
+  .sort-toast-undo:hover{background:var(--accent-dim)}
+  @keyframes sort-toast-in{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
   .ins-recur-row .recur-edit:hover{background:var(--accent-dim);border-color:var(--accent-border)}
   .ins-recur-row .recur-clear{background:transparent;border:none;color:var(--p3);cursor:pointer;font:10px var(--font);padding:0 4px}
   .ins-recur-row .recur-clear:hover{color:var(--p1)}
@@ -649,6 +751,30 @@
   .tmpl-field label{font:10px var(--mono);color:var(--t4);letter-spacing:.06em;text-transform:uppercase}
   .tmpl-field input{background:var(--surface-2);border:1px solid var(--border-s);color:var(--t1);font:12px var(--font);padding:6px 8px;border-radius:2px;outline:none}
   .tmpl-field input:focus{border-color:var(--accent-border)}
+
+  /* Baselines panel */
+  .bl-overlay{position:fixed;inset:0;background:rgba(2,12,10,.65);z-index:1100;display:flex;align-items:flex-start;justify-content:center;backdrop-filter:blur(2px);padding-top:56px}
+  .bl-modal{background:var(--surface);border:1px solid var(--border-s);border-radius:6px;box-shadow:var(--shadow-lg);width:360px;max-width:92vw;max-height:70vh;display:flex;flex-direction:column;font:12px var(--font);color:var(--t1)}
+  .bl-modal .bl-hdr{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .bl-modal .bl-hdr h3{font-size:13px;font-weight:600;color:var(--t1);flex:1;margin:0}
+  .bl-close{background:transparent;border:none;color:var(--t3);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
+  .bl-close:hover{color:var(--t1)}
+  .bl-save-row{display:flex;align-items:center;gap:6px;padding:9px 16px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--accent-text,var(--t2));font-size:12px;transition:background .1s}
+  .bl-save-row:hover{background:var(--surface-2)}
+  .bl-list{flex:1;overflow-y:auto}
+  .bl-empty{padding:24px 16px;text-align:center;color:var(--t4);font-size:11.5px;font-style:italic}
+  .bl-item{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border-s);transition:background .1s}
+  .bl-item:last-child{border-bottom:none}
+  .bl-item:hover{background:var(--surface-2)}
+  .bl-radio{width:12px;height:12px;border-radius:50%;border:2px solid var(--border-s);flex-shrink:0;cursor:pointer;transition:all .1s}
+  .bl-radio.on{background:var(--accent);border-color:var(--accent)}
+  .bl-item-info{flex:1;min-width:0;cursor:pointer}
+  .bl-item-name{font-size:12px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bl-item-name input{background:transparent;border:none;outline:none;font:inherit;color:inherit;width:100%;padding:0}
+  .bl-item-date{font-size:11px;color:var(--t4);margin-top:1px}
+  .bl-del{background:transparent;border:none;color:var(--t4);cursor:pointer;padding:3px 4px;border-radius:2px;opacity:0;line-height:1;display:flex;align-items:center}
+  .bl-item:hover .bl-del{opacity:1}
+  .bl-del:hover{color:var(--p1);background:rgba(239,68,68,.1)}
 
   /* File menu submenu (Templates) */
   .file-menu-item.has-sub{position:relative}
@@ -914,6 +1040,9 @@
   /* Group rows */
   body[data-theme="dark"] .group-row{ background:var(--bg-grid);border-bottom:1px solid var(--border);height:var(--row-h);padding:0 16px 0 12px }
   body[data-theme="dark"] .group-row:hover{ background:rgba(255,255,255,.04) }
+  body[data-theme="dark"] .lane-row{background:transparent;border-bottom:1px solid var(--border)}
+  body[data-theme="dark"] .lane-row:hover{background:rgba(255,255,255,.03)}
+  body[data-theme="dark"] .lane-ttl{color:var(--t3)}
   body[data-theme="dark"] .group-chv{ color:var(--t3) }
   body[data-theme="dark"] .group-name{ color:var(--t1);font-size:13px;font-weight:600 }
   body[data-theme="dark"] .group-cnt{ color:var(--t4) }
@@ -961,6 +1090,7 @@
   body[data-theme="dark"] .bar:hover::before,
   body[data-theme="dark"] .bar:hover::after{ background:rgba(0,0,0,.55) }
   body[data-theme="dark"] .bar-meta{ color:rgba(0,0,0,.45) }
+  body[data-theme="dark"] .bar-owner-ext{background:rgba(255,255,255,.1);color:var(--t1)}
   body[data-theme="dark"] .dep-knob{ background:var(--accent);border:2px solid var(--bg) }
   body[data-theme="dark"] .dep-knob:hover{ box-shadow:0 0 0 5px rgba(79,142,247,.25) }
   body[data-theme="dark"] .bar.project::before{ background:linear-gradient(90deg,#4f8ef7,#7aabff) !important;height:5px;border:none;border-radius:99px }
@@ -971,6 +1101,7 @@
   body[data-theme="dark"] .bar.milestone .bar-ttl{ color:var(--t1);font-weight:600 }
   /* Inspector */
   body[data-theme="dark"] .inspector{ background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 50px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.2);color:var(--t1) }
+  body[data-theme="dark"] .inspector.docked{ border-radius:12px 0 0 12px;box-shadow:-4px 0 16px rgba(0,0,0,.3) }
   body[data-theme="dark"] .inspector::before{ background:var(--surface);border-right-color:var(--border);border-bottom-color:var(--border) }
   body[data-theme="dark"] .ins-title{ color:var(--t1) }
   body[data-theme="dark"] .ins-close{ color:var(--t3) }
@@ -1009,6 +1140,7 @@
   body[data-theme="dark"] .dep-path{ stroke:var(--surface-3);opacity:.55 }
   body[data-theme="dark"] .dep-path.show-all{ opacity:.85 }
   body[data-theme="dark"] .dep-path:hover{ stroke:var(--accent);opacity:1 }
+  body[data-theme="dark"] .dep-path.critical{ stroke:var(--critical);opacity:1 }
   body[data-theme="dark"] .dep-svg .row-divider{ stroke:rgba(255,255,255,.04) }
   /* Scrollbars */
   body[data-theme="dark"] ::-webkit-scrollbar{ width:10px;height:10px }
@@ -1246,6 +1378,9 @@
     height:var(--row-h); padding:0 16px 0 12px;
   }
   body[data-theme="things"] .group-row:hover{background:rgba(0,0,0,.03)}
+  body[data-theme="things"] .lane-row{background:transparent;border-bottom:1px solid var(--border)}
+  body[data-theme="things"] .lane-row:hover{background:rgba(0,0,0,.02)}
+  body[data-theme="things"] .lane-ttl{color:var(--t3)}
   body[data-theme="things"] .group-chv{color:var(--t3)}
   body[data-theme="things"] .group-name{
     color:var(--t1); font-size:13px; font-weight:600; letter-spacing:0;
@@ -1326,6 +1461,7 @@
   body[data-theme="things"] .bar:hover::before,
   body[data-theme="things"] .bar:hover::after{background:rgba(0,0,0,.55)}
   body[data-theme="things"] .bar-meta{color:rgba(0,0,0,.45)}
+  body[data-theme="things"] .bar-owner-ext{background:rgba(0,0,0,.07);color:var(--t2)}
 
   /* Dep knob */
   body[data-theme="things"] .dep-knob{
@@ -1351,6 +1487,9 @@
     border-radius:50%; transform:rotate(0) !important;
     box-shadow:0 2px 6px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4),0 0 0 2px #fff !important;
   }
+  body[data-theme="things"] .bar.milestone.critical .diamond{
+    box-shadow:0 2px 6px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4),0 0 0 2.5px var(--critical) !important;
+  }
   body[data-theme="things"] .bar.milestone .bar-ttl{color:var(--t1);font-weight:600}
 
   /* Inspector */
@@ -1359,6 +1498,10 @@
     border-radius:12px;
     box-shadow:0 16px 50px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.04);
     color:var(--t1);
+  }
+  body[data-theme="things"] .inspector.docked{
+    border-radius:12px 0 0 12px;
+    box-shadow:-4px 0 12px rgba(0,0,0,.08);
   }
   body[data-theme="things"] .inspector::before{
     background:#fff;
@@ -1425,6 +1568,7 @@
   /* Dependency arrows */
   body[data-theme="things"] .dep-path{stroke:#8b94a8;opacity:.55}
   body[data-theme="things"] .dep-path.show-all{opacity:.85}
+  body[data-theme="things"] .dep-path.critical{stroke:var(--critical);opacity:1}
   body[data-theme="things"] .dep-path:hover{stroke:var(--accent);opacity:1}
   body[data-theme="things"] .dep-svg .row-divider{stroke:rgba(0,0,0,.025)}
 
@@ -1823,6 +1967,7 @@
     "snapToDay": true,
     "groupBy": "project",
     "showFloat": false,
+    "showCritical": false,
     "hideMilestoneLines": false,
     "showProbBars": true,
     "showNowCurtain": false,
@@ -2224,7 +2369,7 @@ function genId(prefix){ return (prefix||'p') + Date.now().toString(36) + Math.ra
 function newProject(name){
   // Same 8 Things-3 pastels as COLOR_PRESETS — keeps drawer + project dots visually consistent
   const palette = ['#f9a8a8','#fac89a','#f5dc88','#b2e0ac','#9dd8d5','#96c6e8','#c3b2e8','#f5bad0'];
-  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baseline: null, tasks: [], owners: [], calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade', tagRegistry: [], savedViews: [] };
+  return { id: genId('proj-'), name: name || 'Untitled project', color: palette[Math.floor(Math.random()*palette.length)], created: todayStr, baselines: [], activeBaselineId: null, tasks: [], owners: [], calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade', tagRegistry: [], savedViews: [] };
 }
 
 function sampleWorkspace(){
@@ -2234,8 +2379,8 @@ function sampleWorkspace(){
     { name: 'Jordan', hourlyRate: 85,  color: '#b2e0ac', calendar: null, pto: [], allocationPct: 100 },
     { name: 'Chris',  hourlyRate: 120, color: '#f5bad0', calendar: null, pto: [], allocationPct: 100 },
   ];
-  const p = { id: 'proj-mpc6cybsp07', name: 'Sample workspace', color: '#b2e0ac', created: '2026-05-19', baseline: null, tasks: DEMO_TASKS, owners, calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade', tagRegistry: [] };
-  return { version: CURRENT_VERSION, projects: [p], activeProjectId: p.id };
+  const p = { id: 'proj-mpc6cybsp07', name: 'Sample workspace', color: '#b2e0ac', created: '2026-05-19', baselines: [], activeBaselineId: null, tasks: DEMO_TASKS, owners, calendar: {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: 'cascade', tagRegistry: [] };
+  return { version: CURRENT_VERSION, projects: [p], activeProjectId: p.id, laneMode: 'off', lanes: [], stageRegistry: [] };
 }
 
 // ── Status enum (Phase A2) ──
@@ -2259,10 +2404,11 @@ function normalizeStatus(s, doneFallback){
 function syncDoneFromStatus(t){
   // Mutates and returns t with done aligned to status.
   t.done = t.status === 'done';
+  if (t.status === 'done') t.progress = 100;
   return t;
 }
 
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 6;
 const MIGRATIONS = [
   { from: 1, to: 2, migrate(data){
     data.projects = (data.projects || []).map(p => ({...p, owners: p.owners || []}));
@@ -2322,6 +2468,43 @@ const MIGRATIONS = [
     data.version = 4;
     return data;
   } },
+  // v4 → v5: replaces single `baseline` Map with named `baselines[]` array + `activeBaselineId`.
+  { from: 4, to: 5, migrate(data){
+    data.projects = (data.projects || []).map(p => {
+      const baselines = Array.isArray(p.baselines) ? p.baselines : [];
+      let activeBaselineId = p.activeBaselineId || null;
+      // Promote legacy single baseline to the new array if present and array is empty.
+      if (p.baseline && baselines.length === 0) {
+        const snapshot = typeof p.baseline === 'object' && !(p.baseline instanceof Map)
+          ? p.baseline
+          : Object.fromEntries(p.baseline);
+        const id = genId('bl-');
+        baselines.push({ id, name: 'Original baseline', createdAt: p.created || todayStr, snapshot });
+        activeBaselineId = id;
+      }
+      const next = { ...p, baselines, activeBaselineId };
+      delete next.baseline;
+      return next;
+    });
+    data.version = 5;
+    return data;
+  } },
+  // v5 → v6: adds workspace-root laneMode/lanes/stageRegistry and per-task laneId/stage.
+  { from: 5, to: 6, migrate(data){
+    data.laneMode = data.laneMode || 'off';
+    data.lanes = Array.isArray(data.lanes) ? data.lanes : [];
+    data.stageRegistry = Array.isArray(data.stageRegistry) ? data.stageRegistry : [];
+    data.projects = (data.projects || []).map(p => ({
+      ...p,
+      tasks: (p.tasks || []).map(t => ({
+        ...t,
+        laneId: t.laneId || null,
+        stage:  t.stage  || null,
+      })),
+    }));
+    data.version = 6;
+    return data;
+  } },
 ];
 
 function migrateWorkspace(data){
@@ -2342,13 +2525,18 @@ function migrateWorkspace(data){
   return cur;
 }
 
-function serializeWorkspace(projects, activeProjectId){
+function serializeWorkspace(projects, activeProjectId, opts={}){
+  const {laneMode='off', lanes=[], stageRegistry=[]} = opts;
   return JSON.stringify({
     version: CURRENT_VERSION,
     activeProjectId,
+    laneMode,
+    lanes,
+    stageRegistry,
     projects: projects.map(p => ({
       ...p,
-      baseline: (p.baseline instanceof Map) ? Object.fromEntries(p.baseline) : (p.baseline || null)
+      baselines: Array.isArray(p.baselines) ? p.baselines : [],
+      activeBaselineId: p.activeBaselineId || null,
     }))
   }, null, 2);
 }
@@ -2360,6 +2548,9 @@ function parseWorkspace(json){
   return {
     version: data.version,
     activeProjectId: data.activeProjectId || null,
+    laneMode: data.laneMode || 'off',
+    lanes: Array.isArray(data.lanes) ? data.lanes : [],
+    stageRegistry: Array.isArray(data.stageRegistry) ? data.stageRegistry : [],
     projects: data.projects.map(p => ({
       id: p.id || genId('proj-'),
       name: p.name || 'Untitled',
@@ -2375,9 +2566,12 @@ function parseWorkspace(json){
           done: status === 'done',
           tags: Array.isArray(t.tags) ? t.tags : [],
           comments: Array.isArray(t.comments) ? t.comments : [],
+          laneId: t.laneId || null,
+          stage:  t.stage  || null,
         };
       }),
-      baseline: p.baseline ? new Map(Object.entries(p.baseline)) : null,
+      baselines: Array.isArray(p.baselines) ? p.baselines : [],
+      activeBaselineId: p.activeBaselineId || null,
       owners: (Array.isArray(p.owners) ? p.owners : []).map(o => ({
         ...o,
         calendar: o.calendar || null,
@@ -2418,10 +2612,16 @@ function migrateOrphans(projects){
 // (padding-left = 22 + depth*INDENT_PX) and the drag-to-indent math.
 const INDENT_PX = 16;
 
-function buildRows(tasks, collapsed, groupBy, ownerColors){
-  return groupBy === 'owner'
-    ? buildRowsByOwner(tasks, collapsed, ownerColors)
-    : buildRowsByProject(tasks, collapsed);
+// Lane mode constants
+const LANE_PRI_ORDER  = ['p1','p2','p3'];
+const LANE_PRI_LABELS = {p1:'High (P1)', p2:'Medium (P2)', p3:'Low (P3)'};
+const LANE_PRI_COLORS = {p1:'#ff3b30', p2:'#f5c43d', p3:'#9aa0a8'};
+
+function buildRows(tasks, collapsed, laneMode, lanes, stageRegistry, laneCollapsed, ownerColors){
+  if (!laneMode || laneMode === 'off'){
+    return buildRowsByProject(tasks, collapsed);
+  }
+  return buildRowsWithLanes(tasks, collapsed, laneMode, lanes, stageRegistry, laneCollapsed, ownerColors);
 }
 
 function buildRowsByProject(tasks, collapsed){
@@ -2454,25 +2654,114 @@ function buildRowsByProject(tasks, collapsed){
   return out;
 }
 
-function buildRowsByOwner(tasks, collapsed, ownerColors={}){
+function buildRowsWithLanes(tasks, collapsed, laneMode, lanes, stageRegistry, laneCollapsed, ownerColors={}){
   const out = [];
-  const map = new Map();
+  const byParent = new Map();
   for (const t of tasks){
-    if (t.kind==='project') continue;
-    const k = t.owner || '—';
-    if (!map.has(k)) map.set(k,[]);
-    map.get(k).push(t);
+    const k = t.parent || '__root';
+    if (!byParent.has(k)) byParent.set(k,[]);
+    byParent.get(k).push(t);
   }
-  const OWNER_COLORS = {Alex:'#96c6e8',Sam:'#f5dc88',Jordan:'#b2e0ac',Chris:'#f5bad0','—':'#9dd8d5'};
-  for (const owner of [...map.keys()].sort()){
-    const ots = map.get(owner).sort((a,b)=>a.start.localeCompare(b.start));
-    const rs  = ots.reduce((mn,t)=>t.start<mn?t.start:mn, ots[0].start);
-    const re  = ots.reduce((mx,t)=>t.end>mx?t.end:mx,   ots[0].end);
-    const gid = 'owner-'+owner;
-    out.push({id:gid, title:owner, isOwnerGroup:true, owner,
-      start:rs, end:re, color:ownerColors[owner]||OWNER_COLORS[owner]||'#94a3b8', kind:'owner-group'});
-    if (!collapsed.has(gid)){
-      for (const t of ots) out.push({...t, depth:1});
+
+  // Collect every non-project task in a set (all depths flattened)
+  function collectSetTasks(setId){
+    const result = [];
+    const stack = [...(byParent.get(setId)||[])];
+    while (stack.length){
+      const t = stack.pop();
+      result.push(t);
+      for (const kid of (byParent.get(t.id)||[])) stack.push(kid);
+    }
+    return result;
+  }
+
+  function getLaneKey(task){
+    switch(laneMode){
+      case 'owner':    return task.owner    || null;
+      case 'status':   return task.status   || null;
+      case 'priority': return task.priority || null;
+      case 'stage':    return task.stage    || null;
+      case 'manual':   return task.laneId   || null;
+      default:         return null;
+    }
+  }
+
+  function getLaneMeta(laneKey){
+    switch(laneMode){
+      case 'owner':
+        return {title:laneKey, color:ownerColors[laneKey]||'#94a3b8'};
+      case 'status':
+        return {title:STATUS_META[laneKey]?.label||laneKey, color:STATUS_META[laneKey]?.color||'#94a3b8'};
+      case 'priority':
+        return {title:LANE_PRI_LABELS[laneKey]||laneKey, color:LANE_PRI_COLORS[laneKey]||'#94a3b8'};
+      case 'stage':
+        return {title:laneKey, color:'#8b9dc3'};
+      case 'manual': {
+        const ld = lanes.find(l=>l.id===laneKey);
+        return {title:ld?.name||laneKey, color:ld?.color||'#94a3b8'};
+      }
+      default:
+        return {title:laneKey, color:'#94a3b8'};
+    }
+  }
+
+  function getLaneOrder(laneMap){
+    switch(laneMode){
+      case 'owner':    return [...laneMap.keys()].sort();
+      case 'status':   return STATUSES.filter(k=>laneMap.has(k));
+      case 'priority': return LANE_PRI_ORDER.filter(k=>laneMap.has(k));
+      case 'stage': {
+        const regNames = stageRegistry.map(s=>s.name);
+        const ordered = regNames.filter(k=>laneMap.has(k));
+        // Include any stage values not in registry
+        for (const k of laneMap.keys()) if (!ordered.includes(k)) ordered.push(k);
+        return ordered;
+      }
+      case 'manual': {
+        const ordered = [...lanes].sort((a,b)=>a.order-b.order).map(l=>l.id).filter(k=>laneMap.has(k));
+        for (const k of laneMap.keys()) if (!ordered.includes(k)) ordered.push(k);
+        return ordered;
+      }
+      default: return [...laneMap.keys()];
+    }
+  }
+
+  const projects = (byParent.get('__root')||[]).filter(t=>t.kind==='project');
+  for (const p of projects){
+    out.push({...p, depth:0, isProject:true});
+    if (collapsed.has(p.id)) continue;
+
+    const setTasks = collectSetTasks(p.id);
+    if (!setTasks.length) continue;
+
+    // Group all set tasks by lane key (independent of parent-child hierarchy)
+    const laneMap = new Map();
+    const unassigned = [];
+    for (const t of setTasks){
+      const key = getLaneKey(t);
+      if (!key){ unassigned.push(t); continue; }
+      if (!laneMap.has(key)) laneMap.set(key,[]);
+      laneMap.get(key).push(t);
+    }
+
+    // Unassigned tasks float to the top (no lane header)
+    for (const t of unassigned) out.push({...t, depth:1, isSummary:false});
+
+    // Emit lanes in mode-specific order
+    const laneKeys = getLaneOrder(laneMap);
+    for (const laneKey of laneKeys){
+      const laneTasks = laneMap.get(laneKey)||[];
+      const starts = laneTasks.map(t=>t.start).filter(Boolean).sort();
+      const ends   = laneTasks.map(t=>t.end).filter(Boolean).sort();
+      const lStart = starts[0]||p.start;
+      const lEnd   = ends[ends.length-1]||p.end;
+      const {title, color} = getLaneMeta(laneKey);
+      const laneHdrId = 'lane-'+p.id+'-'+laneKey;
+      out.push({id:laneHdrId, isLane:true, laneMode, laneKey, title, color,
+        start:lStart, end:lEnd, depth:1, parentSetId:p.id});
+      if (!laneCollapsed.has(laneHdrId)){
+        for (const t of laneTasks) out.push({...t, depth:1, isSummary:false});
+      }
     }
   }
   return out;
@@ -2589,41 +2878,102 @@ function wouldCreateCycle(tasks, fromId, toId){
   return false;
 }
 
-// ── Critical path ──
+// ── Critical path — proper CPM forward/backward pass ──
+// Returns {nodes, edges, floatMap} where nodes = all tasks with total float = 0,
+// edges = dependency edges connecting two critical nodes, floatMap = Map<id, calendarDays>.
 function computeCriticalPath(tasks, calendar){
-  const byId  = new Map(tasks.map(t=>[t.id,t]));
-  const memo  = new Map();
-  const dur   = t => Math.max(1, workingDaysBetween(t.start, t.end, calendar));
-  const visit = id=>{
-    if (memo.has(id)) return memo.get(id);
-    const t=byId.get(id); if(!t) return {finish:0,prev:null};
-    const td = dur(t);
-    let best={finish:td,prev:null};
-    for (const d of depList(t)){
-      const r=visit(d.id); if(!r) continue;
-      const pred=byId.get(d.id); if(!pred) continue;
-      const pdur = dur(pred);
-      // Effective predecessor finish in this branch (working days)
-      let predFinish;
-      if (d.type === 'SS')      predFinish = (r.finish - pdur) + d.lag + td;
-      else if (d.type === 'FF') predFinish = r.finish + d.lag;
-      else if (d.type === 'SF') predFinish = (r.finish - pdur) + d.lag;
-      else                      predFinish = r.finish + d.lag + td; // FS
-      if (predFinish > best.finish) best = {finish: predFinish, prev: d.id};
-    }
-    memo.set(id,best); return best;
-  };
-  const deps=new Set(); for(const t of tasks) for(const d of depList(t)) deps.add(d.id);
-  let leaf=null,max=-1;
-  for(const t of tasks){
-    if(t.kind==='project') continue;
-    const r=visit(t.id); const isLeaf=!deps.has(t.id);
-    if(isLeaf&&r.finish>max){max=r.finish;leaf=t.id;}
+  const byId=new Map(tasks.map(t=>[t.id,t]));
+  const regular=tasks.filter(t=>t.kind!=='project');
+  if(!regular.length) return {nodes:new Set(),edges:new Set(),floatMap:new Map()};
+
+  // Successor map: predId → [{childId, dep}]
+  const succs=new Map();
+  for(const t of regular) for(const d of depList(t)){
+    if(!byId.has(d.id)) continue;
+    if(!succs.has(d.id)) succs.set(d.id,[]);
+    succs.get(d.id).push({childId:t.id,dep:d});
   }
-  const path=new Set(); const edges=new Set();
-  let cur=leaf;
-  while(cur){ path.add(cur); const prev=memo.get(cur)?.prev; if(prev) edges.add(prev+'→'+cur); cur=prev; }
-  return {nodes:path,edges};
+
+  // Topological sort (Kahn's)
+  const indeg=new Map(regular.map(t=>[t.id,0]));
+  for(const t of regular) for(const d of depList(t)){
+    if(byId.has(d.id)) indeg.set(t.id,(indeg.get(t.id)||0)+1);
+  }
+  const q=regular.filter(t=>(indeg.get(t.id)||0)===0).map(t=>t.id);
+  const order=[];
+  while(q.length){
+    const id=q.shift(); order.push(id);
+    for(const {childId} of (succs.get(id)||[])){
+      indeg.set(childId,indeg.get(childId)-1);
+      if(indeg.get(childId)===0) q.push(childId);
+    }
+  }
+  if(order.length<regular.length) return {nodes:new Set(),edges:new Set(),floatMap:new Map()};
+
+  // Forward pass: ES (earliest start) and EF (earliest finish) as date strings.
+  // Date string comparison is valid since format is fixed-length yyyy-mm-dd.
+  const ES=new Map(),EF=new Map();
+  for(const id of order){
+    const t=byId.get(id); if(!t) continue;
+    const dur=diffDays(t.start,t.end);
+    let minES=t.start,minEF=t.end;
+    for(const d of depList(t)){
+      const pred=byId.get(d.id); if(!pred) continue;
+      const predES=ES.get(d.id)??pred.start;
+      const predEF=EF.get(d.id)??pred.end;
+      const lag=d.lag||0,type=d.type||'FS';
+      const predEFeff=pred.leadTimeAfter?addDays(predEF,pred.leadTimeAfter):predEF;
+      if(type==='FS'){      const c=addDays(predEFeff,1+lag); if(c>minES) minES=c; }
+      else if(type==='SS'){ const c=addDays(predES,lag);      if(c>minES) minES=c; }
+      else if(type==='FF'){ const c=addDays(predEFeff,lag);   if(c>minEF) minEF=c; }
+      else if(type==='SF'){ const c=addDays(predES,lag);      if(c>minEF) minEF=c; }
+    }
+    const fromES=addDays(minES,dur);
+    ES.set(id,minES); EF.set(id,fromES>minEF?fromES:minEF);
+  }
+
+  // Project end = max EF across all tasks
+  const projEnd=regular.reduce((mx,t)=>{const e=EF.get(t.id)??t.end;return e>mx?e:mx;},'2000-01-01');
+
+  // Backward pass: LF (latest finish) as date string
+  const LF=new Map();
+  for(const id of [...order].reverse()){
+    const t=byId.get(id); if(!t) continue;
+    const dur=diffDays(t.start,t.end);
+    let maxLF=projEnd;
+    for(const {childId,dep} of (succs.get(id)||[])){
+      const childLF=LF.get(childId); if(childLF===undefined) continue;
+      const child=byId.get(childId); if(!child) continue;
+      const childDur=diffDays(child.start,child.end);
+      const lag=dep.lag||0,type=dep.type||'FS';
+      let c;
+      if(type==='FS')       c=addDays(childLF,-childDur-1-lag-(t.leadTimeAfter||0));  // childLS - 1 - lag - leadTimeAfter
+      else if(type==='SS')  c=addDays(childLF,-childDur-lag+dur);     // childLS - lag + parDur
+      else if(type==='FF')  c=addDays(childLF,-lag);                   // childLF - lag
+      else if(type==='SF')  c=addDays(childLF,-lag+dur);               // childLF - lag + parDur
+      if(c!==undefined && c<maxLF) maxLF=c;
+    }
+    LF.set(id,maxLF);
+  }
+
+  // Float = LF - EF (calendar days); critical = float <= 0
+  const floatMap=new Map();
+  const nodes=new Set();
+  for(const t of regular){
+    const ef=EF.get(t.id)??t.end, lf=LF.get(t.id)??t.end;
+    const fl=diffDays(ef,lf);
+    floatMap.set(t.id,Math.max(0,fl));
+    if(fl<=0) nodes.add(t.id);
+  }
+
+  // Critical edges: dep where both endpoints are critical
+  const edges=new Set();
+  for(const t of regular){
+    if(!nodes.has(t.id)) continue;
+    for(const d of depList(t)) if(nodes.has(d.id)) edges.add(d.id+'→'+t.id);
+  }
+
+  return {nodes,edges,floatMap};
 }
 
 // ── At-risk tasks ──
@@ -2680,20 +3030,24 @@ function applyDepConstraint(child, pred, dep, calendar){
   const dur = diffDays(child.start, child.end); // keep duration
   const type = dep.type || 'FS';
   const lag = dep.lag || 0;
+  // pred's leadTimeAfter extends its effective end (calendar days — procurement/delivery windows)
+  const predEffEnd = pred.leadTimeAfter ? addDays(pred.end, pred.leadTimeAfter) : pred.end;
+  // child's leadTimeBefore delays its earliest start after the predecessor constraint
+  const childLTB = child.leadTimeBefore || 0;
   if (type === 'FS'){
-    const minStart = addWorkingDays(pred.end, 1 + lag, calendar);
+    const minStart = addDays(addWorkingDays(predEffEnd, 1 + lag, calendar), childLTB);
     if (child.start < minStart) {
       const ns = minStart;
       return { start: ns, end: addDays(ns, dur) };
     }
   } else if (type === 'SS'){
-    const minStart = addWorkingDays(pred.start, lag, calendar);
+    const minStart = addDays(addWorkingDays(pred.start, lag, calendar), childLTB);
     if (child.start < minStart) {
       const ns = minStart;
       return { start: ns, end: addDays(ns, dur) };
     }
   } else if (type === 'FF'){
-    const minEnd = addWorkingDays(pred.end, lag, calendar);
+    const minEnd = addWorkingDays(predEffEnd, lag, calendar);
     if (child.end < minEnd) {
       const ne = minEnd;
       return { start: addDays(ne, -dur), end: ne };
@@ -2723,6 +3077,8 @@ function cascadeAfterMove(tasks, movedId, calendar){
     for(const {childId, dep} of (dependents.get(id)||[])){
       const child=byId.get(childId); if(!child) continue;
       if(child.locked) continue; // locked tasks are immovable anchors
+      // Skip successors already started or completed — they stay put, conflict arrow surfaces it
+      if(child.status==='inprogress' || child.status==='review' || child.status==='done') continue;
       const adj = applyDepConstraint(child, t, dep, calendar);
       if (adj){
         child.start = adj.start; child.end = adj.end;
@@ -2731,6 +3087,26 @@ function cascadeAfterMove(tasks, movedId, calendar){
     }
   }
   return Array.from(byId.values());
+}
+
+// Roll up set (project-kind) start/end from child task spans.
+function recomputeSetSpans(tasks){
+  const sets = tasks.filter(t => t.kind === 'project');
+  if (sets.length === 0) return tasks;
+  const childrenBySet = new Map(sets.map(s => [s.id, []]));
+  for (const t of tasks){
+    if (t.kind === 'project') continue;
+    if (t.parent && childrenBySet.has(t.parent)) childrenBySet.get(t.parent).push(t);
+  }
+  return tasks.map(t => {
+    if (t.kind !== 'project') return t;
+    const kids = childrenBySet.get(t.id);
+    if (!kids || kids.length === 0) return t;
+    let mn = kids[0].start, mx = kids[0].end;
+    for (const k of kids){ if (k.start < mn) mn = k.start; if (k.end > mx) mx = k.end; }
+    if (mn === t.start && mx === t.end) return t;
+    return {...t, start: mn, end: mx};
+  });
 }
 
 // ── Full forward pass auto-schedule ──
@@ -2846,10 +3222,40 @@ function autoStagger(tasks){
 function autoSort(tasks){
   const priOrd={p1:0,p2:1,p3:2};
   function cmp(a,b){
-    const ad=a.done||a.status==='done'?1:0, bd=b.done||b.status==='done'?1:0;
-    if(ad!==bd) return ad-bd;
     if(a.start<b.start) return -1; if(a.start>b.start) return 1;
-    return (priOrd[a.priority]??1)-(priOrd[b.priority]??1);
+    const pd=(priOrd[a.priority]??1)-(priOrd[b.priority]??1); if(pd!==0) return pd;
+    const ca=a.color||'', cb=b.color||''; if(ca<cb) return -1; if(ca>cb) return 1;
+    return 0;
+  }
+  // Sort siblings by walking dependency chains depth-first: roots (no incoming
+  // deps within this sibling group) are visited in start-date order, and for
+  // each root its successor chain is emitted before moving on. Within a chain
+  // siblings are ordered by start date, so A → B → C lands next to each other
+  // even when an unrelated task starts on the same day as A.
+  function sortSiblings(siblings){
+    if(siblings.length<=1) return siblings.slice();
+    const ids=new Set(siblings.map(t=>t.id));
+    const byId=new Map(siblings.map(t=>[t.id,t]));
+    const succOf=new Map(); for(const t of siblings) succOf.set(t.id,[]);
+    const hasInDep=new Set();
+    for(const t of siblings){
+      for(const d of (t.deps||[])){
+        if(ids.has(d.id)){ succOf.get(d.id).push(t.id); hasInDep.add(t.id); }
+      }
+    }
+    const roots=siblings.filter(t=>!hasInDep.has(t.id)).sort(cmp);
+    const visited=new Set(), out=[];
+    function dfs(id){
+      if(visited.has(id)) return;
+      visited.add(id); out.push(byId.get(id));
+      const succs=succOf.get(id).slice().sort((a,b)=>cmp(byId.get(a),byId.get(b)));
+      for(const s of succs) dfs(s);
+    }
+    for(const r of roots) dfs(r.id);
+    // Append anything unreached (isolated cycle, etc.) in start-date order.
+    const left=siblings.filter(t=>!visited.has(t.id)).sort(cmp);
+    for(const t of left) out.push(t);
+    return out;
   }
   const childMap=new Map();
   for(const t of tasks){
@@ -2858,7 +3264,7 @@ function autoSort(tasks){
     childMap.get(k).push(t);
   }
   function emitSorted(parentId){
-    const kids=[...(childMap.get(parentId)||[])].sort(cmp);
+    const kids=sortSiblings(childMap.get(parentId)||[]);
     const out=[];
     for(const k of kids){ out.push(k); out.push(...emitSorted(k.id)); }
     return out;
@@ -3220,7 +3626,7 @@ function instantiateTemplate(template, name, startDate){
     name: name || src.name || 'New project',
     color: src.color || '#7c3aed',
     created: todayStr,
-    baseline: null,
+    baselines: [], activeBaselineId: null,
     tasks: newTasks,
     owners: (src.owners || []).map(o => ({...o})),
     calendar: src.calendar ? {
@@ -3237,7 +3643,7 @@ Object.assign(window,{
   DOW,MONTHS,DEMO_TASKS,
   DEFAULT_CALENDAR, isWorkingDay, workingDaysBetween, addWorkingDays, formatDuration,
   normalizeDep, depList,
-  buildRows,buildRowsByProject,buildRowsByOwner,migrateOrphans,
+  buildRows,buildRowsByProject,buildRowsWithLanes,migrateOrphans,
   computeCriticalPath,computeAtRisk,getHealth,getDepChain,
   cascadeAfterMove,fullAutoSchedule,computeFloat,detectConflicts,autoStagger,
   buildArrowPath,shade,
@@ -3287,7 +3693,7 @@ function Minimap({ rows, axis, dayW, totalW, gridScrollRef }){
   const toPct  = (s,e)=>`${(window.diffDays(s,e)+1)/nDays*100}%`;
   const todayL = `${window.diffDays(axis.start,window.todayStr)/nDays*100}%`;
 
-  const taskRows=rows.filter(r=>!r.isProject&&!r.isOwnerGroup);
+  const taskRows=rows.filter(r=>!r.isProject&&!r.isOwnerGroup&&!r.isLane);
   const barH=Math.min(4,Math.max(1.5, 32/Math.max(1,taskRows.length)));
   let y=0;
   const barItems=taskRows.map(r=>{ const my=y; y+=barH+0.5; return {r,my}; });
@@ -3314,7 +3720,8 @@ function Minimap({ rows, axis, dayW, totalW, gridScrollRef }){
 
 const DOW_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject, customConfirm }){
+function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject, customConfirm,
+  laneMode, lanes, stageRegistry, setLaneMode, setLanes, setStageRegistry, setLaneCollapsed, setDirty }){
   if(!window.TweaksPanel) return null;
   const { TweaksPanel, TweakSection, TweakSlider, TweakToggle, TweakSelect, TweakRadio, TweakButton } = window;
   const DEFAULT_CAL = window.DEFAULT_CALENDAR;
@@ -3365,13 +3772,82 @@ function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject, customC
           onChange={v=>setTweak('rowHeight',v)} unit="px"/>
       </TweakSection>
 
-      <TweakSection title="Grouping">
-        <TweakSelect label="Group by" value={tw.groupBy||'project'}
-          options={[{value:'project',label:'Project'},{value:'owner',label:'Owner / swimlane'}]}
-          onChange={v=>setTweak('groupBy',v)}/>
+      <TweakSection title="Lanes">
+        <TweakSelect label="Mode" value={laneMode}
+          options={[
+            {value:'off',      label:'Off (no lanes)'},
+            {value:'owner',    label:'By owner'},
+            {value:'status',   label:'By status'},
+            {value:'priority', label:'By priority'},
+            {value:'stage',    label:'By stage'},
+            {value:'manual',   label:'Manual (named lanes)'},
+          ]}
+          onChange={v=>{ setLaneMode(v); setLaneCollapsed(new Set()); setDirty(true); }}/>
+
+        {/* Stage editor — visible when mode is 'stage' */}
+        {laneMode==='stage'&&(
+          <div className="lane-stage-editor">
+            <div className="lse-title">Stages (workspace-wide)</div>
+            {stageRegistry.map((s,idx)=>(
+              <div key={s.id} className="lse-row">
+                <span className="lse-handle">&#9776;</span>
+                <input className="lse-input" value={s.name}
+                  onChange={e=>{
+                    const v=e.target.value;
+                    setStageRegistry(prev=>prev.map((x,i)=>i===idx?{...x,name:v}:x));
+                    setDirty(true);
+                  }}/>
+                <button className="lse-del" title="Delete stage" onClick={()=>{
+                  setStageRegistry(prev=>prev.filter((_,i)=>i!==idx));
+                  setDirty(true);
+                }}>×</button>
+              </div>
+            ))}
+            <button className="lse-add" onClick={()=>{
+              const id=genId('stage-');
+              setStageRegistry(prev=>[...prev,{id,name:'New stage',order:prev.length}]);
+              setDirty(true);
+            }}>+ Add stage</button>
+          </div>
+        )}
+
+        {/* Manual lane manager — visible when mode is 'manual' */}
+        {laneMode==='manual'&&(
+          <div className="lane-stage-editor">
+            <div className="lse-title">Lanes (workspace-wide)</div>
+            {lanes.map((ln,idx)=>(
+              <div key={ln.id} className="lse-row">
+                <input type="color" className="lse-color" value={ln.color||'#94a3b8'}
+                  onChange={e=>{
+                    const c=e.target.value;
+                    setLanes(prev=>prev.map((x,i)=>i===idx?{...x,color:c}:x));
+                    setDirty(true);
+                  }}/>
+                <input className="lse-input" value={ln.name}
+                  onChange={e=>{
+                    const v=e.target.value;
+                    setLanes(prev=>prev.map((x,i)=>i===idx?{...x,name:v}:x));
+                    setDirty(true);
+                  }}/>
+                <button className="lse-del" title="Delete lane" onClick={()=>{
+                  setLanes(prev=>prev.filter((_,i)=>i!==idx));
+                  setDirty(true);
+                }}>×</button>
+              </div>
+            ))}
+            <button className="lse-add" onClick={()=>{
+              const id=genId('lane-');
+              const colors=['#96c6e8','#b2e0ac','#f5dc88','#f5bad0','#c4b5fd','#fca5a5','#6ee7b7'];
+              const color=colors[lanes.length%colors.length];
+              setLanes(prev=>[...prev,{id,name:'New lane',color,order:prev.length}]);
+              setDirty(true);
+            }}>+ Add lane</button>
+          </div>
+        )}
       </TweakSection>
 
       <TweakSection title="Overlays">
+        <TweakToggle label="Critical path"          value={!!tw.showCritical}          onChange={v=>setTweak('showCritical',v)}/>
         <TweakToggle label="Milestone lines"         value={!tw.hideMilestoneLines}    onChange={v=>setTweak('hideMilestoneLines',!v)}/>
         <TweakToggle label="Float / slack ghosts"   value={!!tw.showFloat}            onChange={v=>setTweak('showFloat',v)}/>
         <TweakToggle label="PERT probability tails" value={!!tw.showProbBars}         onChange={v=>setTweak('showProbBars',v)}/>
@@ -3391,6 +3867,8 @@ function GanttTweaks({ tw, setTweak, activeProject, updateActiveProject, customC
         <TweakToggle label="Show dependencies" value={tw.showDeps!==false}     onChange={v=>setTweak('showDeps',v)}/>
         <TweakToggle label="Show all dep arrows" value={!!tw.showAllDeps}      onChange={v=>setTweak('showAllDeps',v)}/>
         <TweakToggle label="Compact bars"      value={!!tw.compactBars}        onChange={v=>setTweak('compactBars',v)}/>
+        <TweakToggle label="Pill bars"         value={!!tw.pillBars}           onChange={v=>setTweak('pillBars',v)}/>
+        <TweakToggle label="Hide completed tasks" value={!!tw.hideDone}        onChange={v=>setTweak('hideDone',v)}/>
         <TweakToggle label="Snap to day"       value={tw.snapToDay!==false}    onChange={v=>setTweak('snapToDay',v)}/>
         {activeProject && (
           <div className="set-row">
@@ -3594,6 +4072,7 @@ function ListView({ tasks, expandedTasks, wbsMap, owners, selected, selectedSet,
         case 'status':return stRank[classifyStatus(t)] ?? 99;
         case 'cost':  return cost(t);
         case 'deps':  return depsN(t);
+        case 'color': return (t.color||'').toLowerCase();
         default: return 0;
       }
     };
@@ -3692,6 +4171,7 @@ function ListView({ tasks, expandedTasks, wbsMap, owners, selected, selectedSet,
               <th className="sortable" onClick={()=>onSort('status')}>Status<span className="sort-arr">{arr('status')}</span></th>
               <th className="sortable numeric" onClick={()=>onSort('cost')}>Cost<span className="sort-arr">{arr('cost')}</span></th>
               <th className="sortable numeric" onClick={()=>onSort('deps')}>Deps<span className="sort-arr">{arr('deps')}</span></th>
+              <th className="sortable" onClick={()=>onSort('color')}>Colour<span className="sort-arr">{arr('color')}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -3714,7 +4194,7 @@ function ListView({ tasks, expandedTasks, wbsMap, owners, selected, selectedSet,
                 <tr key={t.id} className={`${isSel?'selected':''} ${t.done?'done':''}`}
                     style={{background:bg}}
                     onClick={e=>onRowClick(e, t)}
-                    onContextMenu={e=>{e.preventDefault(); if(!selectedSet.has(t.id)){setSelected(t.id);setSelectedSet(new Set([t.id]));} setCtxMenu({x:e.clientX,y:e.clientY,taskId:t.id});}}>
+                    onContextMenu={e=>{e.preventDefault(); if(!selectedSet.has(t.id)){setSelectedSet(new Set([t.id]));} setCtxMenu({x:e.clientX,y:e.clientY,taskId:t.id});}}>
                   <td className="lv-wbs">{wbs}</td>
                   <td className="lv-title-cell"
                       onDoubleClick={()=>setEditing({id:t.id, field:'title', value:t.title})}>
@@ -4070,6 +4550,51 @@ function TemplateInstantiateModal({ template, onCancel, onCreate }){
   );
 }
 
+// Baselines panel — full CRUD for named baseline snapshots.
+function BaselinesPanel({ baselines, activeBaselineId, tasks, onClose, onSaveNew, onActivate, onRename, onDelete }){
+  const [renaming, setRenaming] = React.useState(null); // {id, value}
+  return (
+    <div className="bl-overlay" onMouseDown={onClose}>
+      <div className="bl-modal" onMouseDown={e=>e.stopPropagation()}>
+        <div className="bl-hdr">
+          <h3>Baselines</h3>
+          <button className="bl-close" onClick={onClose}>×</button>
+        </div>
+        <div className="bl-save-row" onClick={onSaveNew}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Save current plan as baseline
+        </div>
+        <div className="bl-list">
+          {baselines.length === 0
+            ? <div className="bl-empty">No baselines yet — save one to track schedule variance</div>
+            : [...baselines].reverse().map(bl => (
+              <div key={bl.id} className={`bl-item${bl.id===activeBaselineId?' active':''}`}>
+                <div className={`bl-radio${bl.id===activeBaselineId?' on':''}`}
+                     title={bl.id===activeBaselineId?'Active — click to hide':'Click to show on timeline'}
+                     onClick={()=>onActivate(bl.id===activeBaselineId ? null : bl.id)}/>
+                <div className="bl-item-info" onDoubleClick={()=>setRenaming({id:bl.id, value:bl.name})}>
+                  <div className="bl-item-name">
+                    {renaming?.id===bl.id
+                      ? <input autoFocus value={renaming.value}
+                          onChange={e=>setRenaming(r=>({...r, value:e.target.value}))}
+                          onBlur={()=>{ const v=renaming.value.trim(); if(v) onRename(bl.id,v); setRenaming(null); }}
+                          onKeyDown={e=>{ if(e.key==='Enter'){ const v=renaming.value.trim(); if(v) onRename(bl.id,v); setRenaming(null); } else if(e.key==='Escape') setRenaming(null); }}/>
+                      : bl.name}
+                  </div>
+                  <div className="bl-item-date">{fmtShort(bl.createdAt)} · {Object.keys(bl.snapshot).length} tasks</div>
+                </div>
+                <button className="bl-del" title="Delete baseline" onClick={()=>onDelete(bl.id)}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Batch 5: Keyboard shortcut help overlay. Categorised list of shortcuts.
 function HelpModal({ onClose, fsaAvailable }){
   // Each row: keys (array of strings, '+' between them), description
@@ -4260,6 +4785,121 @@ async function idbDel(id) {
   return new Promise((r,j) => { const tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).delete(id); tx.oncomplete=r; tx.onerror=()=>j(tx.error); });
 }
 
+// ── DateField (DD/MM/YYYY text input + inline calendar) ──
+function isoToDDMMYYYY(iso){
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function parseDDMMYYYY(str){
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(str||'').trim());
+  if (!m) return null;
+  const d = +m[1], mo = +m[2], y = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const dt = new Date(y, mo-1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo-1 || dt.getDate() !== d) return null;
+  return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function DateField({ value, onChange, className }) {
+  const [text, setText] = React.useState(isoToDDMMYYYY(value));
+  const [open, setOpen] = React.useState(false);
+  const [shake, setShake] = React.useState(false);
+  const [focused, setFocused] = React.useState(value || new Date().toISOString().slice(0,10));
+  const wrapRef = React.useRef(null);
+  React.useEffect(()=>{ setText(isoToDDMMYYYY(value)); }, [value]);
+  React.useEffect(()=>{
+    if (!open) return;
+    const onDocDown = (e)=>{ if (!wrapRef.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDocDown);
+    return ()=>document.removeEventListener('mousedown', onDocDown);
+  }, [open]);
+  const commit = (newText)=>{
+    const iso = parseDDMMYYYY(newText);
+    if (iso) { onChange(iso); setText(isoToDDMMYYYY(iso)); }
+    else if ((newText||'').trim() === '') { setText(isoToDDMMYYYY(value)); }
+    else { setShake(true); setTimeout(()=>setShake(false), 300); setText(isoToDDMMYYYY(value)); }
+  };
+  const shift = (days, units)=>{
+    const base = parseDDMMYYYY(text) || value || new Date().toISOString().slice(0,10);
+    const d = new Date(base+'T00:00:00');
+    if (units === 'd') d.setDate(d.getDate()+days);
+    else if (units === 'm') d.setMonth(d.getMonth()+days);
+    else if (units === 'y') d.setFullYear(d.getFullYear()+days);
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    setFocused(iso);
+    return iso;
+  };
+  const onKey = (e)=>{
+    if (e.key === 'Enter') { commit(text); setOpen(false); e.preventDefault(); }
+    else if (e.key === 'Escape') { setText(isoToDDMMYYYY(value)); setOpen(false); }
+    else if (open) {
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); setFocused(shift(-1,'d')); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); setFocused(shift(1,'d')); }
+      else if (e.key === 'ArrowUp')    { e.preventDefault(); setFocused(shift(-7,'d')); }
+      else if (e.key === 'ArrowDown')  { e.preventDefault(); setFocused(shift(7,'d')); }
+      else if (e.key === 'PageUp')     { e.preventDefault(); setFocused(shift(e.shiftKey?-1:-1, e.shiftKey?'y':'m')); }
+      else if (e.key === 'PageDown')   { e.preventDefault(); setFocused(shift(e.shiftKey?1:1, e.shiftKey?'y':'m')); }
+    }
+  };
+  const renderCal = ()=>{
+    const cur = new Date((focused||value||new Date().toISOString().slice(0,10))+'T00:00:00');
+    const y = cur.getFullYear(), m = cur.getMonth();
+    const first = new Date(y, m, 1);
+    const firstDow = (first.getDay()+6)%7; // Monday-first
+    const start = new Date(y, m, 1 - firstDow);
+    const cells = [];
+    for (let i=0;i<42;i++){
+      const d = new Date(start.getFullYear(), start.getMonth(), start.getDate()+i);
+      cells.push(d);
+    }
+    const monthName = cur.toLocaleString('default',{month:'long'});
+    const isFocused = (d)=> d.getFullYear()===cur.getFullYear()&&d.getMonth()===cur.getMonth()&&d.getDate()===cur.getDate();
+    const isSelected = (d)=> {
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return iso === value;
+    };
+    return (
+      <div className="datefield-cal" onMouseDown={e=>e.stopPropagation()}>
+        <div className="datefield-cal-head">
+          <button type="button" className="datefield-nav" onClick={()=>shift(-1,'m')}>‹</button>
+          <span className="datefield-month">{monthName} {y}</span>
+          <button type="button" className="datefield-nav" onClick={()=>shift(1,'m')}>›</button>
+        </div>
+        <div className="datefield-cal-grid">
+          {['M','T','W','T','F','S','S'].map((d,i)=><div key={'h'+i} className="datefield-dow">{d}</div>)}
+          {cells.map((d,i)=>{
+            const inMonth = d.getMonth()===m;
+            const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const cls = ['datefield-day'];
+            if (!inMonth) cls.push('outside');
+            if (isFocused(d)) cls.push('focused');
+            if (isSelected(d)) cls.push('selected');
+            return <button type="button" key={iso+i} className={cls.join(' ')} onClick={()=>{ onChange(iso); setText(isoToDDMMYYYY(iso)); setOpen(false); }}>{d.getDate()}</button>;
+          })}
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className={`datefield-wrap${shake?' shake':''}`} ref={wrapRef}>
+      <input
+        type="text"
+        className={(className||'')+' datefield-input'}
+        value={text}
+        placeholder="DD/MM/YYYY"
+        onChange={e=>setText(e.target.value)}
+        onFocus={()=>setFocused(value||new Date().toISOString().slice(0,10))}
+        onBlur={()=>{ commit(text); setTimeout(()=>setFocused(value||new Date().toISOString().slice(0,10)), 0); }}
+        onKeyDown={onKey}
+      />
+      <button type="button" className="datefield-icon" tabIndex={-1} title="Open calendar" onMouseDown={e=>{ e.preventDefault(); setOpen(o=>!o); }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </button>
+      {open && renderCal()}
+    </div>
+  );
+}
+
 function App(){
   const tweakRes = window.useTweaks ? window.useTweaks(window.__TWEAK_DEFAULTS) : [window.__TWEAK_DEFAULTS,()=>{}];
   const tw = tweakRes[0], setTweak = tweakRes[1];
@@ -4283,6 +4923,24 @@ function App(){
   const [projRenaming,    setProjRenaming]    = useState(null);  // {id,value}
   const [groupCtxMenu,    setGroupCtxMenu]    = useState(null);  // {x,y,groupId,kind:'project'|'owner',title}
   const [groupRenaming,   setGroupRenaming]   = useState(null);  // {id,kind,value}
+  const [onboardDismissed,setOnboardDismissed]= useState(()=>{ try{ return !!localStorage.getItem('onboardingHintDismissed'); }catch(e){ return false; } });
+  const [markDonePrompt,  setMarkDonePrompt]  = useState(null);  // taskId currently prompted
+  const markDonePromptTimerRef = useRef(null);
+  const [sortToast,       setSortToast]       = useState(null);  // {prevTasks} | null
+  const sortToastTimerRef = useRef(null);
+
+  // ── Lanes state (workspace-root-level, persisted in workspace file) ──
+  const [laneMode,       setLaneMode]       = useState('off');
+  const [lanes,          setLanes]          = useState([]);
+  const [stageRegistry,  setStageRegistry]  = useState([]);
+  // Lane collapse is ephemeral (not persisted) — same pattern as task collapse.
+  const [laneCollapsed,  setLaneCollapsed]  = useState(new Set());
+
+  // Stable refs so callbacks (saveWorkspace, autosave) always read latest values
+  // without needing to be recreated on every lane state change.
+  const laneModeRef      = useRef('off');       laneModeRef.current      = laneMode;
+  const lanesRef         = useRef([]);          lanesRef.current         = lanes;
+  const stageRegistryRef = useRef([]);          stageRegistryRef.current = stageRegistry;
 
   // ── Core editing state ──
   const [collapsed,   setCollapsed]   = useState(new Set());
@@ -4356,6 +5014,8 @@ function App(){
   const [recurEditor, setRecurEditor] = useState(null);
   // ── Batch 5: keyboard help overlay
   const [helpOpen, setHelpOpen] = useState(false);
+  // ── Baselines panel
+  const [baselinesOpen, setBaselinesOpen] = useState(false);
   // ── Phase B1: command palette (Cmd/Ctrl+K)
   const [paletteOpen, setPaletteOpen] = useState(false);
   // ── Phase B2: saved views dropdown open/closed
@@ -4431,8 +5091,10 @@ function App(){
     () => projects.find(p => p.id === activeProjectId) ?? null,
     [projects, activeProjectId]
   );
-  const tasks    = activeProject?.tasks ?? [];
-  const baseline = activeProject?.baseline ?? null;
+  const tasks           = activeProject?.tasks ?? [];
+  const baselines       = activeProject?.baselines ?? [];
+  const activeBaselineId = activeProject?.activeBaselineId ?? null;
+  const activeBaseline  = baselines.find(b => b.id === activeBaselineId) ?? null;
   const calendar = activeProject?.calendar ?? DEFAULT_CALENDAR;
   const autoSchedule = activeProject?.autoSchedule ?? 'cascade';
 
@@ -4440,16 +5102,17 @@ function App(){
   // (downstream direct dependents shift). 'off' skips it entirely. 'full' runs
   // a forward pass over the whole dep DAG.
   const applySchedule = useCallback((ts, movedId) => {
-    if (autoSchedule === 'off') return ts;
-    if (autoSchedule === 'full') return fullAutoSchedule(ts, calendar);
-    return cascadeAfterMove(ts, movedId, calendar);
+    if (autoSchedule === 'off') return recomputeSetSpans(ts);
+    if (autoSchedule === 'full') return recomputeSetSpans(fullAutoSchedule(ts, calendar));
+    return recomputeSetSpans(cascadeAfterMove(ts, movedId, calendar));
   }, [autoSchedule, calendar]);
 
   // ── Tweak aliases ──
   const dayW           = tw.dayWidth  || 36;
   const rowH           = tw.rowHeight || 34;
-  const groupBy        = tw.groupBy   || 'project';
+  // laneMode is now workspace-level state (not a tweak); groupBy alias removed.
   const showFloat           = !!tw.showFloat;
+  const showCritical        = !!tw.showCritical;
   const hideMilestoneLines  = !!tw.hideMilestoneLines;
   const showProbBars   = !!tw.showProbBars;
   const showNowCurtain = !!tw.showNowCurtain;
@@ -4535,7 +5198,7 @@ function App(){
   const projectIdRef = useRef(null); projectIdRef.current = activeProjectId;
   // Live mirror of the current groupBy so Sortable callbacks can branch (project vs owner view)
   // without forcing a re-init when the user toggles groupBy.
-  const groupByRef = useRef(null); groupByRef.current = tw.groupBy || 'project';
+  // laneModeRef declared above; used in drag handlers in place of old groupByRef.
 
   const isDescendantOf = useCallback((ts, candidateAncestorId, taskId) => {
     // True if taskId is `candidateAncestorId` itself or a descendant.
@@ -4586,7 +5249,7 @@ function App(){
     dragStateRef.current = {
       taskId: id, taskIds: dragIds, currentDepth: 1,
       tooltipEl: tip, newParent: null, newOwner: null, blocked: false,
-      mode: groupByRef.current === 'owner' ? 'owner' : 'project',
+      mode: laneModeRef.current === 'owner' ? 'owner' : 'project',
     };
   }, []);
 
@@ -4811,7 +5474,7 @@ function App(){
       // Whole row is the drag affordance — no grip handle.
       // `filter` excludes interactive children so clicks on them behave normally.
       draggable: '.task-row.is-child',
-      filter: '.chk, .task-chv, .row-rename, .wbs, .group-row, .owner-group-row, .task-row-add',
+      filter: '.chk, .task-chv, .row-rename, .wbs, .group-row, .owner-group-row, .lane-row, .task-row-add',
       preventOnFilter: false, // let onClick on filtered elements proceed
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
@@ -4823,7 +5486,7 @@ function App(){
       onEnd: handleDragEnd,
     });
     return () => { try { sortable.destroy(); } catch(e){} };
-  }, [activeProjectId, tw.groupBy, handleDragStart, handleDragMove, handleDragEnd]);
+  }, [activeProjectId, laneMode, handleDragStart, handleDragMove, handleDragEnd]);
 
   const updateActiveProject = useCallback((updates) => {
     commitMutation('edit project', ps => ps.map(p => p.id === activeProjectId ? {...p, ...updates} : p));
@@ -4912,19 +5575,160 @@ function App(){
     setGroupRenaming({id: newId, kind: 'project', value: 'New set'});
   }, [updateTasks]);
 
+  // Reorder a set (project task) to a new index among other project tasks.
+  // Children (any task with parent === groupId, transitively) travel with the project.
+  // targetIndex is the desired position in the projects-only ordering after the move.
+  const reorderGroupTo = useCallback((groupId, targetIndex) => {
+    updateTasks(ts => {
+      const projects = ts.filter(t => t.kind === 'project').map(t => t.id);
+      const curIdx = projects.indexOf(groupId);
+      if (curIdx < 0) return ts;
+      const clamped = Math.max(0, Math.min(projects.length - 1, targetIndex));
+      if (clamped === curIdx) return ts;
+      // Collect transitive descendants of groupId
+      const childIds = new Set();
+      const stack = [groupId];
+      while (stack.length) {
+        const cur = stack.pop();
+        for (const t of ts) if (t.parent === cur && t.id !== groupId) {
+          if (!childIds.has(t.id)) { childIds.add(t.id); stack.push(t.id); }
+        }
+      }
+      // Block = [project, ...descendants in their original relative order]
+      const block = ts.filter(t => t.id === groupId || childIds.has(t.id));
+      const rest  = ts.filter(t => t.id !== groupId && !childIds.has(t.id));
+      // Among rest, find anchor: the project at the new index in projects-only ordering, excluding the moved one
+      const restProjects = rest.filter(t => t.kind === 'project').map(t => t.id);
+      const anchorId = restProjects[clamped] ?? null;
+      let insertAt;
+      if (anchorId === null) {
+        insertAt = rest.length; // append
+      } else {
+        insertAt = rest.findIndex(t => t.id === anchorId);
+      }
+      return [...rest.slice(0, insertAt), ...block, ...rest.slice(insertAt)];
+    });
+  }, [updateTasks]);
+
+  // Group drag-handle reorder: custom pointer handling so it doesn't fight SortableJS on the same container.
+  const beginGroupDrag = useCallback((e, groupId) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const startName = document.querySelector(`.group-row[data-gid="${groupId}"] .group-name`)?.innerText || 'Set';
+    const overlay = document.createElement('div');
+    overlay.className = 'grp-drag-ghost';
+    overlay.textContent = startName;
+    overlay.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:4px;padding:3px 9px;font:11px var(--font);color:var(--accent-2);box-shadow:0 4px 14px rgba(0,0,0,.18)';
+    document.body.appendChild(overlay);
+    const indicator = document.createElement('div');
+    indicator.className = 'grp-drop-indicator';
+    indicator.style.cssText = 'position:fixed;pointer-events:none;z-index:9998;height:2px;background:var(--accent-2);box-shadow:0 0 6px rgba(20,184,166,.6);display:none';
+    document.body.appendChild(indicator);
+    let dropTargetId = null;
+    let dropBefore = true;
+    const onMove = (me) => {
+      overlay.style.left = (me.clientX + 14) + 'px';
+      overlay.style.top  = (me.clientY + 10) + 'px';
+      const els = document.elementsFromPoint(me.clientX, me.clientY);
+      const gr = els.find(el => el.classList && el.classList.contains('group-row') && el.dataset && el.dataset.gid);
+      if (gr && gr.dataset.gid !== groupId) {
+        const r = gr.getBoundingClientRect();
+        const above = me.clientY < r.top + r.height/2;
+        indicator.style.display = 'block';
+        indicator.style.left = r.left + 'px';
+        indicator.style.width = r.width + 'px';
+        indicator.style.top = (above ? r.top - 1 : r.bottom - 1) + 'px';
+        dropTargetId = gr.dataset.gid;
+        dropBefore = above;
+      } else {
+        indicator.style.display = 'none';
+        dropTargetId = null;
+      }
+    };
+    const onUp = () => {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      overlay.remove(); indicator.remove();
+      if (!dropTargetId || dropTargetId === groupId) return;
+      const order = [...document.querySelectorAll('.group-row[data-gid]')].map(el => el.dataset.gid);
+      const fromIdx = order.indexOf(groupId);
+      const anchorIdx = order.indexOf(dropTargetId);
+      if (fromIdx < 0 || anchorIdx < 0) return;
+      // Convert anchor + before/after into a target index in projects-without-moved ordering
+      // restProjects = order with groupId removed (length N-1, indexed 0..N-2)
+      const restAnchorIdx = anchorIdx > fromIdx ? anchorIdx - 1 : anchorIdx;
+      const target = dropBefore ? restAnchorIdx : restAnchorIdx + 1;
+      reorderGroupTo(groupId, target);
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp, { once: true });
+  }, [reorderGroupTo]);
+
+  const moveGroup = useCallback((groupId, dir) => {
+    updateTasks(ts => {
+      const projects = ts.filter(t => t.kind === 'project').map(t => t.id);
+      const idx = projects.indexOf(groupId);
+      if (idx < 0) return ts;
+      const target = dir === 'up' ? idx - 1 : idx + 1;
+      if (target < 0 || target >= projects.length) return ts;
+      // Inline the reorder logic for atomicity
+      const childIds = new Set();
+      const stack = [groupId];
+      while (stack.length) {
+        const cur = stack.pop();
+        for (const t of ts) if (t.parent === cur && t.id !== groupId) {
+          if (!childIds.has(t.id)) { childIds.add(t.id); stack.push(t.id); }
+        }
+      }
+      const block = ts.filter(t => t.id === groupId || childIds.has(t.id));
+      const rest  = ts.filter(t => t.id !== groupId && !childIds.has(t.id));
+      const restProjects = rest.filter(t => t.kind === 'project').map(t => t.id);
+      const anchorId = restProjects[target] ?? null;
+      const insertAt = anchorId === null ? rest.length : rest.findIndex(t => t.id === anchorId);
+      return [...rest.slice(0, insertAt), ...block, ...rest.slice(insertAt)];
+    });
+  }, [updateTasks]);
+
   // ── Phase B2: Saved views ──
-  // A view captures viewMode + groupBy + filter (q/owners/priorities/status).
+  // A view captures viewMode + laneMode + filter (q/owners/priorities/status).
   // Sets are converted to arrays for JSON serialization and back on apply.
   const snapshotCurrentView = useCallback(() => ({
     viewMode: tw.viewMode === 'list' || tw.viewMode === 'calendar' ? tw.viewMode : 'gantt',
-    groupBy: tw.groupBy || 'project',
+    laneMode: laneMode || 'off',
     filter: {
       q: filter.q || '',
       owners: Array.from(filter.owners || []),
       priorities: Array.from(filter.priorities || []),
       status: filter.status || 'all',
     },
-  }), [tw.viewMode, tw.groupBy, filter]);
+  }), [tw.viewMode, laneMode, filter]);
+
+  // ── Baseline handlers ──
+  const saveBaseline = useCallback(async () => {
+    if (!activeProject) return;
+    const n = baselines.length + 1;
+    const name = await customPrompt('Save Baseline', `Baseline ${n}`);
+    if (!name) return;
+    const id = genId('bl-');
+    const snapshot = Object.fromEntries(tasks.map(t => [t.id, {start: t.start, end: t.end}]));
+    const entry = { id, name: name.trim() || `Baseline ${n}`, createdAt: todayStr, snapshot };
+    updateActiveProject({ baselines: [...baselines, entry], activeBaselineId: id });
+  }, [activeProject, baselines, tasks, customPrompt, updateActiveProject]);
+
+  const activateBaseline = useCallback((id) => {
+    updateActiveProject({ activeBaselineId: id });
+  }, [updateActiveProject]);
+
+  const renameBaseline = useCallback((id, name) => {
+    updateActiveProject({ baselines: baselines.map(b => b.id === id ? {...b, name} : b) });
+  }, [baselines, updateActiveProject]);
+
+  const deleteBaseline = useCallback((id) => {
+    const next = baselines.filter(b => b.id !== id);
+    const nextActiveId = activeBaselineId === id ? (next.length > 0 ? next[next.length-1].id : null) : activeBaselineId;
+    updateActiveProject({ baselines: next, activeBaselineId: nextActiveId });
+  }, [baselines, activeBaselineId, updateActiveProject]);
 
   const saveCurrentView = useCallback(async (nameArg) => {
     const name = nameArg ?? await customPrompt('Save View', 'My view');
@@ -4937,7 +5741,7 @@ function App(){
   const applyView = useCallback((view) => {
     if (!view) return;
     if (view.viewMode) setTweak('viewMode', view.viewMode);
-    if (view.groupBy)  setTweak('groupBy',  view.groupBy);
+    if (view.laneMode) { setLaneMode(view.laneMode); setLaneCollapsed(new Set()); setDirty(true); }
     if (view.filter){
       setFilter({
         q: view.filter.q || '',
@@ -4991,6 +5795,10 @@ function App(){
       ? ws.activeProjectId
       : (migrated[0]?.id ?? null);
     setActiveProjectId(aid);
+    setLaneMode(ws.laneMode || 'off');
+    setLanes(Array.isArray(ws.lanes) ? ws.lanes : []);
+    setStageRegistry(Array.isArray(ws.stageRegistry) ? ws.stageRegistry : []);
+    setLaneCollapsed(new Set());
     setShowWelcome(false);
     setDirty(false);
     setCollapsed(new Set());
@@ -4998,9 +5806,12 @@ function App(){
     setSelectedSet(new Set());
     resetUndoHistory();
     try {
+      const lm = ws.laneMode || 'off';
+      const ln = Array.isArray(ws.lanes) ? ws.lanes : [];
+      const sr = Array.isArray(ws.stageRegistry) ? ws.stageRegistry : [];
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
         savedAt: Date.now(), fileName: (handle || null)?.name || null,
-        dirty: false, payload: serializeWorkspace(ws.projects, aid),
+        dirty: false, payload: serializeWorkspace(migrated, aid, {laneMode:lm, lanes:ln, stageRegistry:sr}),
       }));
     } catch(_) {}
   }, [resetUndoHistory]);
@@ -5060,7 +5871,7 @@ function App(){
     // in-place handle in this mode, so every save downloads a fresh copy.
     if (!FSA_AVAILABLE) {
       try {
-        const payload = serializeWorkspace(projects, activeProjectId);
+        const payload = serializeWorkspace(projects, activeProjectId, {laneMode:laneModeRef.current, lanes:lanesRef.current, stageRegistry:stageRegistryRef.current});
         const blob = new Blob([payload], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -5097,14 +5908,15 @@ function App(){
     }
     try {
       const writable = await handle.createWritable();
-      await writable.write(serializeWorkspace(projects, activeProjectId));
+      const laneOpts = {laneMode:laneModeRef.current, lanes:lanesRef.current, stageRegistry:stageRegistryRef.current};
+      await writable.write(serializeWorkspace(projects, activeProjectId, laneOpts));
       await writable.close();
       try { await idbPut(CURRENT_HANDLE_KEY, handle); } catch(_) {}
       setDirty(false);
       try {
         localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
           savedAt: Date.now(), fileName: handle.name,
-          dirty: false, payload: serializeWorkspace(projects, activeProjectId),
+          dirty: false, payload: serializeWorkspace(projects, activeProjectId, laneOpts),
         }));
       } catch(_) {}
     } catch(e) {
@@ -5176,7 +5988,7 @@ function App(){
         return {...nd, id: idMap.get(nd.id) ?? nd.id};
       }).filter(Boolean),
     }));
-    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baseline: null, tasks: finalTasks, owners: (p.owners||[]).map(o=>({...o})), calendar: p.calendar ? {workingDays:[...(p.calendar.workingDays||DEFAULT_CALENDAR.workingDays)], holidays:[...(p.calendar.holidays||[])]} : {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: p.autoSchedule || 'cascade' };
+    const np = { id: genId('proj-'), name: p.name + ' (copy)', color: p.color, created: todayStr, baselines: [], activeBaselineId: null, tasks: finalTasks, owners: (p.owners||[]).map(o=>({...o})), calendar: p.calendar ? {workingDays:[...(p.calendar.workingDays||DEFAULT_CALENDAR.workingDays)], holidays:[...(p.calendar.holidays||[])]} : {...DEFAULT_CALENDAR, holidays: [...DEFAULT_CALENDAR.holidays]}, autoSchedule: p.autoSchedule || 'cascade' };
     commitMutation('duplicate project', ps => [...ps, np]);
     setActiveProjectId(np.id);
   }, [projects, commitMutation]);
@@ -5206,8 +6018,13 @@ function App(){
   const loadSample = useCallback(async () => {
     if (dirty && projects.length > 0 && !await customConfirm('Load Sample Project?', 'Your unsaved changes will be lost.', {okLabel:'Load Sample'})) return;
     const ws = sampleWorkspace();
-    setProjects(migrateOrphans(ws.projects));
+    const migrated = migrateOrphans(ws.projects);
+    setProjects(migrated);
     setActiveProjectId(ws.activeProjectId);
+    setLaneMode('off');
+    setLanes([]);
+    setStageRegistry([]);
+    setLaneCollapsed(new Set());
     setFileHandle(null);
     idbDel(CURRENT_HANDLE_KEY).catch(()=>{});
     setShowWelcome(false);
@@ -5219,7 +6036,7 @@ function App(){
     try {
       localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
         savedAt: Date.now(), fileName: null,
-        dirty: false, payload: serializeWorkspace(ws.projects, ws.activeProjectId),
+        dirty: false, payload: serializeWorkspace(migrated, ws.activeProjectId, {laneMode:'off', lanes:[], stageRegistry:[]}),
       }));
     } catch(_) {}
   }, [dirty, projects.length, customConfirm, resetUndoHistory]);
@@ -5370,6 +6187,10 @@ function App(){
           ? ws.activeProjectId
           : (migrated[0]?.id ?? null);
         setActiveProjectId(aid);
+        setLaneMode(ws.laneMode || 'off');
+        setLanes(Array.isArray(ws.lanes) ? ws.lanes : []);
+        setStageRegistry(Array.isArray(ws.stageRegistry) ? ws.stageRegistry : []);
+        setLaneCollapsed(new Set());
         setFileHandle(null);
         idbGet(CURRENT_HANDLE_KEY).then(h => { if (h) setFileHandle(h); }).catch(()=>{});
         setShowWelcome(false);
@@ -5396,6 +6217,10 @@ function App(){
         ? ws.activeProjectId
         : (migrated[0]?.id ?? null);
       setActiveProjectId(aid);
+      setLaneMode(ws.laneMode || 'off');
+      setLanes(Array.isArray(ws.lanes) ? ws.lanes : []);
+      setStageRegistry(Array.isArray(ws.stageRegistry) ? ws.stageRegistry : []);
+      setLaneCollapsed(new Set());
       setFileHandle(null);
       idbGet(CURRENT_HANDLE_KEY).then(h => { if (h) setFileHandle(h); }).catch(()=>{});
       setShowWelcome(false);
@@ -5435,7 +6260,11 @@ function App(){
     const delay = idle ? 500 : 1500;
     const tid = setTimeout(() => {
       try {
-        const payload = serializeWorkspace(projects, activeProjectId);
+        const payload = serializeWorkspace(projects, activeProjectId, {
+          laneMode: laneModeRef.current,
+          lanes: lanesRef.current,
+          stageRegistry: stageRegistryRef.current,
+        });
         localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
           savedAt: Date.now(),
           fileName: fileHandle?.name || null,
@@ -5446,7 +6275,7 @@ function App(){
       } catch(_){}
     }, delay);
     return () => clearTimeout(tid);
-  }, [projects, activeProjectId, showWelcome, fileHandle, dirty, tw.autosaveEnabled]);
+  }, [projects, activeProjectId, laneMode, lanes, stageRegistry, showWelcome, fileHandle, dirty, tw.autosaveEnabled]);
 
   const formatAgo = (ts) => {
     const d = Math.max(0, Date.now() - ts);
@@ -5549,8 +6378,8 @@ function App(){
   // Active task filter — produces a Set<id> of tasks that match the filter. A
   // project group is considered visible if any of its non-project children match.
   const filterActive = useMemo(() => {
-    return !!debouncedQ || (filter.owners?.size>0) || (filter.priorities?.size>0) || (filter.status && filter.status !== 'all');
-  }, [debouncedQ, filter.owners, filter.priorities, filter.status]);
+    return !!debouncedQ || (filter.owners?.size>0) || (filter.priorities?.size>0) || (filter.status && filter.status !== 'all') || !!tw.hideDone;
+  }, [debouncedQ, filter.owners, filter.priorities, filter.status, tw.hideDone]);
 
   const filteredTaskIds = useMemo(() => {
     if (!filterActive) {
@@ -5563,6 +6392,7 @@ function App(){
     const status = filter.status || 'all';
     const matchesTask = (t) => {
       if (t.kind === 'project') return false; // project rows aren't direct matches
+      if (tw.hideDone && t.done) return false;
       if (q && !(t.title || '').toLowerCase().includes(q)) return false;
       if (ownersSel.size > 0 && !ownersSel.has(t.owner)) return false;
       if (prisSel.size > 0 && !prisSel.has(t.priority || 'p3')) return false;
@@ -5590,7 +6420,7 @@ function App(){
     }
     for (const pid of projHasMatch) out.add(pid);
     return out;
-  }, [filterActive, debouncedQ, filter.owners, filter.priorities, filter.status, expandedTasks]);
+  }, [filterActive, debouncedQ, filter.owners, filter.priorities, filter.status, tw.hideDone, expandedTasks]);
 
   // Tasks fed into buildRows. When the filter is active we drop non-matching tasks;
   // buildRows will naturally drop projects with no remaining children.
@@ -5600,7 +6430,10 @@ function App(){
   }, [expandedTasks, filteredTaskIds]);
 
   const ownerColors = activeProject?.ownerColors || {};
-  const rows      = useMemo(()=>buildRows(tasksForRows,collapsed,groupBy,ownerColors),[tasksForRows,collapsed,groupBy,ownerColors]);
+  const rows = useMemo(
+    ()=>buildRows(tasksForRows,collapsed,laneMode,lanes,stageRegistry,laneCollapsed,ownerColors),
+    [tasksForRows,collapsed,laneMode,lanes,stageRegistry,laneCollapsed,ownerColors]
+  );
 
   // Count for "N of M tasks" — excludes project rows and recurring instances.
   const totalTaskCount = useMemo(() => {
@@ -5615,9 +6448,9 @@ function App(){
     }
     return c;
   }, [filteredTaskIds, expandedTasks, totalTaskCount]);
-  const critical  = useMemo(()=>computeCriticalPath(expandedTasks,calendar),[expandedTasks,calendar]);
+  const critical  = useMemo(()=>showCritical?computeCriticalPath(expandedTasks,calendar):{nodes:new Set(),edges:new Set(),floatMap:new Map()},[expandedTasks,showCritical,calendar]);
   const atRisk    = useMemo(()=>computeAtRisk(expandedTasks),[expandedTasks]);
-  const floatMap  = useMemo(()=>showFloat?computeFloat(expandedTasks,calendar):new Map(),[expandedTasks,showFloat,calendar]);
+  const floatMap  = useMemo(()=>showFloat?(showCritical&&critical.floatMap.size?critical.floatMap:computeFloat(expandedTasks,calendar)):new Map(),[expandedTasks,showFloat,showCritical,critical,calendar]);
   const conflicts = useMemo(()=>showConflicts?detectConflicts(expandedTasks):new Set(),[expandedTasks,showConflicts]);
   const wbsMap    = useMemo(()=>computeWbsMap(expandedTasks),[expandedTasks]);
   const owners    = activeProject?.owners ?? [];
@@ -5628,6 +6461,15 @@ function App(){
     const c=getDepChain(tasks,hoveredBarId);
     return c.size>1?c:null;
   },[hoveredBarId,focusChain,tasks]);
+  const rowIndexById = useMemo(()=>new Map(rows.map((r,i)=>[r.id,i])),[rows]);
+  const isInspectorOpen = useMemo(()=>{
+    if(!selected) return false;
+    const r = rows.find(x=>x.id===selected) || expandedTasks.find(x=>x.id===selected);
+    if (!r) return false;
+    if (r.isProject||r.isOwnerGroup||r.isLane||r.kind==='project'||renaming?.id===r.id) return false;
+    if (r.recurrenceParent) return false;
+    return true;
+  },[selected, rows, expandedTasks, renaming]);
 
   const sprintBands = useMemo(()=>{
     const b=[]; let n=0;
@@ -5683,6 +6525,20 @@ function App(){
     if(hdrScrollRef.current) hdrScrollRef.current.scrollLeft=left;
   },[axis.start, activeProjectId]); // eslint-disable-line
 
+  // Re-anchor scroll on manual dayWidth changes so today stays centred in the viewport
+  const prevDayWRef = useRef(null);
+  useLayoutEffect(()=>{
+    if(prevDayWRef.current===null){ prevDayWRef.current=dayW; return; } // skip mount
+    if(prevDayWRef.current===dayW) return;
+    prevDayWRef.current=dayW;
+    const el=gridScrollRef.current; if(!el) return;
+    const todayPx=diffDays(axis.start,todayStr)*dayW;
+    const left=Math.max(0,todayPx-el.clientWidth/2);
+    el.scrollLeft=left;
+    savedScrollRef.current={left, top:savedScrollRef.current.top};
+    if(hdrScrollRef.current) hdrScrollRef.current.scrollLeft=left;
+  },[dayW]); // eslint-disable-line
+
   // Autofit: when tw.fitWidth is on, recompute dayWidth so actual task span fits the viewport
   useEffect(()=>{
     if(!tw.fitWidth) return;
@@ -5729,6 +6585,7 @@ function App(){
 
   // ── Drag begin ──
   const beginBarDrag = useCallback((e,t,kind)=>{
+    if(e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
     // Recurring instances are not individually editable — ignore drag attempts.
     if (t.recurrenceParent){ return; }
@@ -5748,7 +6605,7 @@ function App(){
     }
     if(inGroup&&kind==='move'){
       const offsets={};
-      for(const id of selectedSet){const tt=tasks.find(x=>x.id===id);if(tt)offsets[id]={start:tt.start,end:tt.end};}
+      for(const id of selectedSet){const tt=tasks.find(x=>x.id===id);if(tt&&!tt.locked)offsets[id]={start:tt.start,end:tt.end};}
       setDrag({id:t.id,kind:'group-move',startClientX:e.clientX,startClientY:e.clientY,
         groupOffsets:offsets,gridLeft:rect.left,gridScrollLeft:gridScrollRef.current.scrollLeft,
         dx:0,deltaDays:0,snapped:false,currentClientX:e.clientX,currentClientY:e.clientY});
@@ -5764,11 +6621,11 @@ function App(){
     }
   },[selectedSet,tasks,showToast]);
 
-  const beginDepDrag = useCallback((e,t)=>{
+  const beginDepDrag = useCallback((e,t,endpoint='end')=>{
     e.preventDefault(); e.stopPropagation();
     if (t.recurrenceParent){ return; }
     const rect=gridScrollRef.current.getBoundingClientRect();
-    setDrag({id:t.id,kind:'dep',startClientX:e.clientX,startClientY:e.clientY,
+    setDrag({id:t.id,kind:'dep',depEndpoint:endpoint,startClientX:e.clientX,startClientY:e.clientY,
       gridLeft:rect.left,gridTop:rect.top,
       gridScrollLeft:gridScrollRef.current.scrollLeft,gridScrollTop:gridScrollRef.current.scrollTop,
       currentClientX:e.clientX,currentClientY:e.clientY});
@@ -5813,10 +6670,10 @@ function App(){
     }
     e.preventDefault();
     grid.classList.add('panning');
-    setSelected(null); setSelectedSet(new Set());
+    if(!drawerPinned){ setSelected(null); setSelectedSet(new Set()); }
     setDrag({kind:'pan',startClientX:e.clientX,startClientY:e.clientY,
       startScrollLeft:sl,startScrollTop:st});
-  },[]);
+  },[drawerPinned]);
 
   const onGridDblClick = useCallback(e=>{
     if(e.target.closest('[data-bar-id],.bar-handle,.dep-knob')) return;
@@ -5922,7 +6779,7 @@ function App(){
         const grid=gridScrollRef.current; if(!grid){setDrag(null);return;}
         const lx=e.clientX-grid.getBoundingClientRect().left+grid.scrollLeft;
         const p=Math.max(0,Math.min(1,(lx-drag.barX)/drag.barW));
-        updateTasks(ts=>ts.map(t=>t.id===drag.id?{...t,progress:p>=.98?1:p,done:p>=.98}:t));
+        updateTasks(ts=>ts.map(t=>t.id===drag.id?{...t,progress:p>=.98?1:p,done:p>=.98,status:p>=.98?'done':t.status}:t));
         setDrag(null); return;
       }
 
@@ -5932,7 +6789,7 @@ function App(){
           const y1=Math.min(lasso.y1,lasso.y2),y2=Math.max(lasso.y1,lasso.y2);
           const sel=new Set();
           rows.forEach((r,i)=>{
-            if(r.isProject||r.isOwnerGroup) return;
+            if(r.isProject||r.isOwnerGroup||r.isLane) return;
             const bx=diffDays(axis.start,r.start)*dayW;
             const bw=r.milestone?dayW:(diffDays(r.start,r.end)+1)*dayW;
             if(bx<x2&&bx+bw>x1&&i*rowH<y2&&(i+1)*rowH>y1) sel.add(r.id);
@@ -5955,7 +6812,7 @@ function App(){
           const nt={id:nid,parent:drag.parentId,project:drag.project,title:'New task',
             start:s,end:en,priority:'p3',progress:0,color:'#96c6e8'};
           updateTasks(ts=>[...ts,nt]);
-          setSelected(nid); setRenaming({id:nid,value:nt.title});
+          setSelected(nid); setRenaming({id:nid,value:nt.title,source:'bar'});
         }
         setDrag(null); return;
       }
@@ -6005,29 +6862,31 @@ function App(){
         const barEl=target?.closest?.('[data-bar-id]');
         const tid=barEl?.getAttribute('data-bar-id');
         if(tid&&tid!==drag.id){
-          // tid is the successor (child). drag.id is the predecessor.
-          // Cycle check: would adding drag.id as a predecessor of tid create a cycle?
-          if(wouldCreateCycle(tasks, drag.id, tid)){
-            const srcTitle = tasks.find(t=>t.id===drag.id)?.title||drag.id;
-            const dstTitle = tasks.find(t=>t.id===tid)?.title||tid;
+          // Left knob: drag.id is successor, tid is predecessor. Right knob: reversed.
+          const [predId, succId] = drag.depEndpoint==='start' ? [tid, drag.id] : [drag.id, tid];
+          if(wouldCreateCycle(tasks, predId, succId)){
+            const srcTitle = tasks.find(t=>t.id===predId)?.title||predId;
+            const dstTitle = tasks.find(t=>t.id===succId)?.title||succId;
             showToast(`Circular dependency — "${dstTitle}" already has a path back to "${srcTitle}".`, 'err');
           } else {
             updateTasks(ts=>applySchedule(ts.map(t=>{
-              if(t.id!==tid) return t;
+              if(t.id!==succId) return t;
               const existing = depList(t);
-              if (existing.some(d => d.id === drag.id)) return t;
-              return {...t, deps:[...existing, {id: drag.id, type:'FS', lag:0}]};
-            }), tid));
+              if (existing.some(d => d.id === predId)) return t;
+              return {...t, deps:[...existing, {id: predId, type:'FS', lag:0}]};
+            }), succId));
           }
         } else if(!tid){
-          const src=tasks.find(t=>t.id===drag.id);
-          if(src){
-            const nid='task-'+Date.now().toString(36);
-            const ns=addWorkingDays(src.end,1,calendar);
-            const ne=addWorkingDays(ns,2,calendar);
-            const nt={id:nid,parent:src.parent,project:src.project,title:'New successor',
-              start:ns,end:ne,priority:'p3',progress:0,color:src.color||'#96c6e8',deps:[{id:drag.id,type:'FS',lag:0}]};
-            updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
+          if(drag.depEndpoint!=='start'){
+            const src=tasks.find(t=>t.id===drag.id);
+            if(src){
+              const nid='task-'+Date.now().toString(36);
+              const ns=addWorkingDays(src.end,1,calendar);
+              const ne=addWorkingDays(ns,2,calendar);
+              const nt={id:nid,parent:src.parent,project:src.project,title:'New successor',
+                start:ns,end:ne,priority:'p3',progress:0,color:src.color||'#96c6e8',deps:[{id:drag.id,type:'FS',lag:0}]};
+              updateTasks(ts=>[...ts,nt]); setSelected(nid); setRenaming({id:nid,value:nt.title});
+            }
           }
         }
         setDrag(null); return;
@@ -6047,7 +6906,7 @@ function App(){
           return [...ts,copy];
         }
         if(drag.kind==='group-move'&&days!==0){
-          let next=ts.map(t=>{ const o=drag.groupOffsets?.[t.id]; return o?{...t,start:addDays(o.start,days),end:addDays(o.end,days)}:t; });
+          let next=ts.map(t=>{ const o=drag.groupOffsets?.[t.id]; return o&&!t.locked?{...t,start:addDays(o.start,days),end:addDays(o.end,days)}:t; });
           if (autoSchedule === 'full') next = fullAutoSchedule(next, calendar);
           else if (autoSchedule === 'cascade') for(const id of Object.keys(drag.groupOffsets||{})) next=cascadeAfterMove(next,id,calendar);
           return next;
@@ -6368,13 +7227,27 @@ function App(){
     };
     updateTasks(ts=>[...ts, fresh]);
     setSelected(newId); setSelectedSet(new Set([newId]));
-    setRenaming({id:newId,value:'New task'});
+    setRenaming({id:newId,value:'New task',source:'bar'});
   },[updateTasks,activeProject]);
 
 
   const commitRename=useCallback(()=>{
     setRenaming(r=>{ if(!r)return null; const v=r.value.trim(); if(v)updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,title:v}:t)); return null; });
   },[updateTasks]);
+
+  // Click-away commit for inline rename inputs (bar-rename / row-rename).
+  // onBlur alone can be skipped if the input unmounts before blur fires
+  // (e.g. another bar's onClick triggers a re-render). Capture-phase pointerdown
+  // outside any rename input commits the pending rename.
+  useEffect(()=>{
+    if(!renaming) return;
+    const onDown=(e)=>{
+      if(e.target?.closest?.('.row-rename, .bar-rename, .ins-title-input')) return;
+      commitRename();
+    };
+    window.addEventListener('pointerdown', onDown, true);
+    return ()=>window.removeEventListener('pointerdown', onDown, true);
+  },[renaming, commitRename]);
 
   // Auto-commit duration buffer
   useEffect(()=>{
@@ -6631,7 +7504,10 @@ function App(){
             </div>
           </div>
         )}
-        <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject} customConfirm={customConfirm}/>
+        <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject} customConfirm={customConfirm}
+  laneMode={laneMode} lanes={lanes} stageRegistry={stageRegistry}
+  setLaneMode={setLaneMode} setLanes={setLanes} setStageRegistry={setStageRegistry}
+  setLaneCollapsed={setLaneCollapsed} setDirty={setDirty}/>
       </Fragment>
     );
   }
@@ -6651,7 +7527,7 @@ function App(){
           <button className={`tb-btn${fileMenuOpen?' active':''}`}
                   onMouseDown={e=>e.stopPropagation()}
                   onClick={()=>setFileMenuOpen(o=>!o)}>
-            File {dirty && <span className="dirty-dot" title="Unsaved changes"/>}
+            File
           </button>
           {fileMenuOpen && (
             <div className="file-menu-drop" onMouseDown={e=>e.stopPropagation()}>
@@ -6735,7 +7611,7 @@ function App(){
 
         <span className="tb-sep"/>
         <div className="tb-crumb">
-          <span>{fileHandle?.name || 'Unsaved'}</span>
+          <span title={fileHandle?.name ? `Saved to ${fileHandle.name}` : 'Auto-saved to browser. Click File > Save to export.'}>{fileHandle?.name || 'Unsaved'}</span>
           <span>›</span>
           <span className="tb-crumb-active">{activeProject?.name || '—'}</span>
         </div>
@@ -6745,9 +7621,11 @@ function App(){
         {/* Zoom presets — Gantt-only; hiding off-Gantt prevents dayWidth drift while in List/Calendar */}
         {viewMode === 'gantt' && (<Fragment>
           <div className="zoom-presets" title="Zoom level">
-            <button className={`zp-btn${tw.fitWidth?' active':''}`} onClick={()=>setTweak('fitWidth',!tw.fitWidth)} title="Fit entire project in viewport (auto-resizes)">Fit</button>
-            {[['Q',4],['M',8],['W',20],['D',48]].map(([k,w])=>(
-              <button key={k} className={`zp-btn${!tw.fitWidth&&currentZoom===k?' active':''}`} onClick={()=>{setTweak('fitWidth',false);setTweak('dayWidth',w);}}>{k}</button>
+            <button className={`zp-btn${tw.fitWidth?' active':''}`} onClick={()=>setTweak('fitWidth',!tw.fitWidth)} title="Fit entire project in viewport (auto-resizes)" aria-label="Fit width">Fit</button>
+            {[['Q',4,'Quarter'],['M',8,'Month'],['W',20,'Week'],['D',48,'Day']].map(([k,w,lbl])=>(
+              <button key={k} className={`zp-btn${!tw.fitWidth&&currentZoom===k?' active':''}`}
+                onClick={()=>{setTweak('fitWidth',false);setTweak('dayWidth',w);}}
+                title={`${lbl} zoom`} aria-label={`${lbl} zoom`}>{k}</button>
             ))}
           </div>
 
@@ -6790,7 +7668,7 @@ function App(){
                   <div className="vm-empty">No saved views yet.</div>
                 ) : (activeProject.savedViews.map(v => (
                   <div key={v.id} className="vm-item" onClick={()=>{ applyView(v); setViewsMenuOpen(false); }}>
-                    <span className="vm-name" title={`Switch to "${v.name}" (${v.viewMode} · group by ${v.groupBy})`}>{v.name}</span>
+                    <span className="vm-name" title={`Switch to "${v.name}" (${v.viewMode}${v.laneMode&&v.laneMode!=='off'?' · lanes: '+v.laneMode:''})`}>{v.name}</span>
                     <button className="vm-del" title="Delete view"
                       onClick={e=>{ e.stopPropagation(); deleteSavedView(v.id); }}>×</button>
                   </div>
@@ -6808,16 +7686,24 @@ function App(){
 
         <span className="tb-sep"/>
 
-        {/* Baseline */}
-        <button className={`tb-btn${baseline?' active':''}`}
+        {/* Baselines */}
+        <button className={`tb-btn${activeBaseline?' active':''}`}
                 disabled={!activeProject}
-                title={baseline?'Clear baseline snapshot':'Capture current plan as baseline'}
-                onClick={()=>{
-                  if(!activeProject) return;
-                  if(baseline) updateActiveProject({baseline:null});
-                  else updateActiveProject({baseline:new Map(tasks.map(t=>[t.id,{start:t.start,end:t.end}]))});
-                }}>
-          {baseline?'Baseline ✓':'Snapshot'}
+                title="Manage baseline snapshots"
+                onClick={()=>setBaselinesOpen(true)}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 6h18M3 12h18M3 18h18"/><path d="M7 6v12M17 6v12" strokeWidth="1.5" strokeDasharray="2 2"/></svg>
+          Baselines{baselines.length>0?` (${baselines.length})`:''}
+        </button>
+
+        {/* Critical path */}
+        <button className={`tb-btn${showCritical?' active':''}`}
+                disabled={!activeProject}
+                title="Highlight critical-path tasks and their dependency arrows"
+                onClick={()=>setTweak('showCritical', !showCritical)}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}>
+            <polyline points="3 17 9 11 13 15 21 7" strokeDasharray="3 2"/>
+          </svg>
+          Critical path
         </button>
 
         {/* Auto-stagger */}
@@ -6828,9 +7714,123 @@ function App(){
           </button>
         )}
 
+        {/* Compress schedule */}
+        <button className="tb-btn" disabled={!activeProject} title="Pull all successors back to remove gaps (keeps In-progress and Done tasks fixed)"
+          onClick={async ()=>{
+            const ok = await customConfirm('Compress schedule', 'Tasks with predecessors will be pulled to their earliest valid start. In-progress and Done tasks stay put.', {okLabel:'Compress'});
+            if (!ok) return;
+            const summary = { moved: 0, totalDays: 0 };
+            const compressFn = (ts)=>{
+              const byId = new Map(ts.map(t=>[t.id,{...t}]));
+              const indeg = new Map();
+              for (const t of ts) indeg.set(t.id, 0);
+              for (const t of ts) for (const d of depList(t)) if (byId.has(d.id)) indeg.set(t.id, (indeg.get(t.id)||0)+1);
+              const queue = [];
+              for (const [id,n] of indeg) if (n===0) queue.push(id);
+              const succs = new Map();
+              for (const t of ts) for (const d of depList(t)) {
+                if (!byId.has(d.id)) continue;
+                if (!succs.has(d.id)) succs.set(d.id, []);
+                succs.get(d.id).push(t.id);
+              }
+              const order = [];
+              while (queue.length){
+                const id = queue.shift();
+                order.push(id);
+                for (const s of (succs.get(id)||[])){
+                  indeg.set(s, indeg.get(s)-1);
+                  if (indeg.get(s)===0) queue.push(s);
+                }
+              }
+              for (const id of order){
+                const t = byId.get(id);
+                if (!t || t.kind==='project' || t.locked) continue;
+                if (t.status==='inprogress' || t.status==='review' || t.status==='done') continue;
+                // Earliest valid start = max over all preds of the dep-implied min start.
+                // Bidirectional: pulls back if t.start > maxMin, pushes forward if t.start < maxMin.
+                let maxMinStart = null;
+                for (const d of depList(t)){
+                  const pred = byId.get(d.id); if (!pred) continue;
+                  const type = d.type || 'FS';
+                  const lag = d.lag || 0;
+                  const predEffEnd = pred.leadTimeAfter ? addDays(pred.end, pred.leadTimeAfter) : pred.end;
+                  const childLTB = t.leadTimeBefore || 0;
+                  const dur = diffDays(t.start, t.end);
+                  let depMinStart = null;
+                  if (type === 'FS') depMinStart = addDays(addWorkingDays(predEffEnd, 1 + lag, calendar), childLTB);
+                  else if (type === 'SS') depMinStart = addDays(addWorkingDays(pred.start, lag, calendar), childLTB);
+                  else if (type === 'FF') {
+                    const minEnd = addWorkingDays(predEffEnd, lag, calendar);
+                    depMinStart = addDays(minEnd, -dur);
+                  } else if (type === 'SF') {
+                    const minEnd = addWorkingDays(pred.start, lag, calendar);
+                    depMinStart = addDays(minEnd, -dur);
+                  }
+                  if (depMinStart && (maxMinStart === null || depMinStart > maxMinStart)) {
+                    maxMinStart = depMinStart;
+                  }
+                }
+                if (maxMinStart){
+                  const dur = diffDays(t.start, t.end);
+                  const shift = diffDays(maxMinStart, t.start); // positive = pulled back (earlier)
+                  if (shift > 0) {
+                    summary.moved += 1;
+                    summary.totalDays += shift;
+                    t.start = maxMinStart;
+                    t.end = addDays(maxMinStart, dur);
+                  }
+                  // (We don't push forward here — that's autoSchedule's job, not Compress's.)
+                }
+              }
+              return Array.from(byId.values());
+            };
+            // Compute synchronously against current tasksRef so summary reflects actual changes
+            // BEFORE we hand the result to React. (React's functional setState defers the mutator
+            // — capturing summary from within it races the toast.)
+            const newTasks = compressFn(tasksRef.current || []);
+            updateTasks(() => newTasks);
+            if (typeof showToast === 'function') {
+              if (summary.moved === 0) showToast('Schedule already compact — no gaps to remove.', 'info');
+              else if (summary.moved === 1) showToast(`Compressed 1 task by ${summary.totalDays}d.`, 'info');
+              else showToast(`Compressed ${summary.moved} tasks · ${summary.totalDays} task-days reclaimed.`, 'info');
+            }
+          }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{verticalAlign:'middle',marginRight:4}}>
+            <polyline points="20 12 4 12"/><polyline points="14 6 4 12 14 18"/>
+          </svg>
+          Compress
+        </button>
+
         {/* Auto-sort */}
         <button className="tb-btn" disabled={!activeProject} title="Sort tasks: active first, then by start date and priority"
-          onClick={()=>updateTasks(ts=>autoSort(ts))}>
+          onClick={()=>{
+            const rowsBefore = Array.from(document.querySelectorAll('.lpane-body [data-task-id]'));
+            const posBefore = new Map();
+            for (const el of rowsBefore) posBefore.set(el.dataset.taskId, el.getBoundingClientRect().top);
+            let prevSnapshot = null;
+            updateTasks(ts=>{ prevSnapshot = ts; return autoSort(ts); });
+            requestAnimationFrame(()=>requestAnimationFrame(()=>{
+              const rowsAfter = Array.from(document.querySelectorAll('.lpane-body [data-task-id]'));
+              for (const el of rowsAfter) {
+                const id = el.dataset.taskId;
+                const before = posBefore.get(id);
+                if (before == null) continue;
+                const after = el.getBoundingClientRect().top;
+                const delta = before - after;
+                if (Math.abs(delta) < 1) continue;
+                el.style.transition = 'none';
+                el.style.transform = `translateY(${delta}px)`;
+                requestAnimationFrame(()=>{
+                  el.style.transition = 'transform 300ms cubic-bezier(.2,.7,.3,1)';
+                  el.style.transform = '';
+                  setTimeout(()=>{ el.style.transition=''; el.style.transform=''; }, 350);
+                });
+              }
+            }));
+            if (sortToastTimerRef.current) clearTimeout(sortToastTimerRef.current);
+            setSortToast({ prevTasks: prevSnapshot });
+            sortToastTimerRef.current = setTimeout(()=>setSortToast(null), 5000);
+          }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{verticalAlign:'middle',marginRight:4}}>
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/>
           </svg>
@@ -6843,13 +7843,14 @@ function App(){
         )}
 
         {/* Keyboard help (Batch 5) */}
-        <button className="tb-icon-btn" title="Keyboard shortcuts (?)" onClick={()=>setHelpOpen(true)}>
+        <button className="tb-icon-btn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts" onClick={()=>setHelpOpen(true)}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
 
         {/* Dark / light mode toggle */}
         <button className="tb-icon-btn"
           title={tw.theme==='dark'?'Switch to light mode':'Switch to dark mode'}
+          aria-label={tw.theme==='dark'?'Switch to light mode':'Switch to dark mode'}
           onClick={()=>setTweak('theme', tw.theme==='dark'?'things':'dark')}>
           {tw.theme==='dark'
             ? <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -6858,7 +7859,7 @@ function App(){
         </button>
 
         {/* Settings */}
-        <button className="tb-icon-btn" title="Settings (Ctrl/Cmd+,)" onClick={()=>window.postMessage({type:'__toggle_edit_mode'},'*')}>
+        <button className="tb-icon-btn" title="Settings (Ctrl/Cmd+,)" aria-label="Settings" onClick={()=>window.postMessage({type:'__toggle_edit_mode'},'*')}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
 
@@ -6935,7 +7936,7 @@ function App(){
         </div>
 
         {/* Work area: shared filter strip above the LP+RP row so both panes have equal header overhead */}
-        <div className="work-area">
+        <div className={"work-area"+(drawerPinned&&isInspectorOpen?" inspector-docked":"")}>
           {/* Filter strip (Batch 4) — moved out of rpane so LP/RP alignment is wrap-proof */}
           {activeProject && (
             <SearchFilterBar filter={filter} setFilter={setFilter} owners={owners}
@@ -6947,7 +7948,10 @@ function App(){
         <div className="lpane">
           <div className="lpane-hdr">
             <h2>Tasks</h2>
-            <button className="lpane-add-btn" title="New set" disabled={!activeProject} onClick={addGroup}>+</button>
+            <button className="lpane-add-btn" title="New set" aria-label="New set" disabled={!activeProject} onClick={addGroup}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New set
+            </button>
             <span className="pill">{tasks.filter(t=>!t.kind).length} items</span>
           </div>
           {viewMode === 'gantt' && showMinimap && activeProject && rows.length>0 && (
@@ -6967,13 +7971,16 @@ function App(){
                   : tasks.filter(t=>t.parent===r.id).length;
                 const projCost = costRoll.perTask.get(r.id) || 0;
                 return (
-                  <div className="group-row" data-pid={r.project} key={r.id}
+                  <div className="group-row" data-pid={r.project} data-gid={r.id} key={r.id}
                     style={r.color?{boxShadow:`inset 3px 0 0 ${r.color}`}:undefined}
                     onClick={()=>setCollapsed(c=>{const n=new Set(c);n.has(r.id)?n.delete(r.id):n.add(r.id);return n;})}>
+                    <span className="grp-drag" title="Drag to reorder set" aria-label="Drag to reorder set"
+                      onPointerDown={e=>beginGroupDrag(e,r.id)}
+                      onClick={e=>e.stopPropagation()}>⋮⋮</span>
                     <svg className={`group-chv${open?' open':''}`} viewBox="0 0 24 24" fill="none" stroke={r.color||'currentColor'} strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     <span className="group-dot" style={r.color?{background:r.color}:undefined}/>
                     {groupRenaming?.id===r.id
-                      ? <input className="row-rename" autoFocus value={groupRenaming.value}
+                      ? <input className="row-rename" autoFocus onFocus={e=>e.target.select()} value={groupRenaming.value}
                           onChange={e=>setGroupRenaming(g=>({...g,value:e.target.value}))}
                           onKeyDown={e=>{if(e.key==='Enter')commitGroupRename();if(e.key==='Escape')setGroupRenaming(null);e.stopPropagation();}}
                           onBlur={commitGroupRename}
@@ -6983,7 +7990,7 @@ function App(){
                     {projCost>0 && <span className="group-cost" title={`Rollup cost`}>{formatCost(projCost)} total</span>}
                     <div className="grp-add" title="Add task to this set"
                       onClick={e=>{e.stopPropagation();addTaskToGroup({kind:'project',groupId:r.id,title:r.title});}}>+</div>
-                    <div className="grp-kebab" title="Set options"
+                    <div className="grp-kebab" title="Set options" role="button" aria-label="Set options"
                       onClick={e=>{e.stopPropagation();setGroupCtxMenu({x:e.clientX,y:e.clientY,groupId:r.id,kind:'project',title:r.title});}}>&#xFE19;</div>
                     <span className="group-cnt">{cnt}</span>
                   </div>
@@ -6998,7 +8005,7 @@ function App(){
                     <svg className={`group-chv${open?' open':''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     <div className="owner-avatar" style={{background:r.color+'33',borderColor:r.color+'88',color:r.color}}>{r.owner.slice(0,2).toUpperCase()}</div>
                     {groupRenaming?.id===r.id
-                      ? <input className="row-rename" autoFocus value={groupRenaming.value}
+                      ? <input className="row-rename" autoFocus onFocus={e=>e.target.select()} value={groupRenaming.value}
                           onChange={e=>setGroupRenaming(g=>({...g,value:e.target.value}))}
                           onKeyDown={e=>{if(e.key==='Enter')commitGroupRename();if(e.key==='Escape')setGroupRenaming(null);e.stopPropagation();}}
                           onBlur={commitGroupRename}
@@ -7007,9 +8014,20 @@ function App(){
                     }
                     <div className="grp-add" title="Add task to this set"
                       onClick={e=>{e.stopPropagation();addTaskToGroup({kind:'owner',groupId:r.id,title:r.owner});}}>+</div>
-                    <div className="grp-kebab" title="Set options"
+                    <div className="grp-kebab" title="Set options" role="button" aria-label="Set options"
                       onClick={e=>{e.stopPropagation();setGroupCtxMenu({x:e.clientX,y:e.clientY,groupId:r.id,kind:'owner',title:r.owner});}}>&#xFE19;</div>
                     <span className="group-cnt">{cnt}</span>
+                  </div>
+                );
+              }
+              if(r.isLane){
+                const open=!laneCollapsed.has(r.id);
+                return (
+                  <div key={r.id} className={`lane-row lane-row--${r.laneMode}`} data-lane-id={r.id}
+                    onClick={()=>setLaneCollapsed(c=>{const n=new Set(c);n.has(r.id)?n.delete(r.id):n.add(r.id);return n;})}>
+                    <svg className={`lane-chv${open?' open':''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <span className="lane-dot" style={{background:r.color}}/>
+                    <span className="lane-ttl">{r.title}</span>
                   </div>
                 );
               }
@@ -7026,7 +8044,7 @@ function App(){
                     if(e.shiftKey && selAnchorRef.current){
                       // Shift+click: range select between anchor and clicked row over the
                       // currently visible task rows (skip project / owner section headers).
-                      const ids = rows.filter(rr => rr.id && !rr.isProject && !rr.isOwnerGroup).map(rr => rr.id);
+                      const ids = rows.filter(rr => rr.id && !rr.isProject && !rr.isOwnerGroup && !rr.isLane).map(rr => rr.id);
                       const a = ids.indexOf(selAnchorRef.current);
                       const b = ids.indexOf(r.id);
                       if(a >= 0 && b >= 0){
@@ -7058,7 +8076,7 @@ function App(){
                     selAnchorRef.current = r.id;
                   }}
                   onDoubleClick={()=>{ if(isRecurInst) return; setRenaming({id:r.id,value:r.title}); }}
-                  onContextMenu={e=>{e.preventDefault();if(isRecurInst)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));selAnchorRef.current=r.id;}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                  onContextMenu={e=>{e.preventDefault();if(isRecurInst)return;if(!selectedSet.has(r.id)){setSelectedSet(new Set([r.id]));selAnchorRef.current=r.id;}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
                   {r.isSummary && (
                     <span className={`task-chv${collapsed.has(r.id)?'':' open'}`}
                           title={collapsed.has(r.id)?'Expand':'Collapse'}
@@ -7067,10 +8085,10 @@ function App(){
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </span>
                   )}
-                  <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();if(isRecurInst)return;updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,progress:!t.done?1:(t.progress||0)}:t));}}/>
+                  <span className={`chk${r.done?' done':''}`} onClick={e=>{e.stopPropagation();if(isRecurInst)return;updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,done:!t.done,status:!t.done?'done':'todo',progress:!t.done?1:(t.progress||0)}:t));}}/>
                   {wbsCode && <span className="wbs" title={`WBS ${wbsCode}`}>{wbsCode}</span>}
                   {isRen
-                    ?<input className="row-rename" autoFocus value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
+                    ?<input className="row-rename" autoFocus={renaming.source!=='bar'} onFocus={e=>e.target.select()} value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename} onClick={e=>e.stopPropagation()} onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
                     :<span className="ttl">{isRecurInst && <span style={{color:'var(--accent-2)',marginRight:4}}>↻</span>}{r.title}</span>
                   }
                   <span className="pri" title={`Priority ${r.priority}`}>
@@ -7155,10 +8173,11 @@ function App(){
                   <div>Pick or create a project on the left.</div>
                 </div>
               )}
-              {activeProject && rows.length===0 && (
-                <div className="empty-state">
+              {activeProject && rows.length===0 && !onboardDismissed && (
+                <div className="onboard-hint" onMouseDown={e=>e.stopPropagation()}>
+                  <button className="onboard-close" title="Dismiss" onClick={()=>{ try{ localStorage.setItem('onboardingHintDismissed','1'); }catch(e){} setOnboardDismissed(true); }}>×</button>
                   <h3>{activeProject.name}</h3>
-                  <div>Drag on an empty row to create a task — or use + New task.</div>
+                  <p>Drag on an empty row to create a task — or use + New task.</p>
                 </div>
               )}
 
@@ -7168,7 +8187,7 @@ function App(){
                   const we=isWeekend(d)&&tw.showWeekends!==false, ms=parseYmd(d).getDate()===1;
                   return <div key={d} className={`grid-col${we?' weekend':''}${ms?' month-start':''}`} style={{left:i*dayW+'px',width:dayW+'px'}}/>;
                 })}
-                <div className="today-line" style={{left:xForDay(todayStr)+dayW*(tw.todayLineLive!==false?(now.getHours()*3600+now.getMinutes()*60)/86400:0.5)+'px'}}/>
+                <div className="today-line" style={{left:xForDay(ymd(now))+dayW*(tw.todayLineLive!==false?(now.getHours()*3600+now.getMinutes()*60)/86400:0.5)+'px'}}/>
                 {sprintBands.map(band=>(
                   <Fragment key={'sb'+band.dayIdx}>
                     {band.isEven&&<div className="sprint-band even" style={{left:band.dayIdx*dayW+'px',width:Math.min(7,axis.days.length-band.dayIdx)*dayW+'px'}}/>}
@@ -7181,28 +8200,28 @@ function App(){
                 ))}
                 {hoveredBarId&&(()=>{ const row=rows.find(r=>r.id===hoveredBarId); if(!row||row.isProject)return null; return <div className="hover-guide-band" style={{left:xForDay(row.start)+'px',width:(row.milestone?dayW:(diffDays(row.start,row.end)+1)*dayW)+'px'}}/>; })()}
                 {rows.map((r,i)=>(
-                  <div key={r.id} className={`row-line${r.isProject||r.isOwnerGroup?' group':''}${selected===r.id?' selected-row':''}`} style={{top:i*rowH+'px'}}/>
+                  <div key={r.id} className={`row-line${r.isProject||r.isOwnerGroup?' group':''}${r.isLane?' lane':''}${selected===r.id?' selected-row':''}${hoverRow===r.id?' hover':''}`} style={{top:i*rowH+'px'}}/>
                 ))}
-                {showNowCurtain&&<div className="now-curtain" style={{width:Math.max(0,xForDay(todayStr)+dayW/2)+'px'}}/>}
+                {showNowCurtain&&<div className="now-curtain" style={{width:Math.max(0,xForDay(ymd(now))+dayW/2)+'px'}}/>}
                 {showFloat&&rows.map((r,i)=>{
-                  if(r.isProject||r.isOwnerGroup||r.milestone||r.done)return null;
+                  if(r.isProject||r.isOwnerGroup||r.isLane||r.milestone||r.done)return null;
                   const fl=floatMap.get(r.id)||0; if(fl<=0)return null;
                   const live=livePreview(r); const end=live?live.end:r.end;
                   const bg=r.color||'#96c6e8';
                   return <div key={'fg-'+r.id} className="float-ghost" style={{left:xForDay(addDays(end,1))+'px',width:fl*dayW+'px',top:i*rowH+(rowH-22)/2+'px',background:`linear-gradient(to right,${bg}55,transparent)`}}/>;
                 })}
                 {showProbBars&&rows.map((r,i)=>{
-                  if(!r.pessimistic||r.isProject||r.milestone)return null;
+                  if(!r.pessimistic||r.isProject||r.isLane||r.milestone)return null;
                   const live=livePreview(r); const end=live?live.end:r.end;
                   const bg=r.color||'#96c6e8';
                   return <div key={'pt-'+r.id} className="prob-tail" style={{left:xForDay(end)+'px',width:r.pessimistic*dayW+'px',top:i*rowH+(rowH-22)/2+'px',background:`linear-gradient(to right,${bg}99,${bg}33,transparent)`}}/>;
                 })}
-                {baseline&&rows.map((r,i)=>{
-                  if(r.isProject||r.isOwnerGroup||r.milestone)return null;
-                  const bl=baseline.get(r.id); if(!bl)return null;
+                {activeBaseline&&rows.map((r,i)=>{
+                  if(r.isProject||r.isOwnerGroup||r.isLane||r.milestone)return null;
+                  const bl=activeBaseline.snapshot[r.id]; if(!bl)return null;
                   if(bl.start===r.start&&bl.end===r.end)return null;
                   const slip=bl.end<r.end;
-                  return <div key={'bl-'+r.id} className="baseline-bar" title={`Baseline: ${fmtShort(bl.start)} → ${fmtShort(bl.end)}`}
+                  return <div key={'bl-'+r.id} className="baseline-bar" title={`${activeBaseline.name}: ${fmtShort(bl.start)} → ${fmtShort(bl.end)}`}
                     style={{left:xForDay(bl.start)+'px',width:(diffDays(bl.start,bl.end)+1)*dayW-2+'px',top:i*rowH+(rowH-22)/2+20+'px',background:slip?'var(--p2)':'var(--t4)'}}/>;
                 })}
                 {snapInfo&&<div className="snap-guide-mag" style={{left:snapInfo.x+'px'}}/>}
@@ -7212,7 +8231,7 @@ function App(){
               {tw.showDeps!==false&&(
                 <svg className="dep-svg" width={totalW} height={rows.length*rowH}>
                   <defs>
-                    <marker id="dep-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#66837c"/></marker>
+                    <marker id="dep-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker>
                     <marker id="dep-arrow-preview" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#14b8a6"/></marker>
                   </defs>
                   {rows.flatMap((r,i)=>{
@@ -7223,7 +8242,7 @@ function App(){
                     const childEndX = xForDay(live?live.end:r.end) + dayW;
                     return list.flatMap(dep=>{
                       const depId = dep.id;
-                      const pi=rows.findIndex(rr=>rr.id===depId); if(pi<0)return [];
+                      const pi=rowIndexById.get(depId)??-1; if(pi<0)return [];
                       const par=rows[pi]; const liveP=livePreview(par);
                       const parStartX = xForDay(liveP?liveP.start:par.start);
                       const parEndX = xForDay(liveP?liveP.end:par.end) + dayW;
@@ -7234,7 +8253,7 @@ function App(){
                       else if (type === 'FF') { parentX = parEndX;   childX = childEndX + 4; }
                       else if (type === 'SF') { parentX = parStartX; childX = childEndX + 4; }
                       else                    { parentX = parEndX;   childX = childStartX - 4; }
-                      const isCrit=critical.edges.has(depId+'→'+r.id);
+                      const isCrit=showCritical&&critical.edges.has(depId+'→'+r.id);
                       const focusDim=focusChain&&(!focusChain.has(r.id)||!focusChain.has(depId));
                       const inHover=hoverChain&&hoverChain.has(r.id)&&hoverChain.has(depId);
                       const hoverDim=hoverChain&&!inHover;
@@ -7267,10 +8286,14 @@ function App(){
                   {drag?.kind==='dep'&&(()=>{
                     const fromRow=rows.findIndex(r=>r.id===drag.id); if(fromRow<0)return null;
                     const ft=rows[fromRow];
-                    const x1=xForDay(ft.end)+dayW, y1=fromRow*rowH+rowH/2;
+                    const isStart=drag.depEndpoint==='start';
+                    const x1=isStart?xForDay(ft.start):xForDay(ft.end)+dayW, y1=fromRow*rowH+rowH/2;
                     const gr=gridScrollRef.current?.getBoundingClientRect()||{left:0,top:0};
                     const x2=drag.currentClientX-gr.left+gridScrollRef.current.scrollLeft;
                     const y2=drag.currentClientY-gr.top+gridScrollRef.current.scrollTop;
+                    if(isStart){
+                      return <path className="dep-path preview" d={`M${x2} ${y2} L${Math.min(x1-8,x2+12)} ${y2} L${Math.min(x1-8,x2+12)} ${y1} L${x1} ${y1}`}/>;
+                    }
                     return <path className="dep-path preview" d={`M${x1} ${y1} L${Math.max(x1+8,x2-12)} ${y1} L${Math.max(x1+8,x2-12)} ${y2} L${x2} ${y2}`}/>;
                   })()}
                   {drag?.kind==='dep-edit'&&(()=>{
@@ -7320,6 +8343,15 @@ function App(){
                   const multiSel=selectedSet.has(r.id);
                   const isPast=!dragging&&end<todayStr;
 
+                  if(r.isLane){
+                    if(!r.start||!r.end||w<=0) return null;
+                    const c=r.color||'#94a3b8';
+                    return (
+                      <div key={r.id} className="bar lane-bar"
+                        style={{left:x+'px',top:i*rowH+(rowH-10)/2+'px',width:w+'px',height:'10px',
+                          background:c+'28',border:`1px solid ${c}88`,borderRadius:'3px',pointerEvents:'none'}}/>
+                    );
+                  }
                   if(r.isProject||r.isOwnerGroup){
                     const isOwner=r.isOwnerGroup;
                     const projCost = isOwner ? 0 : (costRoll.perTask.get(r.id) || 0);
@@ -7344,13 +8376,13 @@ function App(){
                   if(r.milestone){
                     return (
                       <div key={r.id}
-                        className={`bar milestone${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}`}
+                        className={`bar milestone${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${showCritical&&critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}`}
                         data-bar-id={r.id} style={{left:x+'px',top:top+'px',width:dayW+'px'}}
                         onPointerDown={e=>{if(isRenaming)return;beginBarDrag(e,r,'move');}}
                         onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
-                        onClick={e=>{e.stopPropagation();setSelected(r.id);}}
-                        onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
-                        onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
+                        onClick={e=>{if(e.button!==0)return;e.stopPropagation();setSelected(r.id);}}
+                        onDoubleClick={e=>{e.stopPropagation();setRenaming({id:r.id,value:r.title,source:'bar'});}}
+                        onContextMenu={e=>{e.preventDefault();if(!selectedSet.has(r.id)){setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}>
                         <span className="diamond" style={{background:r.done?'#ebebed':(r.color||'#96c6e8')}}/>
                         {isRenaming
                           ?<input className="row-rename bar-rename" style={{position:'absolute',left:'24px',width:'180px',background:'var(--surface-2)',color:'var(--t1)'}}
@@ -7358,7 +8390,8 @@ function App(){
                               onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
                           :<span className="bar-ttl">{r.title}</span>
                         }
-                        <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)}/>
+                        <span className="dep-knob dep-knob-l" onPointerDown={e=>beginDepDrag(e,r,'start')} title="Drag to set predecessor ←"/>
+                        <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r,'end')} title="Drag to link successor →"/>
                       </div>
                     );
                   }
@@ -7367,19 +8400,32 @@ function App(){
                   const isRecurInstance = !!r.recurrenceParent;
                   const isRecurSource = !!r.recurrence;
                   const isShort = w < 30;
-                  const showInsideLabel = labelPos==='inside' || labelPos==='both' || (labelPos==='auto' && (w-20)>=r.title.length*6.2);
+                  const extraEls=(w>22?28:0)+(r.locked?20:0);
+                  const showInsideLabel = labelPos==='inside' || labelPos==='both' || (labelPos==='auto' && (w-18-extraEls)>=r.title.length*6.5);
                   return (
                     <React.Fragment key={r.id}>
+                    {(r.leadTimeBefore > 0) && (
+                      <div className="bar-lead bar-lead-before"
+                        style={{left:(x-(r.leadTimeBefore*dayW))+'px',top:top+'px',width:(r.leadTimeBefore*dayW-2)+'px',background:bg}}>
+                        {r.leadTimeBefore*dayW>28&&<span className="bar-lead-lbl">{r.leadTimeBefore}d</span>}
+                      </div>
+                    )}
+                    {(r.leadTimeAfter > 0) && (
+                      <div className="bar-lead bar-lead-after"
+                        style={{left:(x+w+2)+'px',top:top+'px',width:(r.leadTimeAfter*dayW-2)+'px',background:bg}}>
+                        {r.leadTimeAfter*dayW>28&&<span className="bar-lead-lbl">{r.leadTimeAfter}d</span>}
+                      </div>
+                    )}
                     <div
-                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}${isRecurInstance?' recur-instance':''}${isShort?' short':''}${r.locked?' bar-locked':''}`}
+                      className={`bar${dragging?' dragging':''}${sel?' selected':''}${multiSel?' multi-sel':''}${r.done?' done':''}${tw.compactBars?' compact':''}${tw.pillBars?' pill':''}${showCritical&&critical.nodes.has(r.id)?' critical':''}${focusDimmed?' dimmed':''}${hoverDimmed?' hover-dim':''}${r.blocking?' blocking':''}${drag?.kind==='prog'&&drag.id===r.id?' prog-dragging':''}${isPast?' past':''}${isConflict&&showConflicts?' conflict-bar':''}${isRecurInstance?' recur-instance':''}${isShort?' short':''}${r.locked?' bar-locked':''}`}
                       data-bar-id={r.id}
-                      style={{left:x+'px',top:top+'px',width:w+'px',background:`linear-gradient(180deg,${bg},${shade(bg,-.18)})`,border:`1px solid ${shade(bg,-.35)}`,'--bar-c':bg,'--bar-c-d':shade(bg,-.35),'--bar-c-l':shade(bg,.32)}}
+                      style={{left:x+'px',top:top+'px',width:w+'px',...(tw.pillBars?{background:shade(bg,.82),border:`1.5px solid ${shade(bg,-.15)}`,color:shade(bg,-.55)}:{background:`linear-gradient(180deg,${bg},${shade(bg,-.18)})`,border:`1px solid ${shade(bg,-.35)}`}),'--bar-c':bg,'--bar-c-d':shade(bg,-.35),'--bar-c-l':shade(bg,.32)}}
                       onPointerDown={e=>{
                         if(isRenaming)return;
                         const rect=e.currentTarget.getBoundingClientRect();
                         const ox=e.clientX-rect.left, bw=rect.width;
                         const coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
-                        const edge=Math.min(coarse?18:12, bw*0.25);
+                        const edge=Math.min(coarse?22:16, bw*0.3);
                         let kind='move';
                         if(!isRecurInstance && !isShort){
                           if(ox<edge) kind='l';
@@ -7392,7 +8438,7 @@ function App(){
                         const rect=e.currentTarget.getBoundingClientRect();
                         const ox=e.clientX-rect.left, bw=rect.width;
                         const coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
-                        const edge=Math.min(coarse?18:12, bw*0.25);
+                        const edge=Math.min(coarse?22:16, bw*0.3);
                         let zone='';
                         if(ox<edge) zone='l';
                         else if(ox>bw-edge) zone='r';
@@ -7403,9 +8449,9 @@ function App(){
                       }}
                       onPointerLeave={e=>{ if(e.currentTarget.dataset.zone) delete e.currentTarget.dataset.zone; }}
                       onMouseEnter={()=>setHoveredBarId(r.id)} onMouseLeave={()=>setHoveredBarId(null)}
-                      onClick={e=>{e.stopPropagation();setSelected(r.id);}}
-                      onDoubleClick={e=>{if(isRecurInstance)return;e.stopPropagation();setRenaming({id:r.id,value:r.title});}}
-                      onContextMenu={e=>{e.preventDefault();if(isRecurInstance)return;if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
+                      onClick={e=>{if(e.button!==0)return;e.stopPropagation();setSelected(r.id);}}
+                      onDoubleClick={e=>{if(isRecurInstance)return;e.stopPropagation();setRenaming({id:r.id,value:r.title,source:'bar'});}}
+                      onContextMenu={e=>{e.preventDefault();if(isRecurInstance)return;if(!selectedSet.has(r.id)){setSelectedSet(new Set([r.id]));}setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});}}
                       title={isRenaming?'':(isRecurInstance?`${r.title} · recurring instance — edit the source task to change`:`${r.title} · ${fmtShort(start)} → ${fmtShort(end)} · ${durLabel}${r.owner?' · '+r.owner:''}${typeof r.cost==='number'?' · '+formatCost(r.cost):''}${isRecurSource?' · ↻ recurring source':''}${isShort?' · short bar — right-click or use the • dot for resize':''}`)}>
                       {r.locked&&<span className="lock-icon" title="Locked — dates frozen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg></span>}
                       {liveProgress>0&&<div className="bar-prog" style={{width:(liveProgress*100)+'%',background:`${shade(bg,-.45)}66`}}/>}
@@ -7414,28 +8460,40 @@ function App(){
                           onPointerDown={e=>{e.stopPropagation();beginProgDrag(e,r);}}/>
                       )}
                       {(isRecurInstance||isRecurSource)&&<div className="recur-icon" title={isRecurInstance?'Recurring instance — edit the source':'Recurring source'}>↻</div>}
-                      {isRenaming
-                        ?<input className="bar-rename" value={renaming.value} onChange={e=>setRenaming({...renaming,value:e.target.value})} onBlur={commitRename}
+                      {isRenaming && renaming.source==='bar'
+                        ? <input className="bar-rename" autoFocus onFocus={e=>e.target.select()}
+                            value={renaming.value}
+                            onChange={e=>setRenaming({...renaming,value:e.target.value})}
+                            onBlur={commitRename}
                             onKeyDown={e=>{if(e.key==='Enter')commitRename();if(e.key==='Escape')setRenaming(null);e.stopPropagation();}}/>
-                        :<div className="bar-ttl">{showInsideLabel?r.title:''}</div>
+                        : <div className="bar-ttl">{isRenaming?renaming.value:(showInsideLabel?r.title:'')}</div>
                       }
-                      {w>90&&!isRenaming&&<div className="bar-meta">{durLabel}</div>}
-                      {showOwners&&r.owner&&w>70&&!isRenaming&&<div className="bar-owner">{r.owner.slice(0,2)}</div>}
-                      {health&&!isRenaming&&<div className={`health-pip ${health}`} title={`Health: ${health}`}/>}
+                      {w>22&&!isRenaming&&<div className="bar-meta">{durLabel}</div>}
+                      {health&&!isRenaming&&<div className={`health-pip ${health}`} title={health==='green'?'On track':health==='amber'?'At risk — progress behind schedule':'Overdue — past end date'}/>}
                       {atRisk.has(r.id)&&!r.done&&<div className="bar-risk-edge"/>}
                       {isConflict&&showConflicts&&<div className="conflict-dot" title="Owner double-booked">!</div>}
                       {isShort && !isRecurInstance && (
                         <div className="bar-short-dot" title="Resize / link options"
                           onPointerDown={e=>{e.stopPropagation();}}
                           onClick={e=>{e.stopPropagation();
-                            if(!selectedSet.has(r.id)){setSelected(r.id);setSelectedSet(new Set([r.id]));}
+                            if(!selectedSet.has(r.id)){setSelectedSet(new Set([r.id]));}
                             setCtxMenu({x:e.clientX,y:e.clientY,taskId:r.id});
                           }}>•••</div>
                       )}
-                      {!isRecurInstance && <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r)} title="Drag to link →"/>}
+                      {!isRecurInstance && !isShort && <>
+                        <span className="bar-grip bar-grip-l" aria-hidden="true"/>
+                        <span className="bar-grip bar-grip-r" aria-hidden="true"/>
+                      </>}
+                      {!isRecurInstance && <>
+                        <span className="dep-knob dep-knob-l" onPointerDown={e=>beginDepDrag(e,r,'start')} title="Drag to set predecessor ←"/>
+                        <span className="dep-knob" onPointerDown={e=>beginDepDrag(e,r,'end')} title="Drag to link successor →"/>
+                      </>}
                     </div>
                     {!isRenaming&&(labelPos==='both'||!showInsideLabel)&&(
-                      <div className="bar-ttl-ext" style={{left:(x+w+4)+'px',top:top+'px'}}>{r.title}</div>
+                      <div className={`bar-ttl-ext${tw.compactBars?' compact':''}`} style={{left:(x+w+4)+'px',top:top+'px'}}>{r.title}</div>
+                    )}
+                    {showOwners&&r.owner&&!isRenaming&&labelPos!=='both'&&showInsideLabel&&(
+                      <div className="bar-owner-ext" style={{left:(x+w+4)+'px',top:top+'px'}}>{r.owner.slice(0,2).toUpperCase()}</div>
                     )}
                     </React.Fragment>
                   );
@@ -7457,7 +8515,19 @@ function App(){
         <span>
           {activeProject ? `${activeProject.name} · ` : ''}
           {tasks.length} tasks · {tasks.filter(t=>t.deps?.length).length} deps
-          {conflicts.size>0?` · ⚠ ${conflicts.size} conflicts`:''}
+          {conflicts.size>0?(
+            <button className="sbar-conflict-btn" title="Focus first conflict" aria-label="Focus first conflict"
+              onClick={()=>{
+                const firstId = [...conflicts][0];
+                if (!firstId) return;
+                setSelected(firstId);
+                // Scroll the conflict bar into view
+                requestAnimationFrame(()=>{
+                  const bar = document.querySelector(`.bar[data-bar-id="${firstId}"]`);
+                  if (bar) bar.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
+                });
+              }}>{` · ⚠ ${conflicts.size} conflicts`}</button>
+          ):null}
           {selectedSet.size>1?` · ${selectedSet.size} selected`:''}
           {dirty?' · unsaved':''}
         </span>
@@ -7486,27 +8556,28 @@ function App(){
       );
     })()}
 
+    {/* Progress drag tooltip */}
+    {drag?.kind==='prog'&&(
+      <div className="drag-tooltip" style={{left:drag.currentClientX+14+'px',top:drag.currentClientY+14+'px'}}>
+        <div className="dt-meta">{Math.round((drag.liveProgress??0)*100)}%</div>
+      </div>
+    )}
+
     {/* Inspector drawer — slides in from right; persistent wrapper for slide-out animation */}
     <div ref={drawerRef}
-         className={"inspector"+((selected && (()=>{
-           const r = rows.find(x=>x.id===selected) || expandedTasks.find(x=>x.id===selected);
-           if (!r) return false;
-           if (r.isProject||r.isOwnerGroup||r.kind==='project'||renaming?.id===r.id) return false;
-           if (r.recurrenceParent) return false;
-           return true;
-         })()) ? " open" : "")}
+         className={"inspector"+(isInspectorOpen?" open":"")+(drawerPinned?" docked":"")}
          onPointerDown={e=>e.stopPropagation()}>
     {selected&&(()=>{
       // Look up the live task. In non-Gantt views, rows[] is the Gantt build,
       // so we cannot rely on findIndex there — locate by id via expandedTasks.
       let r = rows.find(x=>x.id===selected) || expandedTasks.find(x=>x.id===selected);
       if (!r) return null;
-      if (r.isProject||r.isOwnerGroup||r.kind==='project'||renaming?.id===r.id) return null;
+      if (r.isProject||r.isOwnerGroup||r.isLane||r.kind==='project'||renaming?.id===r.id) return null;
       if (r.recurrenceParent) return null;
       const taskLive = tasks.find(t=>t.id===r.id) || r;
       const live = viewMode === 'gantt' ? livePreview(r) : null;
       const start=live?live.start:r.start, end=live?live.end:r.end;
-      const dur=diffDays(start,end)+1, isCrit=critical.nodes.has(r.id);
+      const dur=diffDays(start,end)+1, isCrit=showCritical&&critical.nodes.has(r.id);
       const insDurLabel = formatDuration(start, end, calendar);
 
       const ownersByName=new Map(owners.map(o=>[o.name,o]));
@@ -7518,6 +8589,7 @@ function App(){
 
       const setPriority = (p) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,priority:p}:t));
       const setColor = (c) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,color:c}:t));
+      const setStatus = (s) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,status:s,done:s==='done',progress:s==='done'?1:(t.progress||0)}:t));
       const setStart = (s) => updateTasks(ts=>applySchedule(ts.map(t=>{
         if(t.id!==r.id) return t;
         // keep duration if both, else snap end
@@ -7538,11 +8610,34 @@ function App(){
       };
       const updateLinks = (next) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,links:next}:t));
       const updateCustom = (next) => updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,customFields:next}:t));
+      const setProgress = (pct) => {
+        const v = Math.max(0, Math.min(100, Math.round(pct/5)*5)) / 100;
+        const wasNotDone = r.status !== 'done';
+        updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,progress:v}:t));
+        if (v >= 1 && wasNotDone) {
+          setMarkDonePrompt(r.id);
+          if (markDonePromptTimerRef.current) clearTimeout(markDonePromptTimerRef.current);
+          markDonePromptTimerRef.current = setTimeout(()=>setMarkDonePrompt(p=>p===r.id?null:p), 5000);
+        } else if (v < 1) {
+          if (markDonePrompt === r.id) setMarkDonePrompt(null);
+        }
+      };
+      const acceptMarkDone = () => {
+        if (markDonePromptTimerRef.current) clearTimeout(markDonePromptTimerRef.current);
+        setMarkDonePrompt(null);
+        updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,status:'done',done:true,progress:1}:t));
+      };
+      const declineMarkDone = () => {
+        if (markDonePromptTimerRef.current) clearTimeout(markDonePromptTimerRef.current);
+        setMarkDonePrompt(null);
+      };
 
       return (
         <>
           <div className="ins-title">
-            <span className="ins-title-text">{taskLive.title}</span>
+            <input className="ins-title-input" value={taskLive.title} title="Click to rename"
+              onChange={e=>updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,title:e.target.value}:t))}
+              onKeyDown={e=>{if(e.key==='Enter'||e.key==='Escape')e.target.blur();}}/>
             {isCrit&&<span className="ins-crit">CRITICAL</span>}
             <button
               className={"ins-pin"+(drawerPinned?" active":"")}
@@ -7561,7 +8656,7 @@ function App(){
               onClick={()=>toggleLock(r.id)}>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
             </button>
-            <button className="ins-close" title="Close (Esc)" aria-label="Close inspector" onClick={()=>{ setDrawerPinned(false); setSelected(null); }}>×</button>
+            <button className="ins-close" title="Close (Esc)" aria-label="Close inspector" onClick={()=>{ setSelected(null); }}>×</button>
           </div>
           <div className="ins-row"><span className="lbl">Dates</span><span className="val">{fmtShort(start)} → {fmtShort(end)}</span><span className="dur-pill" style={{marginLeft:'auto'}}>{r.milestone?'◆':insDurLabel}</span></div>
           <div className="ins-row ins-deps-row"><span className="lbl">Deps</span>
@@ -7607,18 +8702,44 @@ function App(){
               <div className="ins-row-2">
                 <div className="ins-field">
                   <span className="ins-field-lbl">Start</span>
-                  <input className="ins-date" type="date" value={taskLive.start} onChange={e=>{ if(e.target.value) setStart(e.target.value); }}/>
+                  <DateField className="ins-date" value={taskLive.start} onChange={v=>{ if(v) setStart(v); }}/>
                 </div>
                 <div className="ins-field">
                   <span className="ins-field-lbl">End</span>
-                  <input className="ins-date" type="date" value={taskLive.end} onChange={e=>{ if(e.target.value) setEnd(e.target.value); }}/>
+                  <DateField className="ins-date" value={taskLive.end} onChange={v=>{ if(v) setEnd(v); }}/>
                 </div>
               </div>
             )}
             {r.milestone && (
               <div className="ins-field">
                 <span className="ins-field-lbl">Milestone date</span>
-                <input className="ins-date" type="date" value={taskLive.start} onChange={e=>{ if(e.target.value){ const v=e.target.value; updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,start:v,end:v}:t)); }}}/>
+                <DateField className="ins-date" value={taskLive.start} onChange={v=>{ if(v) updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,start:v,end:v}:t)); }}/>
+              </div>
+            )}
+
+            {/* Lead time */}
+            {!r.milestone && (
+              <div className="ins-row-2">
+                <div className="ins-field">
+                  <span className="ins-field-lbl">Lead before</span>
+                  <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                    <input className="ins-num" type="number" min="0" style={{width:'54px'}}
+                      value={taskLive.leadTimeBefore||''}
+                      placeholder="0"
+                      onChange={e=>{const v=parseInt(e.target.value,10);const ltb=isNaN(v)?0:Math.max(0,v);updateTasks(ts=>{const updated=ts.map(t=>t.id===r.id?{...t,leadTimeBefore:ltb}:t);const self=updated.find(t=>t.id===r.id)||r;const predIds=depList(self).map(d=>d.id);return predIds.length>0?predIds.reduce((acc,pid)=>applySchedule(acc,pid),updated):updated;});}}/>
+                    <span style={{fontSize:'10px',color:'var(--t3)'}}>days</span>
+                  </div>
+                </div>
+                <div className="ins-field">
+                  <span className="ins-field-lbl">Lead after</span>
+                  <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+                    <input className="ins-num" type="number" min="0" style={{width:'54px'}}
+                      value={taskLive.leadTimeAfter||''}
+                      placeholder="0"
+                      onChange={e=>{const v=parseInt(e.target.value,10);updateTasks(ts=>applySchedule(ts.map(t=>t.id===r.id?{...t,leadTimeAfter:isNaN(v)?0:Math.max(0,v)}:t),r.id));}}/>
+                    <span style={{fontSize:'10px',color:'var(--t3)'}}>days</span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -7632,6 +8753,52 @@ function App(){
                 ))}
               </div>
             </div>
+
+            {/* Status */}
+            <div className="ins-field">
+              <span className="ins-field-lbl">Status</span>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'4px',marginTop:'2px'}}>
+                {STATUSES.map(s=>{
+                  const meta=STATUS_META[s];
+                  const active=taskLive.status===s;
+                  return (
+                    <button key={s} onClick={()=>setStatus(s)} title={meta.label}
+                      style={{display:'flex',alignItems:'center',gap:'5px',padding:'3px 8px',borderRadius:'3px',
+                        border:`1px solid ${active?meta.color:'var(--border-s)'}`,
+                        background:active?meta.color+'28':'transparent',
+                        color:active?meta.color:'var(--t3)',
+                        font:'10px var(--mono)',cursor:'pointer',whiteSpace:'nowrap',letterSpacing:'.03em'}}>
+                      <span style={{width:6,height:6,borderRadius:'50%',background:meta.color,flexShrink:0,display:'inline-block'}}/>
+                      {meta.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Progress */}
+            {!r.milestone && (
+              <div className="ins-field">
+                <span className="ins-field-lbl">Progress</span>
+                <div className="ins-prog-wrap">
+                  <input type="range" className="ins-slider" min={0} max={100} step={5}
+                    value={Math.round((taskLive.progress||0)*100)}
+                    style={{background:`linear-gradient(to right,var(--accent-2) ${Math.round((taskLive.progress||0)*100)}%,var(--surface-3) ${Math.round((taskLive.progress||0)*100)}%)`}}
+                    onChange={e=>setProgress(Number(e.target.value))}/>
+                  <input type="number" className="ins-num ins-prog-num" min={0} max={100} step={5}
+                    value={Math.round((taskLive.progress||0)*100)}
+                    onChange={e=>setProgress(Number(e.target.value))}
+                    onBlur={e=>setProgress(Number(e.target.value))}/>
+                </div>
+                {markDonePrompt === r.id && (
+                  <div className="ins-mark-done">
+                    <span>Mark as done?</span>
+                    <button className="ins-mark-done-btn yes" onClick={acceptMarkDone}>Yes</button>
+                    <button className="ins-mark-done-btn no" onClick={declineMarkDone}>No</button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Owner */}
             <div className="ins-field">
@@ -7651,6 +8818,30 @@ function App(){
               </div>
               {conflicts.has(r.id)&&<span style={{color:'var(--p2)',font:'9px var(--mono)',marginTop:'2px'}}>⚠ owner double-booked</span>}
             </div>
+
+            {/* Lane (manual mode) */}
+            {laneMode==='manual'&&(
+              <div className="ins-field">
+                <span className="ins-field-lbl">Lane</span>
+                <select className="ins-select" value={taskLive.laneId||''}
+                  onChange={e=>updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,laneId:e.target.value||null}:t))}>
+                  <option value="">— unassigned —</option>
+                  {lanes.map(l=><option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </div>
+            )}
+
+            {/* Stage */}
+            {laneMode==='stage'&&(
+              <div className="ins-field">
+                <span className="ins-field-lbl">Stage</span>
+                <select className="ins-select" value={taskLive.stage||''}
+                  onChange={e=>updateTasks(ts=>ts.map(t=>t.id===r.id?{...t,stage:e.target.value||null}:t))}>
+                  <option value="">— none —</option>
+                  {stageRegistry.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
 
             {/* Color */}
             <div className="ins-field">
@@ -7789,7 +8980,18 @@ function App(){
     {/* Task Context menu */}
     {ctxMenu&&(()=>{
       const t=tasks.find(tt=>tt.id===ctxMenu.taskId); if(!t)return null;
-      const cx=Math.min(ctxMenu.x,window.innerWidth-260), cy=Math.min(ctxMenu.y,window.innerHeight-340);
+      const cx=Math.min(ctxMenu.x,window.innerWidth-280);
+      // Position the menu so the full content fits whenever any direction has
+      // room. Falls back to a top-of-viewport anchor when neither above nor
+      // below the click fits the menu, so the bottom items (Delete!) never
+      // clip even with a click in the dead-zone middle of the screen.
+      // FULL_H is sized for the worst case (every conditional item rendered).
+      const FULL_H=700;
+      const spaceBelow=window.innerHeight-ctxMenu.y-8, spaceAbove=ctxMenu.y-8;
+      let flipUp=false, anchorTop=false, cy, menuMaxH;
+      if (spaceBelow >= FULL_H){ cy=Math.max(8,ctxMenu.y); menuMaxH=spaceBelow; }
+      else if (spaceAbove >= FULL_H){ flipUp=true; menuMaxH=spaceAbove; cy=Math.max(8,ctxMenu.y-menuMaxH); }
+      else { anchorTop=true; cy=8; menuMaxH=window.innerHeight-16; }
 
       // Submenu position (just to the right of the parent menu).
       const subX = Math.min(cx + 224, window.innerWidth - 240);
@@ -7809,13 +9011,14 @@ function App(){
       const predIds = depList(t).map(d=>d.id);
       const dependentTasks = tasks.filter(x=>depList(x).some(d=>d.id===t.id));
 
+      const multiIds = selectedSet.size>1 ? selectedSet : new Set([t.id]);
       return (
-        <div className="ctx-menu" style={{left:cx+'px',top:cy+'px'}} onMouseDown={e=>e.stopPropagation()}>
-          <div className="ctx-hdr">{t.title}</div><div className="ctx-sep"/>
+        <div className="ctx-menu" style={flipUp?{left:cx+'px',bottom:(window.innerHeight-ctxMenu.y)+'px',maxHeight:menuMaxH+'px'}:{left:cx+'px',top:cy+'px',maxHeight:menuMaxH+'px'}} onMouseDown={e=>e.stopPropagation()}>
+          <div className="ctx-hdr">{selectedSet.size>1?`${selectedSet.size} tasks selected`:t.title}</div><div className="ctx-sep"/>
 
           {/* Quick edits — colour / priority / duration */}
-          <div className="ctx-item has-sub" onClick={()=>{ setBulkPicker({x:subX,y:cy,kind:'color',ids:new Set([t.id])}); setCtxSubmenu(null); }}>Colour…<span className="chev">▸</span></div>
-          <div className="ctx-item has-sub" onClick={()=>{ setBulkPicker({x:subX,y:cy,kind:'priority',ids:new Set([t.id])}); setCtxSubmenu(null); }}>Priority…<span className="chev">▸</span></div>
+          <div className="ctx-item has-sub" onClick={()=>{ setBulkPicker({x:subX,y:cy,kind:'color',ids:multiIds}); setCtxSubmenu(null); }}>Colour…<span className="chev">▸</span></div>
+          <div className="ctx-item has-sub" onClick={()=>{ setBulkPicker({x:subX,y:cy,kind:'priority',ids:multiIds}); setCtxSubmenu(null); }}>Priority…<span className="chev">▸</span></div>
           {!t.milestone && t.kind!=='project' && (
             <div className="ctx-item has-sub" onClick={()=>setCtxSubmenu({x:subX, y:cy, kind:'duration', taskId:t.id})}>Set duration…<span className="chev">▸</span></div>
           )}
@@ -7838,7 +9041,7 @@ function App(){
           <div className="ctx-sep"/>
 
           {/* Clipboard */}
-          <div className="ctx-item" onClick={()=>{ copyTasks(new Set([t.id])); closeAll(); }}>Copy<span className="kbd">Ctrl C</span></div>
+          <div className="ctx-item" onClick={()=>{ copyTasks(multiIds); closeAll(); }}>Copy{selectedSet.size>1&&<span className="kbd">×{selectedSet.size}</span>}<span className="kbd">Ctrl C</span></div>
           {clipboard && clipboard.tasks?.length>0 && (
             <div className="ctx-item" onClick={()=>{ pasteTasks(null); closeAll(); }}>Paste ({clipboard.tasks.length})<span className="kbd">Ctrl V</span></div>
           )}
@@ -7862,7 +9065,7 @@ function App(){
           <div className="ctx-item" onClick={()=>{duplicateTask(t.id);closeAll();}}>Duplicate<span className="kbd">Ctrl D</span></div>
           <div className="ctx-item" onClick={()=>{setRenaming({id:t.id,value:t.title});closeAll();}}>Rename<span className="kbd">F2</span></div>
           <div className="ctx-sep"/>
-          <div className="ctx-item danger" onClick={()=>{updateTasks(ts=>ts.filter(tt=>tt.id!==t.id).map(tt=>{ const list=depList(tt); if(!list.some(d=>d.id===t.id))return tt; return {...tt, deps: list.filter(d=>d.id!==t.id)}; }));setSelected(null);closeAll();}}>Delete<span className="kbd">⌫</span></div>
+          <div className="ctx-item danger" onClick={()=>{updateTasks(ts=>ts.filter(tt=>!multiIds.has(tt.id)).map(tt=>{ const list=depList(tt); if(!list.some(d=>multiIds.has(d.id)))return tt; return {...tt, deps: list.filter(d=>!multiIds.has(d.id))}; }));setSelected(null);closeAll();}}>Delete{selectedSet.size>1?<span className="kbd">×{selectedSet.size}</span>:<span className="kbd">⌫</span>}</div>
         </div>
       );
     })()}
@@ -8080,6 +9283,16 @@ function App(){
           <div className="ctx-item" onClick={()=>{setCollapsed(c=>{const n=new Set(c);isOpen?n.add(groupCtxMenu.groupId):n.delete(groupCtxMenu.groupId);return n;});setGroupCtxMenu(null);}}>
             {isOpen?'Collapse':'Expand'}
           </div>
+          {isProject&&(()=>{
+            const projOrder=tasks.filter(t=>t.kind==='project').map(t=>t.id);
+            const pIdx=projOrder.indexOf(groupCtxMenu.groupId);
+            const canUp=pIdx>0, canDown=pIdx>=0&&pIdx<projOrder.length-1;
+            return <>
+              <div className="ctx-sep"/>
+              <div className={`ctx-item${canUp?'':' disabled'}`} onClick={()=>{if(canUp){moveGroup(groupCtxMenu.groupId,'up');setGroupCtxMenu(null);}}}>Move up</div>
+              <div className={`ctx-item${canDown?'':' disabled'}`} onClick={()=>{if(canDown){moveGroup(groupCtxMenu.groupId,'down');setGroupCtxMenu(null);}}}>Move down</div>
+            </>;
+          })()}
           {isProject&&<>
             <div className="ctx-sep"/>
             <div className="ctx-item danger" onClick={()=>{const {groupId,title}=groupCtxMenu;setGroupCtxMenu(null);deleteGroupTasks(groupId,title);}}>Delete set…</div>
@@ -8116,7 +9329,7 @@ function App(){
         setPredPicker(null);
       };
       return (
-        <div className="pred-picker" style={{left:Math.min(anchor.x,window.innerWidth-240)+'px',top:Math.min(anchor.y,window.innerHeight-280)+'px'}}
+        <div className="pred-picker" style={{left:Math.min(anchor.x,window.innerWidth-292)+'px',top:Math.min(anchor.y,window.innerHeight-280)+'px'}}
           onMouseDown={e=>e.stopPropagation()}>
           <input autoFocus className="pred-picker-input" placeholder="Search tasks…"
             value={predFilter} onChange={e=>setPredFilter(e.target.value)}
@@ -8220,6 +9433,19 @@ function App(){
       />
     )}
 
+    {/* Baselines panel */}
+    {baselinesOpen && activeProject && (
+      <BaselinesPanel
+        baselines={baselines}
+        activeBaselineId={activeBaselineId}
+        tasks={tasks}
+        onClose={()=>setBaselinesOpen(false)}
+        onSaveNew={saveBaseline}
+        onActivate={activateBaseline}
+        onRename={renameBaseline}
+        onDelete={deleteBaseline}/>
+    )}
+
     {/* Batch 5: Keyboard help overlay */}
     {helpOpen && <HelpModal onClose={()=>setHelpOpen(false)} fsaAvailable={FSA_AVAILABLE}/>}
 
@@ -8242,7 +9468,7 @@ function App(){
         { id:'view.save',     group:'View', label:'Save current view as…',   keywords:['bookmark','snapshot'], run:()=>saveCurrentView() },
         ...((activeProject?.savedViews) || []).map(v => ({
           id:'view.apply.'+v.id, group:'View', label:`Switch to view "${v.name}"`,
-          keywords:['saved',v.viewMode,v.groupBy], run:()=>applyView(v)
+          keywords:['saved',v.viewMode,v.laneMode||''], run:()=>applyView(v)
         })),
         // Help
         { id:'help.shortcuts', group:'Help', label:'Show keyboard shortcuts', shortcut:'?', run:()=>setHelpOpen(true) },
@@ -8312,7 +9538,22 @@ function App(){
       </div>
     )}
 
-    <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject} customConfirm={customConfirm}/>
+    <GanttTweaks tw={tw} setTweak={setTweak} activeProject={activeProject} updateActiveProject={updateActiveProject} customConfirm={customConfirm}
+  laneMode={laneMode} lanes={lanes} stageRegistry={stageRegistry}
+  setLaneMode={setLaneMode} setLanes={setLanes} setStageRegistry={setStageRegistry}
+  setLaneCollapsed={setLaneCollapsed} setDirty={setDirty}/>
+
+    {sortToast && (
+      <div className="sort-toast" role="status">
+        <span>Sorted by start date</span>
+        <button className="sort-toast-undo" onClick={()=>{
+          if (sortToastTimerRef.current) clearTimeout(sortToastTimerRef.current);
+          const prev = sortToast.prevTasks;
+          setSortToast(null);
+          if (prev) updateTasks(()=>prev);
+        }}>Undo</button>
+      </div>
+    )}
     </Fragment>
   );
 }

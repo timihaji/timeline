@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body data-theme="things" data-screen-label="Timeline">
+<script>document.body.dataset.theme='things';</script>
+<div id="root"><div class="loading">Loading Timeline…</div></div>
+
+<script>
+  // Tweak defaults — read by useTweaks() in App.jsx
+  window.__TWEAK_DEFAULTS = {
+    "dayWidth": 36,
+    "fitWidth": false,
+    "rowHeight": 34,
+    "showWeekends": true,
+    "showDeps": true,
+    "compactBars": false,
+    "snapToDay": true,
+    "groupBy": "project",
+    "showFloat": false,
+    "showCritical": false,
+    "hideMilestoneLines": false,
+    "showProbBars": true,
+    "showNowCurtain": false,
+    "showOwners": true,
+    "showConflicts": true,
+    "showMinimap": true,
+    "autosaveEnabled": true,
+    "labelPos": "auto",
+    "theme": "things"
+  };
+</script>
+
+<script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

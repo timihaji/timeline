@@ -1,0 +1,113 @@
+/* Auth screens — minimal Things-3 styling. Activates only when Supabase is
+   configured AND no session exists. */
+
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-1, #f6f6f4);
+  font: 13px var(--font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  color: var(--t1, #1d1d1f);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 28px 28px 22px;
+  background: var(--surface-2, #ffffff);
+  border: 1px solid var(--border-s, rgba(0, 0, 0, 0.06));
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-card h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.auth-sub {
+  margin: 0 0 4px;
+  color: var(--t3, #6e6e73);
+  font-size: 12px;
+}
+
+.auth-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--t3, #6e6e73);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.auth-card label input {
+  font: 13px var(--font, inherit);
+  padding: 8px 10px;
+  border: 1px solid var(--border-s, rgba(0, 0, 0, 0.12));
+  border-radius: 6px;
+  background: var(--surface-1, #fafafa);
+  color: var(--t1, #1d1d1f);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.auth-card label input:focus {
+  outline: none;
+  border-color: var(--accent-2, #4a90e2);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.auth-error {
+  padding: 8px 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  color: #c0392b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.auth-primary {
+  padding: 10px 14px;
+  background: var(--accent-2, #4a90e2);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font: 600 13px var(--font, inherit);
+  cursor: pointer;
+  transition: background 120ms ease, opacity 120ms ease;
+}
+
+.auth-primary:hover { background: var(--accent-2-hover, #3a80d2); }
+.auth-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.auth-link {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  color: var(--accent-2, #4a90e2);
+  font: 12px var(--font, inherit);
+  cursor: pointer;
+}
+
+.auth-link:hover { text-decoration: underline; }
+
+.auth-loading {
+  font-size: 13px;
+  color: var(--t3, #6e6e73);
+}
